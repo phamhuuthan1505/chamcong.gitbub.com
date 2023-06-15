@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name=description content="Phần mềm Wise Eye ITS V3.0 là một trong những phần mềm chấm công Wise Eye hoạt động cùng với máy chấm công vân tay, máy chấm công khuôn mặt, máy chấm công thẻ cảm ứng nhãn hiệu Wise Eye, Ronald Jack và ZKTeco" />
+    <meta name=keywords content="máy chấm công,Ronald Jack,ZKTeco,Wise Eye,máy chấm công vân tay,phần mềm chấm công" />
+    <title>VIETSWAN</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/css/login.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/wse_easyui.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/icon.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/css/styles.css" />
+
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/exticons/wseicon.css" />
+
+    <script type="text/javascript" src="jquery-easyui-1.10.3/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="CryptoJS_v3.1.2/rollups/aes.js"></script>
+    <script type="text/javascript" src="js/Unibabel.js"></script>
+    <script type="text/javascript" src="js/Unibabel.hex.js"></script>
+
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.messagestore.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.fallbacks.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.parser.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.emitter.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.emitter.bidi.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.language.js"></script>
+
+    <script type="text/javascript" src="js/extend.js"></script>
+    <script type="text/javascript" src="js/js.js"></script>
+    <script type="text/javascript" src="js/login.js"></script>
+
+</head>
+<body >
+    <div id="myBody" class="easyui-layout" data-options="fit:true"  style="display: none;">
+        <div data-options="region:'north',split:false,border:false" style="height:100px;">
+            <div>
+                <a class="app-logo" href="http://chamcong.vietswan.com:8080/" target="_blank"><img src="images/loginlogo.png" /></a>
+            </div>
+        </div>
+        <!-- <div data-options="region:'south',split:false,border:false" style="height:100px;">
+            <center style="margin-top:20px">
+                <span id="copyright">Wise Eye ITS</span>
+            </center>
+            <center style="margin-top:5px">
+                <span id="lastupdate">Last update</span>
+            </center>
+            <center style="margin-top:5px">
+                <a style="font-weight: bold; color: blue;" href="https://wiseeye.info" target="_blank">www.wiseeye.info</a>
+            </center>
+        </div> -->
+        <div data-options="region:'center',border:false">
+            <div id="cc" class="easyui-layout" data-options="fit:true">
+                <div data-options="region:'west',split:false,border:false" style="width:49%;">
+                    <div class="div-bg">
+                        <center style="margin-top:35px">
+                            <span style="font-size:24px; font-weight:bold;color:blue;">VIETSWAN</span>
+                        </center>
+                        <center style="margin-bottom:10px;margin-top:10px;">
+						<span style="font-size:18px; font-weight:bold;color:blue;">Dữ Liệu Chấm Công</span>
+                           <!-- <span id="softname" style="font-size:14px; font-weight:bold;color:blue;">Time Attendance System</span>
+                            <br />
+                            <span id="verid" style="font-size:12px; font-weight:bold;color:maroon;">Version 3.0</span> -->
+                        </center>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="margin-left:10px">
+                    <span class="bar-center"></span>
+                    <div class="div-login">
+                        
+                        <form id="ff">
+                            <div style="margin-bottom:10px; padding-top:10px">
+                                <input id="locale" name="'locale" style="width: 100%; height:35px" />
+                            </div>
+                            <div style="margin-bottom:10px">
+                                <input id="useraccount" name="useraccount" style="width:100%;height:35px;" />
+                            </div>
+
+                            <div style="margin-bottom:40px">
+                                <input id="userpass" name="userpass" style="width:100%;height:35px;" />
+                            </div>
+
+                            <div style="margin-bottom:20px">
+                                <a id="btsendLogin" onclick="TravelSteps()" style="padding:4px 0px;width:100%;"></a>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="display:none">
+        <input type="hidden" class="easyui-textbox" id="captcha" />
+    </div>
+   
+</body>
+
+<!--<body class="easyui-layout" style="display:none">
+    <div data-options="region:'north',split:false,border:false" style="height:200px;">
+        <div>
+            <a class="app-logo" href="https://wiseeye.info" target="_blank"><img src="images/loginlogo.png"></a>
+        </div>
+    </div>
+    <div data-options="region:'south',split:false,border:false" style="height:200px;">
+        <center style="margin-top:130px">
+            <span id="copyright">Wise Eye ITS</span>
+        </center>
+        <center style="margin-top:5px">
+            <span id="lastupdate">Last update</span>
+        </center>
+        <center style="margin-top:5px">
+            <a style="font-weight: bold; color: blue;" href="https://wiseeye.info" target="_blank">www.wiseeye.info</a>
+        </center>
+    </div>
+    <div data-options="region:'center',border:false">
+        <div id="cc" class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'west',split:false,border:false" style="width:50%;">
+                <div class="div-bg">-->
+<!--<img src="images/bg.jpg">-->
+<!--<center style="margin-top:70px">
+                        <span style="font-size:24px; font-weight:bold;color:blue;">Wise Eye ITS</span>
+                    </center>
+                    <center style="margin-bottom:10px;margin-top:10px;">
+                        <span id="softname" style="font-size:14px; font-weight:bold;color:blue;">Time Attendance System</span>
+                        <br />
+                        <span id="verid" style="font-size:12px; font-weight:bold;color:black;">Version 3.0</span>
+                    </center>
+                </div>
+            </div>
+            <div data-options="region:'center',border:false" style="margin-left:10px">
+                <span class="button-sep"></span>
+                <div class="div-login">
+                    <form id="ff">
+                        <div style="margin-bottom:10px; padding-top:10px">
+                            <input id="locale" name="'locale" style="width: 100%; height:35px" />
+                        </div>
+                        <div style="margin-bottom:10px">
+                            <input id="useraccount" name="useraccount" style="width:100%;height:35px;" />
+                        </div>
+
+                        <div style="margin-bottom:40px">
+                            <input id="userpass" name="userpass" style="width:100%;height:35px;" />
+                        </div>
+
+                        <div style="margin-bottom:20px">
+                            <a id="btsendLogin" onclick="TravelSteps()" style="padding:4px 0px;width:100%;"></a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="display:none">
+        <input type="hidden" class="easyui-textbox" id="captcha" />
+    </div>
+    <script type="text/javascript">
+
+    </script>
+</body>-->
+</html>

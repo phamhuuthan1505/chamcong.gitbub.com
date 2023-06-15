@@ -1,0 +1,206 @@
+﻿    <table id="tbAreas" ></table>
+	<div id="toolArea">
+		<a id="addArea" onclick="newArea()">Thêm mới</a>
+		<a id="deleteArea" onclick="deleteArea()">Xóa</a>
+		<span class="button-sep"></span>
+		<a id="reloadArea" onclick="javascript:$('#tbAreas').datagrid('reload');">Tải lại</a>
+		<span class="button-sep"></span>
+		<a id="exportArea" onclick="ExportArea()">Xuất</a>
+	</div>
+    <script type="text/javascript">
+		$(function () {
+			
+			$('#addArea').linkbutton({
+				iconCls: 'icon-add',
+				plain: true,
+				text: $.i18n('add'),
+				disabled: MenuItem.IsAdd() ? false : true
+			});
+			$('#deleteArea').linkbutton({
+				iconCls: 'icon-remove',
+				plain: true,
+				text: $.i18n('delete'),
+				disabled: MenuItem.IsDelete() ? false : true
+			});
+		});
+		$('#reloadArea').linkbutton({
+			iconCls: 'icon-reload',
+			plain: true,
+			text: $.i18n('reload')
+		});
+		$('#exportArea').linkbutton({
+			iconCls: 'icon-excel',
+			plain: true,
+			text: $.i18n('export')
+		});
+		$('#tbAreas').datagrid({
+			columns: [[
+				{ field: 'areacode', title: $.i18n('area_code'), sortable: true },
+				{ field: 'areaname', title: $.i18n('area_name'), sortable: true,width:300},
+			]],
+			//fitColumns: true,
+			pagination: true,
+			pageSize: 20,
+			sortName: 'areacode',
+			rownumbers: true,
+			striped: true,
+			singleSelect: true,
+			method: 'post',
+			url: 'areas?getareas',
+			view: detailview,
+			toolbar: '#toolArea',
+			border: false,
+			fit: true,
+			loader: function (param, success, error) {
+				var opts = $(this).datagrid('options');
+				loaderWSE(opts, param, success, error)
+			},
+			view: detailview,
+			detailFormatter: function (index, row) {
+				return '<div class="ddv" style="padding:5px 0"></div>';
+			},
+			onExpandRow: function (index, row) {
+				var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+				ddv.panel({
+					height: 125,
+					border: false,
+					cache: false,
+					href: 'SubPages/AreaDetails.html',
+					onLoad: function () {
+						$('#tbAreas').datagrid('fixDetailRowHeight', index);
+						$('#tbAreas').datagrid('selectRow', index);
+						$('#tbAreas').datagrid('getRowDetail', index).find('form').form('load', row);
+						SetAreaControls(row,index);
+					}
+				});
+				$(this).datagrid('fixDetailRowHeight', index);
+
+			}
+		});//.datagrid('enableFilter');
+		function SetAreaControls(row,index) {
+			var saveArea = $('#tbAreas').datagrid('getRowDetail', index).find('#saveArea');
+			$(saveArea).linkbutton({
+				iconCls: 'icon-save',
+				plain: true,
+				text: $.i18n('save'),
+				disabled: MenuItem.IsEdit() ? false : true
+			});
+			var cancelArea = $('#tbAreas').datagrid('getRowDetail', index).find('#cancelArea');
+			$(cancelArea).linkbutton({
+				iconCls: 'icon-delete',
+				plain: true,
+				text: $.i18n('cancel')
+			});
+			var areacode = $('#tbAreas').datagrid('getRowDetail', index).find('#areacode');
+			$(areacode).textbox({
+				label: $.i18n('area_code'),
+				required: true,
+				labelWidth: 80
+			});
+			var areaname = $('#tbAreas').datagrid('getRowDetail', index).find('#areaname');
+			$(areaname).textbox({
+				label: $.i18n('area_name'),
+				required: true,
+				labelWidth: 80
+			});
+		}
+		function newArea() {
+			try {
+				var index = $('#tbAreas').datagrid('getRows').length - 1;
+				if (index > 0) {
+					var row = $('#tbAreas').datagrid('getRows')[index]
+					if (row.isNewRecord) { return }
+				}
+				$('#tbAreas').datagrid('appendRow', { isNewRecord: true });
+				index = $('#tbAreas').datagrid('getRows').length - 1;
+				$('#tbAreas').datagrid('expandRow', index);
+				$('#tbAreas').datagrid('selectRow', index);
+
+			} catch (err) { message(err) }
+		}
+		function deleteArea() {
+			var row = $('#tbAreas').datagrid('getSelected');
+			if (!row) return;
+			if (row.isNewRecord) {
+				$('#tbAreas').datagrid('deleteRow', $('#tbAreas').datagrid('getRowIndex', row));
+				return;
+			}
+			$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete',row.areaname) , function (r) {
+				if (r) {
+					var data = { areaid: row.areaid }
+					$.post('areas?deletearea&locale=' + i18n.locale,
+						JSON.stringify(data),
+						function (data) {
+							var data = eval('(' + data + ')');
+							if (data.state == "success") {
+								var index = $('#tbAreas').datagrid('getRowIndex', row);
+								$('#tbAreas').datagrid('deleteRow', index);
+
+							} else {	
+									message(data.message);
+							}
+
+						});
+
+
+				}
+			});
+		}
+		function saveArea(target) {
+			var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+			var index = parseInt(tr.attr('datagrid-row-index'));
+			var row = $('#tbAreas').datagrid('getRows')[index];
+			var areacode = $('#tbAreas').datagrid('getRowDetail', index).find('#areacode');
+			var areaname = $('#tbAreas').datagrid('getRowDetail', index).find('#areaname');
+			var isValid = $(areacode).textbox('isValid');
+			if (!isValid) {
+				$(areacode).textbox('validate');
+				$(areacode).textbox('textbox').focus();
+				return;
+			}
+			var isValid = $(areaname).textbox('isValid');
+			if (!isValid) {
+				$(areaname).textbox('validate');
+				$(areaname).textbox('textbox').focus();
+				return;
+			}
+			var url = row.isNewRecord ? 'areas?addnewarea' : 'areas?updatearea';
+			var doc = { areacode: $(areacode).textbox('getValue'), areaname: $(areaname).textbox('getValue'), areaid: row.areaid }
+			$.post(url,
+				JSON.stringify(doc),
+				function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "error") {
+						if (data.messagekey) {
+							var msg = $.i18n(data.messagekey, doc.areacode);
+							message(msg);
+						} else {
+							message(data.message);
+						}
+
+					} else {
+						data.isNewRecord = false;
+						$('#tbAreas').datagrid('collapseRow', index);
+						$('#tbAreas').datagrid('updateRow', {
+							index: index,
+							row: data
+						});
+					}
+
+				});
+		}
+		function cancelArea(target) {
+			var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+			var index = parseInt(tr.attr('datagrid-row-index'));
+			var row = $('#tbAreas').datagrid('getRows')[index];
+			if (row.isNewRecord) {
+				$('#tbAreas').datagrid('deleteRow', index);
+			} else {
+				$('#tbAreas').datagrid('collapseRow', index);
+			}
+		}	
+		function ExportArea() {
+			var url = 'export?id=getarea&locale=' + i18n.locale;
+			GetExport(url);
+		}
+    </script>

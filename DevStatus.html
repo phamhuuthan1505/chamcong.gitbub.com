@@ -1,0 +1,276 @@
+﻿	<div id="layoutEvent" class="easyui-layout wse-layout">
+	<div data-options="region:'west',split: true" style="width:230px;padding:3px;overflow:auto">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreaIDDevStatus" style="width:285px;margin-bottom:3px" />-->
+				<a id="btAreaIDDevStatus" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:5px;">
+				<ul id="StatusDevices"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftDevStatus" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center'">
+		<table id="tbEvents"/>
+		<div id="toolEvents" style="padding-left:5px;">
+			<a id="clearEvent" onclick="$('#tbEvents').datagrid({data:[]});">Xóa bỏ sự kiện</a>
+			<span class="button-sep"></span>
+			<input id="swStatus">
+			<span class="button-sep"></span>
+			<input id="swNewInfo">
+		</div>
+	</div>
+	
+	<div data-options="region:'south',border:false" style="height:35px;">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:300px;">
+				<center style="margin-top:8px">
+					<label id="infoSocket" style="color:#009">Socket Info</label>
+				</center>
+			</div>
+			<div data-options="region:'center',border:false" style="height:35px;">
+				<center style="margin-top:8px">
+					<label id="infoEventSocket" style="color:#009"></label>
+				</center>
+			</div>
+		</div>
+
+	</div>
+</div>
+	<div id="mmAreaDevStatus" class="menu-content" data-options="hideOnUnhover: false">
+		<div id="dlAreaIDDevStatus">	</div>
+	</div>
+	<script type="text/javascript">
+		//#region Thiết kê
+		$('#clearEvent').linkbutton({
+			iconCls: 'icon-clear',
+			plain: true,
+			text: $.i18n('clearevent')
+		});
+		$('#layoutEvent').layout({ fit: true }).layout('panel', 'west').panel({
+			title: $.i18n('device'),
+			hideCollapsedContent: false,
+			collapsible: true,
+			border: true,
+			split: true
+		});
+		$('#layoutEvent').layout('panel', 'center').panel({
+			title: $.i18n('event'),
+			border: true
+		});
+		$('#ftDevStatus').textbox({
+			icons:[{
+			   iconCls:'icon-filter',
+			   handler:function(e){
+				$('#StatusDevices').tree('doFilter', $(e.data.target).textbox('getValue'))
+			   },
+	   
+		  }],
+			prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+		  onChange:function(newValue,oldValue){
+			  $('#StatusDevices').tree('doFilter', newValue);
+		   }
+		}).textbox('addClearBtn', 'icon-clear');
+		$('#StatusDevices').tree({
+			url: 'devicesstatus?getdevices',
+			lines:true,
+			queryParams:{areaid:0},
+			method:'POST',
+			loader:function(param,success,error){
+				var opts = $(this).tree('options');
+				loaderWSE(opts,param,success,error)
+			},
+			onBeforeSelect: function (node) {
+				//console.log(node);
+				return GetDeviceEvents(node);
+			}
+	
+		});
+		$('#dlAreaIDDevStatus').datalist({
+			method: 'get',
+			url: 'areas?getusedarea&locale=' + i18n.locale,
+			loader: function (param, success, error) {
+				var opts = $(this).datalist('options');
+				loaderWSE(opts, param, success, error)
+			},
+			valueField: 'id',
+			textField: 'text',
+			width: 200,
+			height: 250,
+			border: 0,
+			onLoadSuccess: function () {
+				loadMenuButtonDevStatus($.i18n('all'));
+			},
+			onSelect: function (index, row) {
+				$('#StatusDevices').tree({
+					url: 'devicesstatus?getdevices',
+					lines:true,
+					queryParams:{areaid:row.id},
+					method:'POST',
+					loader:function(param,success,error){
+						var opts = $(this).tree('options');
+						loaderWSE(opts,param,success,error)
+					}
+				});
+				var data = { machineid: 0, levelid: 0, areaid: row.id };
+				EventsOfDevices.send(data);
+				$('#layoutEvent').layout('panel', 'center').panel({
+					title: $.i18n('eventof', row.text),
+				});
+				loadMenuButtonDevStatus(row.text);
+				$('#mmAreaDevStatus').menu('hide');
+			}
+		});
+		function loadMenuButtonDevStatus(txt) {
+			$('#btAreaIDDevStatus').menubutton({
+				text: $.i18n('area') + ': ' + txt,
+				menu: '#mmAreaDevStatus',
+				iconCls: 'icon-area',
+				plain: true,
+				showEvent: 'click'
+			});
+		}
+
+		//$('#cbAreaIDDevStatus').combobox({
+		//	label: $.i18n('area'),
+		//	labelWidth: 60,
+		//	url:'areas?getusedarea&locale=' + i18n.locale,
+		//	panelHeight:200,
+		//	valueField:'id',
+		//	textField:'text',
+		//	value:0,
+		//	onChange:function(newValue,oldValue){
+		//		$('#StatusDevices').tree({
+		//			url: 'devicesstatus?getdevices',
+		//			lines:true,
+		//			queryParams:{areaid:newValue},
+		//			method:'POST',
+		//			loader:function(param,success,error){
+		//				var opts = $(this).tree('options');
+		//				loaderWSE(opts,param,success,error)
+		//			}
+		//		});
+		//		var data = { machineid: 0, levelid: 0, areaid: newValue };
+		//		EventsOfDevices.send(data);
+		//		$('#layoutEvent').layout('panel', 'center').panel({
+		//			title: $.i18n('eventof', $('#cbAreaIDDevStatus').combobox('getText')),
+		//		});
+		//		//$('#EventsPanel').panel('setTitle', 'Sự kiện ' + $('#cbAreaIDDevStatus').combobox('getText'));
+		//	},
+		//});
+		
+		function GetDeviceEvents(node) {
+			if (node.levelid == 2) {
+				var data = { machineid: node.id, levelid: node.levelid, areaid: 0 };
+				EventsOfDevices.send(data);
+			} else {
+				var data = { machineid: 0, levelid: node.levelid, areaid: node.id };
+				EventsOfDevices.send(data);
+			}
+			$('#layoutEvent').layout('panel', 'center').panel({
+				title: $.i18n('eventof', node.text),
+			});
+			return true;
+        }
+
+		$('#swStatus').checkbox({
+			label: $.i18n('requestevent'),
+			labelWidth: i18n.locale == 'vi' ? 92 : 90,
+			height: 15,
+			width:15,
+			checked: true,
+            onChange: function (checked) {
+                var data = { IsRequestShow: checked };
+                EventsOfDevices.send(data);
+            }
+		});
+		$('#swNewInfo').checkbox({
+			label: $.i18n('infotop'),
+			labelWidth:i18n.locale=='vi'? 90 : 50,
+			height: 15,
+			width: 15,
+			checked: false
+		});
+		$('#tbEvents').datagrid({
+			columns: [[
+				{ field: 'timestr', title: $.i18n('eventtime'), width: 140 },
+				{ field: 'eventinfo', title: $.i18n('eventname'), width: 120 },
+				{ field: 'sessionname', title: $.i18n('devicename'), width: 120},
+				{ field: 'info', title: $.i18n('eventinfo'), width: 800 },
+				{ field: 'subinfo', title: $.i18n('eventinfo'), hidden: true, width: 10 }
+			]],
+			rownumbers: true,
+			iconCls: 'icon-text',
+			singleSelect: true,
+			toolbar: '#toolEvents',
+			border: false,
+			//fitColumns: true,
+			fit: true,
+			rowStyler: function (index, row) {
+				return 'color:' + row.colorcode + ';'
+			},
+            //view: detailview,
+            //detailFormatter: function (index, row) {
+            //    return '<div class="ddv" style="padding:5px 0"></div>';
+            //},
+            //onExpandRow: function (index, row) {
+            //    if (row.subinfo.indexOf("record") !== -1) {
+            //        var tt = row.subinfo.split(";");
+            //        var userenrollnumber = tt[0].split(":")[1];
+            //        var userimgname = userenrollnumber + '.jpg';
+            //        var timestr = tt[1].split(":")[1]
+            //        var attimgname = timestr + '-' + userenrollnumber + '.jpg';
+            //        var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+            //        ddv.panel({
+            //            height: 180,
+            //            border: false,
+            //            cache: false,
+            //            href: 'userinfo.html',
+            //            onLoad: function () {
+            //                var userimg = $('#tbEvents').datagrid('getRowDetail', index).find('#userimg');
+            //                var attimg = $('#tbEvents').datagrid('getRowDetail', index).find('#attimg');
+            //                $(userimg).attr('src', 'data/userimages/' + userimgname + '?' + Math.random());
+            //                $(attimg).attr('src', 'ATT_Photo/' + attimgname + '?' + Math.random());
+            //                var url = 'user?getattuser';//&userenrollnumber=' + userenrollnumber;
+            //                var bson = new BSON();
+            //                var data = bson.serialize({ userenrollnumber: userenrollnumber })
+            //                var userrow;
+            //                $.post(url, JSON.stringify(data), function (data) {
+            //                    //console.log(data);
+            //                    var data = eval('(' + data + ')');
+            //                    if (data.state == "error") {
+            //                        userrow = {};
+            //                    } else {
+            //                        userrow = {
+            //                            userfullcode: data.UserFullCode,
+            //                            userfullname: data.UserFullName,
+            //                            deptname: data.DeptName
+            //                        }
+            //                    }
+            //                    $('#tbEvents').datagrid('getRowDetail', index).find('form').form('load', userrow);
+
+
+            //                });
+            //            }
+            //        })
+            //        $('#tbEvents').datagrid('fixDetailRowHeight', index);
+
+            //    } else {
+            //        $('#tbEvents').datagrid('collapseRow', index);
+            //    }
+
+            //}
+        });
+        function cancelItemUserInfo(index) {
+            try {
+                var row = $('#tbEvents').datagrid('getRows')[index];
+                $('#tbEvents').datagrid('collapseRow', index);
+            } catch (err) { message(err) }
+        }
+//#endregion
+		
+</script>
+

@@ -1,0 +1,720 @@
+﻿<div id="layoutAbsence" class="easyui-layout wse-layout">
+	<div data-options="region:'west',split: true" style="width: 250px; overflow: hidden; padding-bottom: 2px">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreaAbsence" style="width:283px;margin-bottom:3px" />-->
+				<a id="btAreaAbsence" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:3px;">
+				<ul id="treeDeptAbsence"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height: 32px; padding:1px">
+				<input id="ftDeptAbsence" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center'" style="padding-bottom:4px">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:420px;">
+				<table id="tbUserAbsence"></table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'center',border:false" style="padding: 0px 0px 3px 3px ">
+						<table id="tbAbsent"></table>
+					</div>
+					<div data-options="region:'south',border:false" style="height:230px;padding: 0px 0px 0px 3px">
+						<table id="tbOtherAbsents"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+<div id="toolUserAbsence">
+	<input id="findUserAbsence" style="width:300px" />
+</div>
+<div id="mmFindUserAbsence">
+	<div id="m-enrollnumberAbsence" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercodeAbsence" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-usernameAbsence" data-options="name:'username'">Tên nhân viên</div>
+</div>
+<div id="AbsentTool">
+	<div style="padding:5px 0;">
+		<input id="cbAbsentYear">
+		<input id="cbAbsentMonth">
+		<span class="button-sep"></span>
+		<a id="addAbsenceManyUsers" onclick="openAddAbsents()"></a>
+		<span class="button-sep"></span>
+		<a id="exportAbsence" onclick="ExportAbsence()"></a>
+		<a id="importAbsence" onclick=""></a>
+	</div>
+</div>
+<div id="tooltbOtherAbsent">
+	<a id="addOtherAbsence"  onclick="openAddOtherAbsent()">Thêm</a>
+	<a id="deleteOtherAbsence" onclick="deleteOtherAbsent()">Xóa vắng</a>
+</div>
+<div id="mmAreaAbsence" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaAbsence"></div>
+</div>
+<script type="text/javascript">
+	var absent = new Array();
+	$.get('noneworking?getselectabsent', function (data, status) { absent = eval('(' + data + ')'); });
+	$('#layoutAbsence').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('dept'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutAbsence').layout().layout('panel', 'center').panel({
+		border: false
+	});
+	$('#m-usernameAbsence').text($.i18n('userfullname'));
+	$('#m-usercodeAbsence').text($.i18n('userfullcode'));
+	$('#m-enrollnumberAbsence').text($.i18n('userenrollnumber'));
+	$('#findUserAbsence').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindUserAbsence',
+		searcher: doSearchUserAbsence
+	});
+	$('#dlAreaAbsence').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonAbsence($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#treeDeptAbsence').tree({
+				queryParams: { areaid: row.id }
+			});
+			loadMenuButtonAbsence(row.text);
+			$('#mmAreaAbsence').menu('hide');
+		}
+	});
+	function loadMenuButtonAbsence(txt) {
+		$('#btAreaAbsence').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaAbsence',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+	//$('#cbAreaAbsence').combobox({
+	//	url: 'areas?getusedarea&locale=' + i18n.locale,
+	//	panelHeight: 250,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	value: 0,
+	//	label: $.i18n('area'),
+	//	labelWidth: 60,
+	//	onSelect: function (record) {
+	//		$('#treeDeptAbsence').tree({
+	//			queryParams: { areaid: record.id }
+	//		});
+	//	}
+	//});
+	$('#treeDeptAbsence').tree({
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (node) {
+			//var areaid = $('#cbAreaAbsence').combobox('getValue');
+			var sl = $('#dlAreaAbsence').datalist('getSelected');
+			var areaid = sl ? sl.id : 0;
+			$('#tbUserAbsence').datagrid({
+				queryParams: {
+					areaid: areaid,
+					useridd: node.id,
+					userenrollnumber: 0,
+				}
+			});
+		}
+	});
+	$('#ftDeptAbsence').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeDeptAbsence').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeDeptAbsence').tree('doFilter', newValue);
+		}
+	});
+	$('#tbUserAbsence').datagrid({
+		title: $.i18n('user'),
+		fit: true,
+		rownumbers: true,
+		toolbar: '#toolUserAbsence',
+		pagination: true,
+		pageList: [10, 15, 20, 25, 30, 50, 100, 200, 500, 1000, 2000, 3000, 5000],
+		pageSize: 30,
+		singleSelect: true,
+		striped: true,
+		sortName: 'userfullcode',
+		frozenColumns: [[
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true }
+		]],
+		queryParams: {
+			areaid: 0,
+			useridd: 0,
+			userenrollnumber: 0,
+		},
+		url: 'user?getusers',
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (index, row) {
+			var year = $('#cbAbsentYear').combobox('getValue');
+			var month = $('#cbAbsentMonth').combobox('getValue');
+			GetUserAbsent(row, month, year);
+		}
+	})
+	function doSearchUserAbsence(value, name) {
+		try {
+			if (!value == "") {
+				//var AreaID = $('#cbAreaAbsence').combobox('getValue');
+				var sl = $('#dlAreaAbsence').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				if (name == 'enrollnumber') {
+					$('#tbUserAbsence').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						}
+					});
+				} else if (name == 'username') {
+					$('#tbUserAbsence').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						}
+					});
+				} else if (name == 'usercode') {
+					$('#tbUserAbsence').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -3,
+							SearchValue: value
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+	}
+	$('#tbAbsent').propertygrid({
+		border: true,
+		fit: true,
+		toolbar: '#AbsentTool',
+		width: 300,
+		scrollbarSize: 0,
+		columns: [[
+			{ field: 'name', title: $.i18n("day"), sortable: false, resizable: false },
+			{
+				field: 'value', title: $.i18n('chooseabsence'), resizable: false, formatter: function (value, row) {
+					if (value == "-") return "-";
+					var i;
+					for (i = 0; i < absent.length; i++) {
+						if (absent[i].AbsentCode == value) {
+							return absent[i].AbsentDescription;
+						}
+
+					}
+					return "-";
+				}
+			}
+		]],
+		onEndEdit: function (index, row) {
+			var url = 'noneworking?updateuserabsent';
+			var data = { rowcode: row.rowcode, value: row.value, itemname: row.feildname };
+			$.post(url, JSON.stringify(data), function (res) {
+				res = eval('(' + res + ')');
+				if (res.state == 'error') {
+					message(res.message);
+					var row = $('#tbUserAbsence').datagrid('getSelected');
+					var year = $('#cbAbsentYear').combobox('getValue');
+					var month = $('#cbAbsentMonth').combobox('getValue');
+					GetUserAbsent(row, month, year);
+				}
+			});
+		},
+		onBeforeEdit: function (index, row) {
+			return MenuItem.IsEdit();
+		}
+	});
+	$('#cbAbsentYear').combobox({
+		data: getYears(),
+		width: 110,
+		panelHeight: 100,
+		label: $.i18n('year'),
+		labelWidth: 40,
+		onChange: function (newValue, oldValue) {
+			var row = $('#tbUserAbsence').datagrid('getSelected');
+			if (row) {
+				var month = $('#cbAbsentMonth').combobox('getValue');
+				GetUserAbsent(row, month, newValue);
+			}
+		}
+	});
+	$('#cbAbsentMonth').combobox({
+		data: getMonths(),
+		width: 110,
+		label: $.i18n('month'),
+		labelWidth: 50,
+		onChange: function (newValue, oldValue) {
+			var row = $('#tbUserAbsence').datagrid('getSelected');
+			if (row) {
+				var year = $('#cbAbsentYear').combobox('getValue');
+				GetUserAbsent(row, newValue, year);
+			}
+		}
+	});
+	function getYears() {
+		try {
+			var d = new Date;
+			var y = parseInt(d.getFullYear());
+			var data = [{ text: y - 1, value: y - 1 }, { text: y, value: y, selected: true }, { text: y + 1, value: y + 1 }];
+			return data;
+		} catch (err) { message(err); }
+	}
+	function getMonths() {
+		try {
+			var d = new Date;
+			var m = parseInt(d.getMonth() + 1);
+			var data = new Array()
+			for (i = 1; i < 13; i++) {
+				if (i == m) {
+					data.push({ text: i, value: i, selected: true });
+				} else {
+					data.push({ text: i, value: i });
+				}
+
+			}
+			return data;
+		} catch (err) { message(err); }
+	}
+	$('#addAbsenceManyUsers').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('absence_manyuser'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#exportAbsence').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('export'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#importAbsence').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('import'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	function GetUserAbsent(row, month, year) {
+		$('#tbAbsent').propertygrid({
+			queryParams: {
+				userenrollnumber: row.userenrollnumber,
+				month: month,
+				year: year
+			},
+			url: 'noneworking?getuserabsent',
+			method: 'POST',
+			title: row.userfullname,
+			loader: function (param, success, error) {
+				var opts = $(this).propertygrid('options');
+				loaderWSE(opts, param, success, error)
+			}
+
+		});
+		$('#tbOtherAbsents').datagrid({
+			queryParams: {
+				UserEnrollNumber: row.userenrollnumber,
+				month: month,
+				year: year
+			}
+		}).datagrid('autoSizeColumn');
+	}
+	function openAddAbsents() {
+		var node = $('#treeDeptAbsence').tree('getSelected');
+		if (!node) {
+			message($.i18n('choosedept'));
+			return;
+		}
+		if (node.id == 0) {
+			message($.i18n('choosedept'));
+			return;
+		}
+		$('body').append('<div id="indexWindow1" style="display:none;overflow:hidden;padding:3px"></div>');
+		$('#indexWindow1').dialog({
+			width: 720,
+			height: 580,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-add',
+			title: $.i18n('absence_manyuser'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			constrain: true,
+			extractor: function (data) {
+
+				data = $.fn.panel.defaults.extractor(data);
+				return data;
+
+			},
+			onClose: function () {
+				$('#indexWindow1').remove();
+			},
+			buttons: [{
+				text: $.i18n('ok'),
+				iconCls: 'icon-ok',
+				width: 100,
+				handler: function () {
+					var isValid = $('#frmAddAbsence').form('validate');
+					if (isValid) {
+						var rows = $("#tbUsersSet").datagrid('getChecked');
+						if (rows.length == 0) {
+							message($.i18n('chooseuser'));
+							return;
+						}
+
+						showProgress();
+						var values = {};
+						$.each($('#frmAddAbsence').serializeArray(), function (i, field) {
+							values[field.name] = field.value;
+						});
+						var userenrollnumber = new Array();
+						for (var i = 0; i < rows.length; i++) {
+							var row = rows[i];
+							userenrollnumber.push(row.userenrollnumber);
+						}
+						values['userenrollnumber'] = userenrollnumber;
+						$.post('noneworking?updatemanyuserabsent', JSON.stringify(values),
+							function (data) {
+								closeProgress();
+								var data = eval('(' + data + ')');
+								if (data.state == "success") {
+									message($.i18n('doneupdate'));
+								} else {
+									message(data.message);
+								}
+
+							}
+						);
+					}
+				}
+			}, {
+				text: $.i18n('exit'),
+				iconCls: 'icon-exit',
+				width: 100,
+				handler: function () {
+					$('#indexWindow1').dialog('close');
+				}
+			}],
+			onLoad: function () {
+				//var AreaID = $('#cbAreaAbsence').combobox('getValue');
+				var sl = $('#dlAreaAbsence').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				$('#tbUsersSet').datagrid({
+					title: $.i18n('user'),
+					fit: true,
+					border: false,
+					pagination: true,
+					pageList: [10, 15, 20, 25, 30, 50, 100, 200, 500, 1000, 2000, 3000, 5000],
+					pageSize: 30,
+					singleSelect: true,
+					checkOnSelect: false,
+					selectOnCheck: false,
+					striped: true,
+					queryParams: {
+						areaid: AreaID,
+						useridd: node.id,
+						userenrollnumber: 0,
+					},
+					url: 'user?getusers',
+					method: 'POST',
+					loader: function (param, success, error) {
+						var opts = $(this).datagrid('options');
+						loaderWSE(opts, param, success, error)
+					},
+					sortName: 'userfullcode',
+					frozenColumns: [[
+						{ field: 'chk', checkbox: true },
+						{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+					]],
+					columns: [[
+						{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+						{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true }
+					]],
+				});
+				var flag; var Absent;
+				$('#cbAsentCode').combobox({
+					label: $.i18n('chooseabsence'),
+					labelWidth: 100,
+					valueField: 'AbsentCode',
+					textField: 'AbsentDescription',
+					url: 'noneworking?getusedabsent',
+					required: true,
+					width: 300,
+					loadFilter: function (data) {
+						Absent = data;
+						if (data.length <= 0) {
+							flag = 0;
+						} else {
+							flag = 1
+						}
+						return data;
+					},
+					onLoadSuccess: function () {
+						if (flag == 1) {
+							$('#cbAsentCode').combobox('setValue', Absent[0].AbsentCode);
+						}
+					}
+				});
+				$('#beginningdate').datebox({
+					required: true,
+					formatter: mydateformatter,
+					parser: mydateparser,
+					label: $.i18n('selectdate'),
+					labelWidth: 100,
+					width: 300
+				});
+			}
+		}).dialog('open').dialog('refresh', 'SubPages/AddAbsents.html').dialog('center');
+	}
+	$('#addOtherAbsence').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#deleteOtherAbsence').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#tbOtherAbsents').datagrid({
+		title: $.i18n('anotherabsence'),
+		fit: true,
+		rownumbers: true,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		toolbar: '#tooltbOtherAbsent',
+		method: 'POST',
+		queryParams: {
+			UserEnrollNumber: 0,
+			month: 0,
+			year: 0
+		},
+		url: 'noneworking?getuserotherabsent',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		columns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber') },
+			{ field: 'timedate', title: $.i18n('date') },
+			{ field: 'absentsymbol', title: $.i18n('symbol','') },
+			{ field: 'workingday', title: $.i18n('workingday') },
+			{ field: 'absentdescription', title: $.i18n('description') }
+		]]
+	});
+	function openAddOtherAbsent() {
+		var row = $('#tbUserAbsence').datagrid('getSelected');
+		if (!row) return;
+		$('body').append('<div id="indexWindow1" style="display:none;overflow:hidden;padding:5px"></div>');
+		$('#indexWindow1').dialog({
+			width: 350,
+			height: 200,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-absent',
+			title: $.i18n('addanotherabsence'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			constrain: true,
+			extractor: function (data) {
+
+				data = $.fn.panel.defaults.extractor(data);
+				return data;
+
+			},
+			onClose: function () {
+				$('#indexWindow1').remove();
+			},
+			buttons: [{
+				text: $.i18n('ok'),
+				iconCls: 'icon-ok',
+				width: 100,
+				handler: function () {
+					var isValid = $('#frmAddAbsence').form('validate');
+					if (isValid) {
+
+						var values = {};
+						$.each($('#frmAddAbsence').serializeArray(), function (i, field) {
+							values[field.name] = field.value;
+						});
+						values['userenrollnumber'] = row.userenrollnumber;
+						$.post('noneworking?updateotherabsent', JSON.stringify(values),
+							function (data) {
+								var data = eval('(' + data + ')');
+								if (data.state == 'error') {
+									message(data.message);
+								} else {
+									//message(data.message);
+									$('#indexWindow1').dialog('close');
+									$('#tbOtherAbsents').datagrid('reload');
+								}
+
+							}
+						);
+					}
+				}
+			}, {
+				text: $.i18n('exit'),
+				iconCls: 'icon-exit',
+				width: 100,
+				handler: function () {
+					$('#indexWindow1').dialog('close');
+				}
+			}],
+			onLoad: function () {
+				var flag; var Absent;
+				$('#cbAsentCode').combobox({
+					label: $.i18n('chooseabsence'),
+					labelWidth: 100,
+					valueField: 'AbsentCode',
+					textField: 'AbsentDescription',
+					url: 'noneworking?getusedabsent',
+					required: true,
+					width: 300,
+					loadFilter: function (data) {
+						Absent = data;
+						if (data.length <= 0) {
+							flag = 0;
+						} else {
+							flag = 1
+						}
+						return data;
+					},
+					onLoadSuccess: function () {
+						if (flag == 1) {
+							$('#cbAsentCode').combobox('setValue', Absent[0].AbsentCode);
+						}
+					}
+				});
+				$('#beginningdate').datebox({
+					required: true,
+					formatter: mydateformatter,
+					parser: mydateparser,
+					label: $.i18n('selectdate'),
+					labelWidth: 100,
+					width: 300
+				});
+				$('#cbWorkingday').combobox({
+					label: $.i18n('workingday'),
+					labelWidth: 100,
+					required: true,
+					width: 300
+				});
+
+			}
+		}).dialog('open').dialog('refresh', 'SubPages/AddOtherAbsent.html').dialog('center');
+	}
+	function deleteOtherAbsent() {
+		try {
+			var absentRow = $('#tbOtherAbsents').datagrid('getChecked');
+			if (absentRow.length > 0) {
+				$.messager.confirm($.i18n('mytitle'), $.i18n('deleteanotherabsence_ask'), function (r) {
+					if (r) {
+						var userenrollnumber = new Array();
+						var timedate = new Array();
+						for (i = 0; i < absentRow.length; i++) {
+							userenrollnumber.push(absentRow[i].userenrollnumber);
+							timedate.push(absentRow[i].timedate);
+						}
+						var url = 'noneworking?deleteotherabsent';
+						var myJsonString = { userenrollnumber: userenrollnumber, timedate: timedate, absentcode: 'A01' };
+						$.post(url, JSON.stringify(myJsonString), function (data) {
+							data = eval('(' + data + ')');
+							if (data.state == "success") {
+								for (i = 0; i < absentRow.length; i++) {
+									var index = $('#tbOtherAbsents').datagrid('getRowIndex', absentRow[i]);
+									$('#tbOtherAbsents').datagrid('deleteRow', index);
+								}
+								//message(data.message);
+
+							} else {
+								message(data.message);
+							}
+						});
+					}
+				});
+			} else {
+
+			}
+
+		} catch (err) { message(err); }
+	}
+	function ExportAbsence() {
+		var url = 'export?id=exportabsence&locale=' + i18n.locale;
+		GetExportAbsence(url);
+	}
+	function GetExportAbsence(url) {
+		try {
+			var node = $('#treeDeptAbsence').tree('getSelected');
+			if (!node) {
+				message($.i18n('choosedept'));
+				return;
+			}
+			if (node.id == 0) {
+				message($.i18n('choosedept'));
+				return;
+			}
+			showProgress();
+			var values = { deptid:node.id };
+			$.post(url, JSON.stringify(values), function (res) {
+				res = eval('(' + res + ')');
+				closeProgress();
+				if (res.state == 'success') {
+					document.getElementById('exp_iframe').src = res.message;
+				} else {
+					$.messager.alert($.i18n('mytitle'), res.message, 'info');
+				}
+			});
+		} catch (err) { closeProgress(); message(err) }
+	}
+</script>

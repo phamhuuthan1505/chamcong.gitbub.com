@@ -1,0 +1,309 @@
+﻿@charset "utf-8";
+/* CSS Document */
+.icon-tree-root{
+	background:url('wseicons/tree-r.png') no-repeat center center;
+}
+.icon-tree-new{
+	background:url('wseicons/tree-new.png') no-repeat center center;
+}
+.icon-dept-move{
+	background:url('wseicons/dept_move.png') no-repeat center center;
+}
+.icon-next{
+	background:url('wseicons/next.png') no-repeat center center;
+}
+.icon-home{
+	background:url('wseicons/home.png') no-repeat center center;
+}
+.icon-title{
+	background:url('wseicons/title.png') no-repeat center center;
+}
+.icon-large-title{
+	background:url('wseicons/large_title.png') no-repeat center center;
+}
+.icon-dept{
+	background:url('wseicons/dept.png') no-repeat center center;
+}
+.icon-large-dept{
+	background:url('wseicons/large_dept.png') no-repeat center center;
+}
+.icon-user{
+	background:url('wseicons/user.png') no-repeat center center;
+}
+.icon-large-user{
+	background:url('wseicons/large_user.png') no-repeat center center;
+}
+.icon-device{
+	background:url('wseicons/device.png') no-repeat center center;
+}
+.icon-large-device{
+	background:url('wseicons/large_device.png') no-repeat center center;
+}
+.icon-data{
+	background:url('wseicons/data.png') no-repeat center center;
+}
+.icon-inout{
+	background:url('wseicons/inout.png') no-repeat center center;
+}
+.icon-attsetting{
+	background:url('wseicons/attsetting.png') no-repeat center center;
+}
+.icon-shift{
+	background:url('wseicons/shift.png') no-repeat center center;
+}
+.icon-large-shift{
+	background:url('wseicons/large_shift.png') no-repeat center center;
+}
+.icon-large-schedule{
+	background:url('wseicons/large_schedule.png') no-repeat center center;
+}
+.icon-schedule{
+	background:url('wseicons/schedule.png') no-repeat center center;
+}
+.icon-large-schedule-arrange{
+	background:url('wseicons/large_schedule_arrange.png') no-repeat center center;
+}
+.icon-schedule-arrange{
+	background:url('wseicons/schedule_arrange.png') no-repeat center center;
+}
+.icon-attcal{
+	background:url('wseicons/attcal.png') no-repeat center center;
+}
+.icon-attview{
+	background:url('wseicons/attview.png') no-repeat center center;
+}
+.icon-fp-reader{
+	background:url('wseicons/fp_reader.png') no-repeat center center;
+}
+.icon-text{
+	background:url('wseicons/text.png') no-repeat center center;
+}
+.icon-large-text{
+	background:url('wseicons/large_text.png') no-repeat center center;
+}
+.icon-area{
+	background:url('wseicons/area.png') no-repeat center center;
+}
+.icon-large-area{
+	background:url('wseicons/large_area.png') no-repeat center center;
+}
+.icon-monitor{
+	background:url('wseicons/monitor.png') no-repeat center center;
+}
+.icon-large-monitor{
+	background:url('wseicons/large_monitor.png') no-repeat center center;
+}
+.icon-attdownload{
+	background:url('wseicons/attdownload.png') no-repeat center center;
+}
+.icon-large-attdownload{
+	background:url('wseicons/large_attdownload.png') no-repeat center center;
+}
+.icon-userdownload{
+	background:url('wseicons/userdownload.png') no-repeat center center;
+}
+.icon-userupload{
+	background:url('wseicons/userupload.png') no-repeat center center;
+}
+.icon-photodownload{
+	background:url('wseicons/photodownload.png') no-repeat center center;
+}
+.icon-restart{
+	background:url('wseicons/restart.png') no-repeat center center;
+}
+.icon-cmd{
+	background:url('wseicons/cmd.png') no-repeat center center;
+}
+.icon-cmdUser{
+	background:url('wseicons/cmdUser.png') no-repeat center center;
+}
+.icon-symReport{
+	background:url('wseicons/symReport.png') no-repeat center center;
+}
+.icon-absentSym{
+	background:url('wseicons/absentSym.png') no-repeat center center;
+}
+.icon-weekend{
+	background:url('wseicons/weekend.png') no-repeat center center;
+}
+.icon-rose{
+	background:url('wseicons/rose.png') no-repeat center center;
+}
+.icon-holiday{
+	background:url('wseicons/holiday.png') no-repeat center center;
+}
+.icon-report{
+	background:url('wseicons/report.png') no-repeat center center;
+}
+.icon-large-report{
+	background:url('wseicons/large_report.png') no-repeat center center;
+}
+.icon-useracc{
+	background:url('wseicons/useracc.png') no-repeat center center;
+}
+.icon-data-edit{
+	background:url('wseicons/data_edit.png') no-repeat center center;
+}
+.icon-data-delete{
+	background:url('wseicons/data_delete.png') no-repeat center center;
+}
+.icon-data-add{
+	background:url('wseicons/data_add.png') no-repeat center center;
+}
+.icon-absent{
+	background:url('wseicons/absent.png') no-repeat center center;
+}
+.icon-attphoto{
+	background:url('wseicons/attphoto.png') no-repeat center center;
+}
+.icon-get-info{
+	background:url('wseicons/get_info.png') no-repeat center center;
+}
+.icon-login{
+	background:url('wseicons/login.png') no-repeat center center;
+}
+.icon-large-login{
+	background:url('wseicons/large_login.png') no-repeat center center;
+}
+.icon-wman{
+	background:url('wseicons/wman.png') no-repeat center center;
+}
+.icon-large-logout{
+	background:url('wseicons/large_logout.png') no-repeat center center;
+}
+.icon-logout{
+	background:url('wseicons/logout.png') no-repeat center center;
+}
+.icon-switchpass{
+	background:url('wseicons/switchpass.png') no-repeat center center;
+}
+.icon-arrow-down{
+	background:url('wseicons/arrow_down.png') no-repeat center center;
+}
+.icon-devconn{
+	background:url('wseicons/devconn.png') no-repeat center center;
+}
+.icon-devmanage{
+	background:url('wseicons/devmanage.png') no-repeat center center;
+}
+.icon-excel{
+	background:url('wseicons/excel.png') no-repeat center center;
+}
+.icon-agent{
+	background:url('wseicons/agent.png') no-repeat center center;
+}
+.icon-expand{
+	background:url('wseicons/expand.png') no-repeat center center;
+}
+.icon-collapse{
+	background:url('wseicons/collapse.png') no-repeat center center;
+}
+.icon-user-list{
+	background:url('wseicons/user-list.png') no-repeat center center;
+}
+.icon-event{
+	background:url('wseicons/event.png') no-repeat center center;
+}
+.icon-unlock{
+	background:url('wseicons/unlock.png') no-repeat center center;
+}
+.icon-unlockman{
+	background:url('wseicons/unlockman.png') no-repeat center center;
+}
+.icon-unlockgreen{
+	background:url('wseicons/unlockgreen.png') no-repeat center center;
+}
+.icon-devonline {
+	background: url('wseicons/bulbOnline.png') no-repeat center center;
+}
+
+.icon-devoffline {
+	background: url('wseicons/bulbOffline.png') no-repeat center center;
+}
+.icon-devpause {
+	background: url('wseicons/bulbPause.png') no-repeat center center;
+}
+.icon-userbydevice {
+	background: url('wseicons/userbydevice.png') no-repeat center center;
+}
+.icon-syncgroup {
+	background: url('wseicons/syncgroup.png') no-repeat center center;
+}
+.icon-inputvalid {
+	background: url('wseicons/inputvalid.png') no-repeat center center;
+}
+.icon-inputhistory1 {
+	background: url('wseicons/inputhistory1.png') no-repeat center center;
+}
+.icon-inputhistory2 {
+	background: url('wseicons/inputhistory2.png') no-repeat center center;
+}
+.icon-deviceinfo {
+	background: url('wseicons/deviceinfo.png') no-repeat center center;
+}
+.icon-school {
+	background: url('wseicons/school.png') no-repeat center center;
+}
+.icon-downloadcmd {
+	background: url('wseicons/downloadcmd.png') no-repeat center center;
+}
+.icon-info {
+	background: url('wseicons/info.png') no-repeat center center;
+}
+.icon-setting {
+	background: url('wseicons/setting.png') no-repeat center center;
+}
+.icon-file-delete {
+	background: url('wseicons/file_delete.png') no-repeat center center;
+}
+.icon-delete {
+	background: url('wseicons/delete.png') no-repeat center center;
+}
+.icon-users-remove {
+	background: url('wseicons/users_remove.png') no-repeat center center;
+}
+.icon-exit {
+	background: url('wseicons/exit.png') no-repeat center center;
+}
+.icon-rule {
+	background: url('wseicons/rule.png') no-repeat center center;
+}
+.icon-annualday {
+	background: url('wseicons/annualday.png') no-repeat center center;
+}
+.icon-management {
+	background: url('wseicons/management.png') no-repeat center center;
+}
+.icon-useraccount {
+	background: url('wseicons/useraccount.png') no-repeat center center;
+}
+.icon-lang {
+	background: url('wseicons/lang.png') no-repeat center center;
+}
+.icon-en {
+	background: url('wseicons/en.png') no-repeat center center;
+}
+.icon-vi {
+	background: url('wseicons/vn.png') no-repeat center center;
+}
+.icon-fp {
+	background: url('wseicons/fp.png') no-repeat center center;
+}
+.icon-face {
+	background: url('wseicons/face.png') no-repeat center center;
+}
+.icon-palm {
+	background: url('wseicons/palm.png') no-repeat center center;
+}
+.icon-import-excel {
+	background: url('wseicons/import_excel.png') no-repeat center center;
+}
+.icon-enrollremotely {
+	background: url('wseicons/enrollremotely.png') no-repeat center center;
+}
+.icon-theme {
+	background: url('wseicons/theme.png') no-repeat center center;
+}
+.icon-att {
+	background: url('wseicons/att.png') no-repeat center center;
+}

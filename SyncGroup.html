@@ -1,0 +1,251 @@
+﻿<div id="layoutSyncGroup" class="easyui-layout wse-layout" data-options="fit:true">
+    <div data-options="region:'west',split:true" style="width: 280px;padding:3px">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'north',border:false" style="height:32px;">
+                <a id="addSyncGroup"  onclick="AddSyncGroup()">Thêm mới</a>
+                <a id="deleteSyncGroup" onclick="DeleteSyncGroup()">Xóa</a>
+            </div>
+            <div data-options="region:'center',border:false" style="padding:5px;">
+                <ul id="SyncGroupTree"></ul>
+            </div>
+           
+        </div>
+    </div>
+    <div data-options="region:'center',border:true" style="padding:3px">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'north',border:false" style="height:32px;">
+                <a id="addSyncDev" onclick="openMachineArr()">Chọn thiết bị</a>
+                <a id="deleteSyncDev" onclick="DeleteMachineAr()">Loại bỏ thiết bị</a>
+            </div>
+            <div data-options="region:'center',border:false" style="padding:5px;">
+                <ul id="SyncGroupArrTree"></ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+	
+	$('#layoutSyncGroup').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('groupname'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+    });
+	$('#layoutSyncGroup').layout('panel', 'center').panel({
+		title: $.i18n('device'),
+		border: true
+	});
+	$('#addSyncGroup').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+        text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+    $('#deleteSyncGroup').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+        text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+    });
+    $('#addSyncDev').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+        text: $.i18n('add'),
+		disabled: MenuItem.IsEdit() ? false : true
+	});
+    $('#deleteSyncDev').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+        text: $.i18n('delete'),
+		disabled: MenuItem.IsEdit() ? false : true
+	});
+    $('#SyncGroupTree').tree({
+			url: 'syncgroup?getsyncgroups',
+			lines:true,
+			checkbox:false,
+			onClick: function(node){
+                if (node.id != 0) {
+                    $('#SyncGroupArrTree').tree({
+                        lines: true,
+                        url: 'syncgroup?getmachinesyncgroup',
+                        queryParams: { SyncGroupID: node.id },
+                        method: 'POST',
+                        loader: function (param, success, error) {
+                            var opts = $(this).tree('options');
+                            loaderWSE(opts, param, success, error)
+                        }
+                    });
+                }
+			}
+
+		});
+    function AddSyncGroup(){
+
+
+    var dlg = $.messager.prompt({
+    iconCls: 'icon-contacts',
+		title: $.i18n('addsyncgroup'),
+		msg: $.i18n('inputgroupname'),
+    shadow: false,
+    buttons:[{
+        plain: true,
+        iconCls: 'icon-save',
+        text: $.i18n('add'),
+        width:100,
+        onClick: function(){
+        	var opts = dlg.dialog('options');
+        	var value = dlg.find('.messager-input').val();
+        	dlg.dialog('close');
+        	opts.fn(value);
+        }
+    },{
+            plain: true,
+			width: 100,
+        iconCls: 'icon-cancel',
+			text: $.i18n('cancel'),
+        onClick: function(){
+        	var opts = dlg.dialog('options');
+        	dlg.dialog('close');
+        	opts.fn();
+        }
+    }],
+    fn: function(r){
+        if (r) {
+            var url ='syncgroup?addsyncgroup';
+             var doc ={SyncGroupName:r}
+            $.post(url,
+				JSON.stringify(doc),
+				function(data){
+					var data = eval('('+data+')');
+					if (data.state=="error"){
+							message(data.message);
+
+					}else{
+						$('#SyncGroupTree').tree('reload');
+					}
+
+			});
+        }
+    }
+
+});
+}
+        function DeleteSyncGroup(){
+            var node = $('#SyncGroupTree').tree('getSelected');
+            if (node){
+                if (node.id != 0) {
+                    $.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete', node.text), function (r) {
+                        if (r) {
+                            var data = { SyncGroupID: node.id };
+                            $.post('syncgroup?deletesyncgroup',
+                                JSON.stringify(data),
+                                function (data) {
+                                    var data = eval('(' + data + ')');
+                                    if (data.state == "success") {
+                                        $('#SyncGroupArrTree').tree('reload');
+                                        $('#SyncGroupTree').tree('reload');
+
+                                    } else {
+                                        message(data.message);
+                                    }
+
+                                });
+                        }
+                    });
+                } 
+            }
+        }
+        function openMachineArr() {
+            var node = $('#SyncGroupTree').tree('getSelected');
+            if (!node) return;
+            if (node.id == 0) return;
+            $('body').append('<div id="indexWindow" style="display:none;overflow:hidden"></div>');
+            $('#indexWindow').dialog({
+                width: 350,
+				height: window.innerHeight - 200,
+                modal: true,
+                closed: true,
+                iconCls: 'icon-fp-reader',
+                title: $.i18n('selectdevice'),
+                collapsible: false,
+                minimizable: false,
+                maximizable: false,
+                constrain: true,
+                extractor: function (data) {
+
+                    data = $.fn.panel.defaults.extractor(data);
+                    return data;
+
+                },
+                onClose: function () {
+                    $('#indexWindow').remove();
+                },
+                buttons: [{
+					text: $.i18n('ok'),
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        var nodes = $('#MachineArrSyncTree').tree('getChecked');
+                        var ids = new Array();
+                        var sns = new Array();
+                        for (var i = 0; i < nodes.length; i++) {
+                            if (nodes[i].levelid == 2) {
+                                ids.push(nodes[i].id);
+                                sns.push(nodes[i].code)
+                            }
+                        }
+                        if (ids.length == 0) {
+							$.messager.alert($.i18n('mytitle'), $.i18n('choosedevice'), 'info');
+                            return;
+                        }
+                        var data = { SyncGroupID:node.id, ids:ids,sns:sns };
+                        $.post("syncgroup?arrmachines", JSON.stringify(data),
+                            function (data) {
+                                var data = eval('(' + data + ')');
+                                if (data.state == "success") {
+                                    $('#SyncGroupArrTree').tree('reload');
+                                    $('#indexWindow').dialog('close');
+                                } else {
+                                    message(data.message);
+                                }
+                            }
+                        );
+                    }
+                }, {
+						text: $.i18n('cancel'),
+                        iconCls: 'icon-delete',
+                    handler: function () {
+                        $('#indexWindow').dialog('close');
+                    }
+                }]
+            }).dialog('open').dialog('refresh', 'SubPages/MachineArrSync.html').dialog('center');
+        }
+        function DeleteMachineAr() {
+            var node = $('#SyncGroupArrTree').tree('getSelected');
+            if (!node) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedevice'), 'info');
+                return;
+            }
+            if (node.levelid == 0) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedevice'), 'info');
+                return;
+            }
+			$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete', node.text) , function (r) {
+                if (r) {
+                    var data = { sn: node.code };
+                    $.post('syncgroup?deletearrsyncgroup',
+                        JSON.stringify(data),
+                        function (data) {
+                            var data = eval('(' + data + ')');
+                            if (data.state == "success") {
+                                $('#SyncGroupArrTree').tree('reload');
+                            } else {
+                                message(data.message);
+                            }
+
+                        });
+                }
+            });
+        }
+</script>

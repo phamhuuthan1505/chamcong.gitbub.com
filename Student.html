@@ -1,0 +1,516 @@
+﻿<div class="easyui-layout wse-layout" data-options="fit:true">
+	<div data-options="region:'west',collapsible:true,border:true,split:true,title:'Cây quản lý'" style="width:320px;padding:3px;overflow:hidden">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:68px;">
+				<div><input id="cbAreaIDUser" style="width:306px;margin-bottom:3px"/></div>
+				<div style="margin-top:3px"><input id="ftDeptUser" style="width:100%"></div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:5px;">
+				<ul id="treeUserDept"></ul>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false,minWidth:0">
+		<table id="tbUser"></table>
+	</div>
+</div>
+<div id="toolUserDept" style="background-color:#F5F5F5;margin:2px 0 2px 2px;">
+	<a class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newItemUser()">Thêm mới</a>
+	<a class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="deleteItemUser()">Xóa</a>
+	<span class="button-sep"></span>
+	<a class="easyui-linkbutton" iconCls="icon-dept-move" plain="true" onclick="showDeptUserW()">Chuyển lớp</a>
+	<span class="button-sep"></span>
+</div>
+<div id="deptUserW" class="easyui-dialog" title="Chọn một lớp"
+	 data-options="
+      modal:true,
+      closed:true,
+      iconCls:'icon-dept-move',
+      buttons:moveUserButtons,
+      collapsible:false,
+      minimizable:false,maximizable:false,resizable:true,
+      toolbar:'#dlg-user-toolbar'
+
+      "
+	 style="width:406px;height:520px;padding:3px">
+	<div class="easyui-panel" style="width:385px;height:100%;">
+		<ul id="deptM" class="easyui-tree"></ul>
+	</div>
+</div>
+<div id="dlg-user-toolbar" style="padding:5px;">
+	<input id="cbAreaIDChangeDept" class="easyui-combobox" style="width:270px;" data-options="label:'Địa bàn:',labelWidth:60,value:0" />
+	<span class="button-sep"></span>
+	<a class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-collapse'" onclick="javascript:$('#deptM').tree('collapseAll');"></a>
+	<a class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-expand'" onclick="javascript:$('#deptM').tree('expandAll');"></a>
+
+</div>
+<script type="text/javascript">
+	var DeptData = ["Nhân viên mới"];
+
+	$('#treeUserDept').tree({
+		fit: true,
+		lines: true,
+		url: 'departmentnew?getuseddepartment',
+		method: 'POST',
+		queryParams: {
+			areaid: 0
+		},
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onClick: function (node) {
+			var AreaID = $('#cbAreaIDUser').combobox('getValue');
+			$('#tbUser').datagrid({
+				queryParams: {
+					areaid: AreaID,
+					useridd: node.id,
+					userenrollnumber: 0,
+				},
+				url: 'user?getusers',
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).datagrid('options');
+					loaderWSE(opts, param, success, error)
+				}
+
+			});
+		}
+	});
+	$('#ftDeptUser').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeUserDept').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: 'Nhập tên để lọc!',
+		onChange: function (newValue, oldValue) {
+			$('#treeUserDept').tree('doFilter', newValue);
+		}
+	});
+	$('#cbAreaIDUser').combobox({
+		url: 'areas?getusedarea',
+		panelHeight: 250,
+		valueField: 'id',
+		textField: 'text',
+		value: 0,
+		label: 'Địa bàn:',
+		labelWidth: 60,
+		onSelect: function (record) {
+			$.post("departmentnew?getdeptpartmentbyarea",
+				JSON.stringify({ areaid: record.id })).done(function (data) {
+					DeptData = eval('(' + data + ')');
+					$('#treeUserDept').tree({
+						queryParams: { areaid: record.id },
+						url: 'departmentnew?getuseddepartment',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).tree('options');
+							loaderWSE(opts, param, success, error)
+						}
+
+					});
+				});
+		}
+	});
+	$.get("departmentnew?getselectdept").done(function (data) {
+		DeptData = eval('(' + data + ')');
+		$('#tbUser').datagrid({
+			fit: true,
+			fitColumns: true,
+			striped: true,
+			toolbar: '#toolUserDept',
+			loadMsg: 'Đang tải ...',
+			pagination: true,
+			pageList: [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000],
+			pageSize: 30,
+			singleSelect: true,
+			checkOnSelect: false,
+			selectOnCheck: false,
+			rownumbers: true,
+			sortName: 'userenrollnumber',
+			queryParams: {
+				areaid: 0,
+				useridd: 0,
+				userenrollnumber: 0,
+			},
+			url: 'user?getusers',
+			method: 'POST',
+			loader: function (param, success, error) {
+				var opts = $(this).datagrid('options');
+				loaderWSE(opts, param, success, error)
+			},
+			frozenColumns: [[
+				{ field: 'chk', checkbox: true },
+				{ field: 'userenrollnumber', title: 'Mã đăng ký', sortable: true }
+			]],
+			columns: [[
+				{ field: 'userfullname', title: 'Tên học sinh', sortable: true },
+				{ field: 'gender', title: 'Giới tính', formatter: usersex, sortable: true },
+				{ field: 'useridd', title: 'Tên lớp', formatter: DeptName },
+				{ field: 'gradeid', title: 'Tên khối', formatter: DeptName },
+				{ field: 'schoolid', title: 'Tên trường', formatter: DeptName },
+				{ field: 'userenrollname', title: 'Tên trên thiết bị' },
+				{ field: 'userhireday', title: 'Ngày tham gia' },
+				{ field: 'contactername', title: 'Tên người liên hệ' },
+				{ field: 'conacterphone', title: 'Số điện thoại người liên hệ' }
+			]],
+			view: detailview,
+			detailFormatter: function (index, row) {
+				return '<div class="ddv" style="padding:5px 0"></div>';
+			},
+			onExpandRow: function (index, row) {
+
+				var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+				ddv.panel({
+					height: 420,
+					border: false,
+					cache: false,
+					href: 'UserDetails.html',
+					onLoad: function () {
+						$('#tbUser').datagrid('clearSelections');
+						$('#tbUser').datagrid('fixDetailRowHeight', index);
+						$('#tbUser').datagrid('selectRow', index);
+						$('#tbUser').datagrid('getRowDetail', index).find('form').form('load', row);
+						if (row.isNewRecord) {
+							SetSchoolInNew(index);
+						} else {
+							SetSchoolInEdit(index, row);
+						}
+
+					},
+				});
+				$(this).datagrid('fixDetailRowHeight', index);
+			}
+		});
+	});
+	function SetSchoolInNew(index) {
+		var areaid = $('#cbAreaIDUser').combobox('getValue');
+		var cbschoolname = $('#tbUser').datagrid('getRowDetail', index).find('#cbschoolname');
+		var cbgradename = $('#tbUser').datagrid('getRowDetail', index).find('#cbgradename');
+		var cbclassname = $('#tbUser').datagrid('getRowDetail', index).find('#cbclassname');
+		$(cbschoolname).combobox({
+			url: 'departmentnew?getusedschool',
+			panelHeight: 200,
+			valueField: 'id',
+			textField: 'text',
+			queryParams: { areaid: areaid },
+			loader: function (param, success, error) {
+				var opts = $(this).combobox('options');
+				loaderWSE(opts, param, success, error)
+			},
+			onSelect: function (record) {
+				$(cbgradename).combobox({
+					url: 'departmentnew?getusedgrade',
+					panelHeight: 200,
+					valueField: 'id',
+					textField: 'text',
+					queryParams: { relationid: record.id },
+					loader: function (param, success, error) {
+						var opts = $(this).combobox('options');
+						loaderWSE(opts, param, success, error)
+					},
+					onSelect: function (record) {
+						$(cbclassname).combobox({
+							url: 'departmentnew?getusedclass',
+							panelHeight: 200,
+							valueField: 'id',
+							textField: 'text',
+							queryParams: { relationid: record.id },
+							loader: function (param, success, error) {
+								var opts = $(this).combobox('options');
+								loaderWSE(opts, param, success, error)
+							}
+
+						});
+					}
+				});
+				$(cbclassname).combobox({
+					url: 'departmentnew?getusedclass',
+					panelHeight: 200,
+					valueField: 'id',
+					textField: 'text',
+					queryParams: { relationid: -1 },
+					loader: function (param, success, error) {
+						var opts = $(this).combobox('options');
+						loaderWSE(opts, param, success, error)
+					}
+
+				});
+
+
+			}
+		});
+
+	}
+	function SetSchoolInEdit(index, row) {
+		var cbschoolname = $('#tbUser').datagrid('getRowDetail', index).find('#cbschoolname');
+		var cbgradename = $('#tbUser').datagrid('getRowDetail', index).find('#cbgradename');
+		var cbclassname = $('#tbUser').datagrid('getRowDetail', index).find('#cbclassname');
+		$(cbschoolname).combobox({
+			url: 'departmentnew?getdeptbyid',
+			panelHeight: 50,
+			valueField: 'id',
+			textField: 'text',
+			queryParams: { id: row.schoolid },
+			loader: function (param, success, error) {
+				var opts = $(this).combobox('options');
+				loaderWSE(opts, param, success, error)
+			},
+			onLoadSuccess: function () {
+				$(this).combobox('setValue', row.schoolid);
+			}
+		});
+		$(cbgradename).combobox({
+			url: 'departmentnew?getdeptbyid',
+			panelHeight: 50,
+			valueField: 'id',
+			textField: 'text',
+			queryParams: { id: row.gradeid },
+			loader: function (param, success, error) {
+				var opts = $(this).combobox('options');
+				loaderWSE(opts, param, success, error)
+			},
+			onLoadSuccess: function () {
+				$(this).combobox('setValue', row.gradeid);
+			}
+		});
+		$(cbclassname).combobox({
+			url: 'departmentnew?getdeptbyid',
+			panelHeight: 50,
+			valueField: 'id',
+			textField: 'text',
+			queryParams: { id: row.useridd },
+			loader: function (param, success, error) {
+				var opts = $(this).combobox('options');
+				loaderWSE(opts, param, success, error)
+			},
+			onLoadSuccess: function () {
+				$(this).combobox('setValue', row.useridd);
+			}
+		});
+	}
+	function cancelItemUser(index) {
+		try {
+			var row = $('#tbUser').datagrid('getRows')[index];
+			if (row.isNewRecord) {
+				$('#tbUser').datagrid('deleteRow', index);
+			} else {
+				$('#tbUser').datagrid('collapseRow', index);
+			}
+		} catch (err) { message(err) }
+	}
+	function newItemUser() {
+		try {
+			var index = $('#tbUser').datagrid('getRows').length - 1;
+			if (index > 0) {
+				var row = $('#tbUser').datagrid('getRows')[index]
+				if (row.isNewRecord) { return }
+			}
+
+			var node = $('#treeUserDept').tree('getSelected');
+			$('#tbUser').datagrid('appendRow', { isNewRecord: true, areaid: 0 });
+			index = $('#tbUser').datagrid('getRows').length - 1;
+			$('#tbUser').datagrid('expandRow', index);
+			$('#tbUser').datagrid('selectRow', index);
+
+		} catch (err) { message(err) }
+	}
+	function saveUser(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		saveItemUser(index);
+
+	}
+	function cancelUser(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		cancelItemUser(index);
+
+	}
+	function saveItemUser(index) {
+		try {
+			var areaid = $('#cbAreaIDUser').combobox('getValue');
+			var row = $('#tbUser').datagrid('getRows')[index];
+			var myForm = $('#tbUser').datagrid('getRowDetail', index).find('form');
+			var isValid = myForm.form('validate');
+			if (isValid) {
+				var values = {};
+				$.each(myForm.serializeArray(), function (i, field) {
+					values[field.name] = field.value;
+				});
+				values['areaid'] = areaid;
+				var url = row.isNewRecord ? 'user?adduser' : 'user?updateuser'
+				$.post(url, JSON.stringify(values),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "error") {
+							message(data.message);
+
+						} else {
+							data.isNewRecord = false;
+							$('#tbUser').datagrid('collapseRow', index);
+							$('#tbUser').datagrid('updateRow', {
+								index: index,
+								row: data
+							});
+
+						}
+
+					});
+			}
+
+		} catch (err) { message(err) }
+	}
+	function DeptName(value, row, index) {
+		try {
+			for (var i = 0; i < DeptData.length; i++) {
+
+				if (value == DeptData[i].id) {
+					return DeptData[i].text;
+				}
+			}
+			return '';
+		} catch (err) { message(err) }
+	}
+	function deleteItemUser() {
+		try {
+			var rows = $('#tbUser').datagrid('getChecked');
+			if (rows.length > 0) {
+				$.messager.confirm(myTitle, 'Bạn muốn xóa nhân viên đã chọn?', function (r) {
+					if (r) {
+						if (rows[rows.length - 1].isNewRecord) {
+							$('#tbUser').datagrid('deleteRow', $('#tbUser').datagrid('getRowIndex', rows[rows.length - 1]));
+							return;
+						}
+						showProgress();
+						var data = new Array();
+						for (var i = 0; i < rows.length; i++) {
+							var row = rows[i];
+							data.push(row.userenrollnumber);
+						}
+						var myJsonString = { count: rows.length, userenrollnumber: data };
+						$.post("user?deleteuser", JSON.stringify(myJsonString),
+							function (data, status) {
+								var data = eval('(' + data + ')');
+								closeProgress();
+								if (status == "success") {
+									if (data.state == "success") {
+										for (var i = 0; i < rows.length; i++) {
+											var row = rows[i];
+											$('#tbUser').datagrid('deleteRow', $('#tbUser').datagrid('getRowIndex', row));
+										}
+									} else {
+										message(data.message);
+									}
+								} else {
+									message('error');
+								}
+							}
+						);
+					}
+				});
+			}
+		} catch (err) { closeProgress();message(err) }
+	}
+	$('#cbAreaIDChangeDept').combobox({
+		url: 'areas?getusedarea',
+		panelHeight: 200,
+		valueField: 'id',
+		textField: 'text',
+		value: 0,
+		onSelect: function (record) {
+			$('#deptM').tree({
+				queryParams: { areaid: record.id },
+				url: 'departmentnew?getuseddepartment',
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+
+			});
+		}
+	});
+	function showDeptUserW() {
+		try {
+			var rows = $('#tbUser').datagrid('getChecked');
+			if (rows.length == 0) { return }
+			var AreaID = $('#cbAreaIDUser').combobox('getValue');
+			$('#deptUserW').window({
+				height: window.innerHeight - 100,
+				onBeforeOpen: function () {
+					$('#cbAreaIDChangeDept').combobox('setValue', AreaID);
+					$('#deptM').tree({
+						border: false,
+						fit: true,
+						lines: true,
+						queryParams: { areaid: AreaID },
+						url: 'departmentnew?getuseddepartment',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).tree('options');
+							loaderWSE(opts, param, success, error)
+						}
+
+					})
+				}
+			}).window('open').window('center');
+		} catch (err) { message(err) }
+	}
+	var moveUserButtons = [{
+		text: 'Thực hiện',
+		iconCls: 'icon-ok',
+		handler: function () {
+			moveUsers();
+		}
+	}, {
+		text: 'Hủy',
+		iconCls: 'icon-no',
+		handler: function () {
+			$('#deptUserW').dialog('close');
+		}
+		}];
+	function moveUsers() {
+		try {
+			var node = $('#deptM').tree('getSelected');
+			if (node) {
+				if (node.levelID == 0) return;
+				showProgress();
+				var data = new Array();
+				var rows = $('#tbUser').datagrid('getChecked');
+				for (var i = 0; i < rows.length; i++) {
+					var row = rows[i];
+					data.push(row.userenrollnumber);
+				}
+				var payload = { useridd: node.id, userenrollnumber: data }
+				$.post("user?updateuseridd", JSON.stringify(payload),
+					function (data, status) {
+
+						if (status == "success") {
+							var data = eval('(' + data + ')');
+							if (data.state == "success") {
+								$('#deptUserW').dialog('close');
+								for (var i = 0; i < rows.length; i++) {
+									var row = rows[i];
+									$('#tbUser').datagrid('deleteRow', $('#tbUser').datagrid('getRowIndex', row));
+								}
+							} else {
+								message(data.message);
+							}
+						} else {
+							message('error');
+						}
+						closeProgress();
+					}
+				);
+
+			}
+			else {
+				message('Xin chọn một lớp học!');
+			}
+		} catch (err) { message(err) }
+	}
+</script>

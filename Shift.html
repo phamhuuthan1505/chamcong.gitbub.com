@@ -1,0 +1,760 @@
+﻿<div id="layoutShift" class="easyui-layout wse-layout" data-options="fit:true">
+	<!--<div data-options="region:'north',border:false" style="height:38px;padding:2px">
+		<input id="cbAreaShift" class="easyui-combobox" />
+	</div>-->
+	<div data-options="region:'west',split:true" style="width:580px;">
+		<table id="tbShift"></table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div id="tabShift" class="easyui-tabs" style="width:100%;height:400px">
+			<div id="panelShiftDetails" title="Khai báo chung">
+				<table id="shiftdetails"></table>
+			</div>
+			<div id="panelDetailsLateEarly" title="Đi trễ, về sớm">
+				<table id="detailslateearly"></table>
+			</div>
+			<div id="panelDetailsOvertime" title="Thông số tăng ca">
+				<table id="detailsovertime"></table>
+			</div>
+			<div id="panelRound" title="Làm tròn">
+				<table id="tbRoundHour"></table>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="toolShift">
+	<a id="btAreaShift" />
+	<span class="button-sep"></span>
+	<a id="addShift" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newItemShift()">Thêm mới</a>
+	<a id="deleteShift" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="deleteShift()">Xóa</a>
+	<!--<span class="button-sep"></span>
+	<a id="reloadShift" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="javascript:$('#tbShift').datagrid('reload');">Tải lại</a>-->
+</div>
+<div id="mmAreaShift" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaShift">	</div>
+</div>
+<script type="text/javascript">
+	$(function () {
+		SelAreaObj.init();
+		loadShift(0);
+		//$('#cbAreaShift').combobox({
+		//	label: $.i18n('area'),
+		//	labelWidth: 60,
+		//	width: 390,
+		//	url: 'areas?getusedarea&locale=' + i18n.locale,
+		//	panelHeight: 200,
+		//	valueField: 'id',
+		//	textField: 'text',
+		//	value: 0,
+		//	onSelect: function (record) {
+		//		loadShift(record.id);
+		//	},
+		//});
+	});
+	$('#dlAreaShift').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonShift($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			loadShift(row.id);
+			loadMenuButtonShift(row.text);
+			$('#mmAreaShift').menu('hide');
+		}
+	});
+	function loadMenuButtonShift(txt) {
+		$('#btAreaShift').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaShift',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+	$('#layoutShift').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('shiftlist'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutShift').layout('panel', 'center').panel({
+		title: $.i18n('shiftdetail'),
+		border: true
+	});
+	var tabs = $('#tabShift').tabs({
+		fit: true,
+		border: false,
+		onSelect: function (title, index) {
+			if (index == 0) {
+				$('#shiftdetails').propertygrid();
+			} else if (index == 1) {
+				$('#detailslateearly').propertygrid();
+			} else if (index == 2) {
+				$('#detailsovertime').propertygrid();
+			//}else{
+			//	$('#detailsother').propertygrid();
+			}
+		}
+	}).tabs('tabs');
+	$('#tabShift').tabs('update', {
+		tab: tabs[0],
+		options: {
+			title: $.i18n('general'),
+		}
+	});
+	$('#tabShift').tabs('update', {
+		tab: tabs[1],
+		options: {
+			title: $.i18n('latein_earlyout'),
+		}
+	});
+	$('#tabShift').tabs('update', {
+		tab: tabs[2],
+		options: {
+			title: $.i18n('overtime'),
+		}
+	});
+	$('#tabShift').tabs('update', {
+		tab: tabs[3],
+		options: {
+			title: $.i18n('round'),
+		}
+	});
+	$('#addShift').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#deleteShift').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	//$('#reloadShift').linkbutton({
+	//	iconCls: 'icon-reload',
+	//	plain: true,
+	//	text: $.i18n('reload')
+	//});
+	
+	$('#tbShift').datagrid({
+		fit: true,
+		fitColumns: true,
+		border: false,
+		sortName: 'shiftcode',
+		pagination: true,
+		pageSize: 20,
+		columns: [[
+			{ field: 'shiftcode', title: $.i18n('code'), sortable: true },
+			{ field: 'areaid', title: $.i18n('area'), formatter: SelAreaObj.AreaName, width: 150 }
+		]],
+		rownumbers: true,
+		singleSelect: true,
+		toolbar: '#toolShift',
+		iconCls: 'icon-shift',
+		striped: true,
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 120,
+				border: false,
+				cache: false,
+				href: 'SubPages/ShiftName.html',
+				onLoad: function () {
+					$('#tbShift').datagrid('fixDetailRowHeight', index);
+					$('#tbShift').datagrid('selectRow', index);
+					SetShiftControls(row, index)
+
+					$('#tbShift').datagrid('getRowDetail', index).find('form').form('load', row);
+				}
+			});
+			$('#tbShift').datagrid('fixDetailRowHeight', index);
+
+		},
+		onClickRow: function (index, row) {
+			loadDetailsOfShift(row.shiftid);
+		}
+	});
+	$('#shiftdetails').propertygrid({
+		border: false,
+		width: 420,
+		scrollbarSize: 0,
+		showGroup: true,
+		columns: [[
+			{ field: 'name', title: $.i18n('description'), width: 80 },
+			{
+				field: 'value', title: $.i18n('value'), width: 30, formatter:
+					function (value, row) {
+						if (row.feildname == 'isnighttime') {
+							if (value == 'True') { return $.i18n('yes') } else { return $.i18n('no') }
+						} else {
+							return value;
+						}
+					}
+			}
+		]],
+		url: 'shift?shiftdetails&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).propertygrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onEndEdit: function (index, row) {
+			var rw = $('#tbShift').datagrid('getSelected');
+			if (!rw) {
+				message($.i18n('chooseshift'));
+				return;
+			}
+			if (row.feildname == 'isnighttime') {
+				if (row.value == true) {
+					row.value = 'True';
+				} else {
+					row.value = "False";
+				}
+			}
+			var url = 'shift?updateitemshift';
+			var data = { id: rw.shiftid, value: row.value, itemname: row.feildname };
+			$.post(url, JSON.stringify(data), function (res) {
+				var res = eval('(' + res + ')');
+				if (res.state == 'error') {
+					message(res.message);
+					return;
+				}
+			});
+		},
+		onBeforeEdit: function (index, row) {
+			return MenuItem.IsEdit();
+		},
+		onBeginEdit: function (index, row) {
+			if (row.feildname == 'isnighttime') {
+				var ed = $('#shiftdetails').propertygrid('getEditors', index)[0];
+				if (row.value == 'True') {
+					$(ed.target).switchbutton('check');
+				} else {
+					$(ed.target).switchbutton('uncheck');
+				}
+			}
+
+		},
+	});
+	$('#detailslateearly').propertygrid({
+		border: false,
+		width: 420,
+		scrollbarSize: 0,
+		showGroup: true,
+		columns: [[
+			{ field: 'name', title: $.i18n('description'), width: 80 },
+			{
+				field: 'value', title: $.i18n('value'), width: 30,
+				formatter: function (value, row) {
+					if (row.feildname == 'islate' || row.feildname == 'islategrace' || row.feildname == 'isearly' || row.feildname == 'isearlygrace') {
+						if (value == 'True') { return $.i18n('yes') } else { return $.i18n('no') }
+					} else if (row.feildname == 'roundtypelate' || row.feildname == 'roundtypeearly') {
+						if (value == "T") { return $.i18n('roundforward') } else { return $.i18n('roundback') }
+					} else {
+						return value;
+					}
+				}
+
+			}
+		]],
+		url: 'shift?detailslateearly&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).propertygrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onEndEdit: function (index, row) {
+			var value = row.value;
+			if (row.feildname == 'islate' || row.feildname == 'islategrace' || row.feildname == 'isearly' || row.feildname == 'isearlygrace') {
+				if (row.value == true) {
+					row.value = 'True';
+				} else {
+					row.value = "False";
+				}
+
+			}
+			var rw = $('#tbShift').datagrid('getSelected');
+			if (!rw) {
+				message($.i18n('chooseshift'));
+				return;
+			}
+			var url = 'shift?updateitemshift&locale=' + i18n.locale
+			var data = { id: rw.shiftid, value: row.value, itemname: row.feildname };
+			$.post(url, JSON.stringify(data), function (res) {
+				var data = eval('(' + res + ')');
+				if (data.state == 'error') {
+					message(data.message);
+					//$('#detailslateearly').propertygrid('reload',{});
+					return;
+				}
+			});
+
+		},
+		onBeginEdit: function (index, row) {
+			if (row.feildname == 'islate' || row.feildname == 'islategrace' || row.feildname == 'isearly' || row.feildname == 'isearlygrace') {
+
+				var ed = $('#detailslateearly').propertygrid('getEditors', index)[0];
+				if (row.value == 'True') {
+					$(ed.target).switchbutton('check');
+				} else {
+					$(ed.target).switchbutton('uncheck');
+				}
+			}
+
+		},
+		onBeforeEdit: function (index, row) {
+			return MenuItem.IsEdit();
+		}
+	});
+	$('#detailsovertime').propertygrid({
+		border: false,
+		width: 480,
+		scrollbarSize: 0,
+		showGroup: true,
+		columns: [[
+			{ field: 'name', title: $.i18n('description'), width: 80 },
+			{
+				field: 'value', title: $.i18n('value'), width: 15, 
+				formatter: function (value, row) {
+					if (row.feildname == 'IsBeforeOT' || row.feildname == 'IsAfterOT' || row.feildname == 'IsOT' || row.feildname == 'IsSunOT' || row.feildname == 'IsHolidayOT') {
+						if (value == 'True') { return $.i18n('yes') } else { return $.i18n('no') }
+					} else {
+						return value;
+					}
+
+				}
+			}
+		]],
+		url: 'shift?detailsovertime&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).propertygrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onEndEdit: function (index, row) {
+			var value = row.value;
+			if (row.feildname == 'IsBeforeOT' || row.feildname == 'IsAfterOT' || row.feildname == 'IsOT' || row.feildname == 'IsSunOT' || row.feildname == 'IsHolidayOT') {
+				if (row.value == true) {
+					row.value = 'True';
+				} else {
+					row.value = "False";
+				}
+
+			}
+			var rw = $('#tbShift').datagrid('getSelected');
+			if (!rw) {
+				message($.i18n('chooseshift'));
+				return;
+			}
+			var url = 'shift?updateitemshift'//&shiftid=' + rw.shiftid + '&value=' + value + '&itemname=' + row.feildname;
+			var data = { id: rw.shiftid, value: row.value, itemname: row.feildname };
+			$.post(url, JSON.stringify(data), function (res) {
+				var data = eval('(' + res + ')');
+				if (data.state == 'error') {
+					message(data.message);
+					//$('#detailsovertime').propertygrid('reload',{});
+					return;
+				}
+			});
+		},
+		onBeginEdit: function (index, row) {
+			if (row.feildname == 'IsBeforeOT' || row.feildname == 'IsAfterOT' || row.feildname == 'IsOT' || row.feildname == 'IsSunOT' || row.feildname == 'IsHolidayOT') {
+				var ed = $('#detailsovertime').propertygrid('getEditors', index)[0];
+				if (row.value == 'True') {
+					$(ed.target).switchbutton('check');
+				} else {
+					$(ed.target).switchbutton('uncheck');
+				}
+			}
+		},
+		onBeforeEdit: function (index, row) {
+			return MenuItem.IsEdit();
+		}
+	});
+	//$('#detailsother').propertygrid({
+	//	border: false,
+	//	width: 480,
+	//	scrollbarSize: 0,
+	//	showGroup: true,
+	//	columns: [[
+	//		{ field: 'name', title: $.i18n('description'), width: 80 },
+	//		{
+	//			field: 'value', title: $.i18n('value'), width: 15,
+	//			formatter: function (value, row) {
+	//				if (row.feildname == 'IsBeforeOT' || row.feildname == 'IsAfterOT' || row.feildname == 'IsOT' || row.feildname == 'IsSunOT' || row.feildname == 'IsHolidayOT') {
+	//					if (value == 'True') { return $.i18n('yes') } else { return $.i18n('no') }
+	//				} else {
+	//					return value;
+	//				}
+
+	//			}
+	//		}
+	//	]],
+	//	url: 'shift?detailsother&locale=' + i18n.locale,
+	//	method: 'POST',
+	//	loader: function (param, success, error) {
+	//		var opts = $(this).propertygrid('options');
+	//		loaderWSE(opts, param, success, error)
+	//	},
+	//});
+	function SetShiftControls(row, index) {
+		var saveShift = $('#tbShift').datagrid('getRowDetail', index).find('#saveShift');
+		$(saveShift).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsDelete() ? false : true
+		});
+		var cancelShift = $('#tbShift').datagrid('getRowDetail', index).find('#cancelShift');
+		$(cancelShift).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var cbAreaID = $('#tbShift').datagrid('getRowDetail', index).find('#cbAreaID');
+		$(cbAreaID).combobox({
+			label: $.i18n('area'),
+			labelWidth: 60,
+			data: SelAreaObj.AreaData(),
+			required: true,
+			panelHeight: 200,
+			valueField: 'id',
+			textField: 'text',
+			width:310
+		});
+		var shiftcode = $('#tbShift').datagrid('getRowDetail', index).find('#shiftcode');
+		$(shiftcode).textbox({
+			label: $.i18n('code'),
+			labelWidth: 60,
+			required: true,
+			width: 310
+		});
+
+	}
+	function loadShift(areaid) {
+		$('#tbShift').datagrid({
+			queryParams: { areaid: areaid },
+			method: 'POST',
+			url: 'shift?getshift',
+			loader: function (param, success, error) {
+				var opts = $(this).datagrid('options');
+				loaderWSE(opts, param, success, error)
+			}
+		});
+	}
+	function saveShiftName(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		saveItemShift(index);
+	}
+	function cancelShiftName(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbShift').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbShift').datagrid('deleteRow', index);
+		} else {
+			$('#tbShift').datagrid('collapseRow', index);
+		}
+	}
+	function newItemShift() {
+		var index = $('#tbShift').datagrid('getRows').length - 1;
+
+		if (index > 0) {
+			var row = $('#tbShift').datagrid('getRows')[index];
+			if (row.isNewRecord) { return }
+		}
+
+		$('#tbShift').datagrid('appendRow', { isNewRecord: true,areaid:0 });
+		index = $('#tbShift').datagrid('getRows').length - 1;
+		$('#tbShift').datagrid('expandRow', index);
+		$('#tbShift').datagrid('selectRow', index);
+	}
+	function saveItemShift(index) {
+		var row = $('#tbShift').datagrid('getRows')[index];
+		var url = row.isNewRecord ? 'shift?addshift' : 'shift?shiftcode';
+		var myForm = $('#tbShift').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (!isValid) return;
+		var values = {};
+		$.each(myForm.serializeArray(), function (i, field) {
+			values[field.name] = field.value;
+		});
+		values['shiftid'] = row.shiftid;
+		$.post(url, JSON.stringify(values),
+			function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "error") {
+					if (data.messagekey) {
+						var msg = $.i18n(data.messagekey, doc.areacode);
+						message(msg);
+					} else {
+						message(data.message);
+					}
+				} else {
+					data.isNewRecord = false;
+					$('#tbShift').datagrid('collapseRow', index);
+					$('#tbShift').datagrid('updateRow', {
+						index: index,
+						row: data
+					});
+					row = $('#tbShift').datagrid('getRows')[index];
+					loadDetailsOfShift(row.shiftid);
+				}
+
+			});
+
+
+	}
+	function deleteShift() {
+		var row = $('#tbShift').datagrid('getSelected');
+		if (row) {
+			if (row.isNewRecord) {
+				$('#tbShift').datagrid('deleteRow', $('#tbShift').datagrid('getRowIndex', row));
+				return;
+			}
+			$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete_item'), function (r) {
+				if (r) {			
+					var data = { shiftid: row.shiftid };
+					$.post('shift?deleteshift', JSON.stringify(data),
+						function (data, status) {
+							if (status == "success") {
+								var data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#tbShift').datagrid('deleteRow', $('#tbShift').datagrid('getRowIndex', row));
+									//$('#shiftdetails').propertygrid('reload', {});
+									//$('#detailslateearly').propertygrid('reload', {});
+									//$('#detailsovertime').propertygrid('reload', {});
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+						}
+					);
+				}
+			});
+		}
+	}
+	function loadDetailsOfShift(shiftid) {
+		$('#shiftdetails').propertygrid({
+			queryParams: { shiftid: shiftid }
+		});
+		$('#detailslateearly').propertygrid({
+			queryParams: { shiftid: shiftid }
+		});
+		$('#detailsovertime').propertygrid({
+			queryParams: { shiftid: shiftid }
+		});
+		$('#tbRoundHour').datagrid({
+			queryParams: {
+				shiftid: shiftid
+			}
+		});
+	}
+	var toolbarRH = [{
+		text: $.i18n('add'),
+		iconCls: 'icon-add',
+		handler: function () { openAddRoundHour(); }
+	}, {
+		text: $.i18n('delete'),
+		iconCls: 'icon-remove',
+		handler: function () {
+			var row = $('#tbRoundHour').datagrid('getSelected');
+			if (row) {
+				$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete_item'), function (r) {
+					if (r) {
+						var data = { id: row.id };
+						$.post('shift?deleteroundhour', JSON.stringify(data),
+							function (data, status) {
+								if (status == "success") {
+									data = eval('(' + data + ')');
+									if (data.state == "success") {
+
+										$('#tbRoundHour').datagrid('reload');
+
+									} else {
+										message(data.message);
+									}
+								} else {
+									message('error');
+								}
+							}
+						);
+					}
+				});
+			}
+		}
+	}];
+	$('#tbRoundHour').datagrid({
+		toolbar: toolbarRH,
+		singleSelect: true,
+		rownumbers: true,
+		border: false,
+		fit:true,
+		columns: [[
+			{ field: 'starth', title: $.i18n('fromhour') },
+			{ field: 'endh', title: $.i18n('tohour') },
+			{ field: 'roundedh', title: $.i18n('round') },
+			{ field: 'id', title: '', hidden: true }
+		]],
+		queryParams: {
+			shiftid: 0,
+		},
+		url: 'shift?getroundhour',
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 160,
+				border: false,
+				cache: false,
+				href: 'SubPages/RoundHour.html',
+				onLoad: function () {
+					$('#tbRoundHour').datagrid('fixDetailRowHeight', index);
+					$('#tbRoundHour').datagrid('selectRow', index);		
+					SetRoundHourControls(row, index);
+					$('#tbRoundHour').datagrid('getRowDetail', index).find('form').form('load', row);
+				}
+			});
+			$(this).datagrid('fixDetailRowHeight', index);
+
+		}
+	});
+	function SetRoundHourControls(row, index) {
+		var btSaveRoundHour = $('#tbRoundHour').datagrid('getRowDetail', index).find('#btSaveRoundHour');
+		$(btSaveRoundHour).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var btSancelRoundHour = $('#tbRoundHour').datagrid('getRowDetail', index).find('#btSancelRoundHour');
+		$(btSancelRoundHour).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var starth = $('#tbRoundHour').datagrid('getRowDetail', index).find('#starth');
+		$(starth).numberspinner({
+			label: $.i18n('fromhour'),
+			required: true,
+			labelWidth: 140,
+			width:215,
+			min: 0,
+			max: 24,
+			precision: 2,
+			increment: 0.01
+		});
+		var endh = $('#tbRoundHour').datagrid('getRowDetail', index).find('#endh');
+		$(endh).numberspinner({
+			label: $.i18n('tohour'),
+			required: true,
+			labelWidth: 140,
+			width: 215,
+			min: 0,
+			max: 24,
+			precision: 2,
+			increment: 0.01
+		});
+		var roundedh = $('#tbRoundHour').datagrid('getRowDetail', index).find('#roundedh');
+		$(roundedh).numberspinner({
+			label: $.i18n('round'),
+			required: true,
+			labelWidth: 140,
+			width: 215,
+			min: 0,
+			max: 24,
+			precision: 2,
+			increment: 0.01
+		});
+	}
+	function openAddRoundHour() {
+		try {
+			var row = $('#tbShift').datagrid('getSelected');
+			if (!row) {
+				message($.i18n('chooseshift'));
+				return;
+			}
+			var index = $('#tbRoundHour').datagrid('getRows').length - 1;
+			if (index > 0) {
+				var row = $('#tbRoundHour').datagrid('getRows')[index]
+				if (row.isNewRecord) { return }
+			}
+			$('#tbRoundHour').datagrid('appendRow', { isNewRecord: true,id:0,shiftid:row.shiftid });
+			index = $('#tbRoundHour').datagrid('getRows').length - 1;
+			$('#tbRoundHour').datagrid('expandRow', index);
+			$('#tbRoundHour').datagrid('selectRow', index);
+
+		} catch (err) { message(err) }
+	}
+	function saveRoundHour(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbRoundHour').datagrid('getRows')[index];
+		var myForm = $('#tbRoundHour').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (isValid) {
+			var values = {};
+			$.each(myForm.serializeArray(), function (i, field) {
+				values[field.name] = field.value;
+			});
+			values['id'] = row.id;
+			values['shiftid'] = row.shiftid;
+			var url = row.isNewRecord ? 'shift?newroundhour&locale=' + i18n.locale : 'shift?updateroundhour&locale=' + i18n.locale;
+			$.post(url, JSON.stringify(values),
+			function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "error") {	
+					message(data.message);
+				} else {
+					data.isNewRecord = false;
+					$('#tbRoundHour').datagrid('collapseRow', index);
+					$('#tbRoundHour').datagrid('updateRow', {
+						index: index,
+						row: data
+					});
+				}
+
+			});
+		}
+	}
+	function cancelRoundHour(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbRoundHour').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbRoundHour').datagrid('deleteRow', index);
+		} else {
+			$('#tbRoundHour').datagrid('collapseRow', index);
+		}
+	}
+
+</script>

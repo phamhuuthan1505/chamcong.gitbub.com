@@ -1,0 +1,141 @@
+﻿
+	<div id="ccShift" class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'west',split:true" style="width:180px;">
+			<div id="listShift"></div>
+
+		</div>
+		<div data-options="region:'center',border:false">
+			<div id="layoutCenter" class="easyui-layout" data-options="fit:true">
+				<div data-options="region:'west',split:true" style="width:180px;">
+					<div id="listWeekday"></div>
+
+				</div>
+				<div data-options="region:'center',border:true">
+					<div id="layoutCenter1" class="easyui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="height:32px;">
+							<a id="unassignShift" onclick="deleteShiftSchedule()">Xóa theo chọn</a>
+							<a id="unassignShiftAll" onclick="deleteAllShiftSchedule()">Xóa tất cả ca</a>
+						</div>
+						<div data-options="region:'center',border:false" style="padding:5px;">
+							<ul id="treeShift"></ul>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<!--<div data-options="region:'south'" style="height:38px;padding:3px 0px 3px 5px">
+			<a id="doAssignShift" onclick="arangeShiftSchedule()" >Ok</a>
+			<a id="closeAssignShift" onclick="javascript:$('#indexWindow').window('close');" >Cancel</a>
+		</div>-->
+	</div>
+
+<div id="toolSh" style="padding:5px">
+	<input id="chkAllShift">
+</div>
+<div id="toolWD" style="padding:5px">
+	<input id="chkAllWeekday">
+</div>
+<script type="text/javascript">
+	$('#ccShift').layout();
+	$('#layoutCenter1').layout();
+	$('#layoutCenter').layout({ fit: true }).layout('panel', 'center').panel({
+		title: $.i18n('tree'),
+	});
+	//$('#closeAssignShift').linkbutton({
+	//	iconCls: 'icon-delete',
+	//	plain: true,
+	//	text: $.i18n('cancel')
+	//});
+	//$('#doAssignShift').linkbutton({
+	//	iconCls: 'icon-ok',
+	//	plain: true,
+	//	text: $.i18n('ok')
+	//});
+	$('#chkAllWeekday').checkbox({
+		label: $.i18n('selectall'),
+		//labelWidth: i18n.locale == 'vi' ? 70 : 60,
+		labelPosition: 'after',
+		height: 15,
+		width: 15,
+		checked: false,
+		onChange: function (checked) {
+			if (checked) {
+				$('#listWeekday').datalist('checkAll');
+			} else {
+				$('#listWeekday').datalist('uncheckAll');
+			}
+		}
+
+	});
+	$('#chkAllShift').checkbox({
+		labelPosition: 'after',
+		label: $.i18n('selectall'),
+		//labelWidth: i18n.locale == 'vi' ? 70 : 60,
+		height: 15,
+		width: 15,
+		checked: false,
+		onChange: function (checked) {
+			if (checked) {
+				$('#listShift').datalist('checkAll');
+			} else {
+				$('#listShift').datalist('uncheckAll');
+			}
+		}
+
+	});
+
+	$('#unassignShift').linkbutton({
+		iconCls: 'icon-clear',
+		plain: true,
+		text: $.i18n('unassign')
+	});
+	$('#unassignShiftAll').linkbutton({
+		iconCls: 'icon-delete',
+		plain: true,
+		text: $.i18n('unassignall')
+	});
+	//var AreaID = $('#cbAreaSch').combobox('getValue');
+	$('#listShift').datalist({
+		toolbar: '#toolSh',
+		title: $.i18n('shiftlist'),
+		checkbox: true,
+		lines: false,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		border: false,
+		fit: true,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		}
+	});
+	$('#listWeekday').datalist({
+		toolbar: '#toolWD',
+		title: $.i18n('days'),
+		checkbox: true,
+		lines: false,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		border: false,
+		url: 'schedule?listweekday&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		}
+	});
+	$('#treeShift').tree({
+		checkbox: true,
+		onlyLeafCheck: true,
+		lines: true,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+	});	
+
+</script>

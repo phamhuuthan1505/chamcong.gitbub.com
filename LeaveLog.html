@@ -1,0 +1,127 @@
+﻿<table id="tbLeaveLog"></table>
+<div id="toolLeaveLog">
+	<input id="StartDateLeaveLog" />
+	<input id="EndDateLeaveLog" />
+	<a id="getLeaveLog" onclick="GetLeaveLog()">Thực hiện</a>
+	<span class="button-sep"></span>
+	<a id="deleteLeaveLog" onclick="DeleteLeaveLog()">Xóa sự kiện</a>
+	<span class="button-sep"></span>
+	<a id="exportLeaveLog" onclick="$('#tbLeaveLog').datagrid('toExcel','Logs.xls');">Xuất Excel</a>
+</div>
+<script type="text/javascript">
+	var d = new Date();
+	var sd = subtractDayFromDate(d, 3);
+	var startdate = sd.getDate() + '/' + (sd.getMonth() + 1) + '/' + sd.getFullYear() + ' ' + '00:00:00';
+	$('#StartDateLeaveLog').datetimespinner({
+		required: true,
+		formatter: mydatetimeformatter,
+		parser: mydatetimeparser,
+		width: 250,
+		label: $.i18n('fromdate'),
+		labelWidth: 75,
+	}).datetimespinner('setValue', startdate);
+	var enddate = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + '23:59:59';
+	$('#EndDateLeaveLog').datetimespinner({
+		required: true,
+		formatter: mydatetimeformatter,
+		parser: mydatetimeparser,
+		width: 250,
+		label: $.i18n('todate'),
+		labelWidth: 75,
+	}).datetimespinner('setValue', enddate);
+	$('#getLeaveLog').linkbutton({
+		iconCls: 'icon-search',
+		plain: true,
+		text: $.i18n('execute')
+	});
+	$('#deleteLeaveLog').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#exportLeaveLog').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('export')
+	});
+	$('#tbLeaveLog').datagrid({
+		toolbar: '#toolLeaveLog',
+		fit: true,
+		border: false,
+		rownumbers: true,
+		singleSelect: true,
+		striped: true,
+		pagination: true,
+		pageList: [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000],
+		pageSize: 20,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		sortName: 'addedtime',
+		sortOrder: 'desc',
+		queryParams: { startdate: startdate, enddate: enddate },
+		url: 'leavelog?getleavelog&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true }
+		]],
+		columns: [[
+			{ field: 'addedtime', title: $.i18n('time'), sortable: true },
+			{ field: 'useraccount', title: $.i18n('useraccount'), sortable: true },
+			{ field: 'logtype', title: $.i18n('eventtype'), sortable: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true },
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'timedate', title: $.i18n('date'), sortable: true },
+			{ field: 'absentsymbol', title: $.i18n('symbol',''), sortable: true }
+		]]
+	});
+	function GetLeaveLog() {
+		try {
+			startdate = $("#StartDateLeaveLog").datetimespinner('getValue');
+			enddate = $("#EndDateLeaveLog").datetimespinner('getValue');
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			$('#tbLeaveLog').datagrid({
+				queryParams: { startdate: startdate, enddate: enddate }
+			});
+		} catch (err) { message(err) }
+	}
+	function DeleteLeaveLog() {
+		try {
+			var rows = $('#tbLeaveLog').datagrid('getChecked');
+			if (rows.length <= 0) { return }
+			$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete_item'), function (r) {
+				if (r) {
+					var url = 'leavelog?deleteleavelog'
+					$.post(url, JSON.stringify(rows),
+						function (data, status) {
+							if (status == "success") {
+								data = eval('(' + data + ')');
+								if (data.state == "success") {
+									for (var i = 0; i < rows.length; i++) {
+										var row = rows[i];
+										$('#tbLeaveLog').datagrid('deleteRow', $('#tbLeaveLog').datagrid('getRowIndex', row));
+									}
+
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+						});
+
+
+				}
+			});
+		} catch (err) { message(err) }
+	}
+
+</script>

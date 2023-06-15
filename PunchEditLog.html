@@ -1,0 +1,128 @@
+﻿<table id="tbPunchEditLog"></table>
+<div id="toolPunchEditLog">
+	<input id="StartDatePunchEditLog" />
+	<input id="EndDatePunchEditLog" />
+	<a id="getPunchEditLog" onclick="GetPunchEditLog()">Thực hiện</a>
+	<span class="button-sep"></span>
+	<a id="deletePunchEditLog" onclick="DeletePunchEditLog()">Xóa sự kiện</a>
+	<span class="button-sep"></span>
+	<a id="exportPunchEditLog" onclick="$('#tbPunchEditLog').datagrid('toExcel','Logs.xls');">Xuất Excel</a>
+</div>
+<script type="text/javascript">
+	var d = new Date();
+	var sd = subtractDayFromDate(d, 3);
+	var startdate = sd.getDate() + '/' + (sd.getMonth() + 1) + '/' + sd.getFullYear() + ' ' + '00:00:00';
+	$('#StartDatePunchEditLog').datetimespinner({
+		required: true,
+		formatter: mydatetimeformatter,
+		parser: mydatetimeparser,
+		width: 250,
+		label: $.i18n('fromdate'),
+		labelWidth: 75,
+	}).datetimespinner('setValue', startdate);
+	var enddate = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + '23:59:59';
+	$('#EndDatePunchEditLog').datetimespinner({
+		required: true,
+		formatter: mydatetimeformatter,
+		parser: mydatetimeparser,
+		width: 250,
+		label: $.i18n('todate'),
+		labelWidth: 75,
+	}).datetimespinner('setValue', enddate);
+	$('#getPunchEditLog').linkbutton({
+		iconCls: 'icon-search',
+		plain: true,
+		text: $.i18n('execute')
+	});
+	$('#deletePunchEditLog').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#exportPunchEditLog').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('export')
+	});
+	$('#tbPunchEditLog').datagrid({
+		toolbar: '#toolPunchEditLog',
+		fit: true,
+		border: false,
+		rownumbers: true,
+		singleSelect: true,
+		striped: true,
+		pagination: true,
+		pageList: [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000],
+		pageSize: 20,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		sortName: 'timedate',
+		sortOrder: 'desc',
+		queryParams: { startdate: startdate, enddate: enddate },
+		url: 'puncheditlog?getpuncheditlog&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true }
+		]],
+		columns: [[
+			{ field: 'timedate', title: $.i18n('time'), sortable: true },
+			{ field: 'useraccount', title: $.i18n('useraccount'), sortable: true },
+			{ field: 'logtype', title: $.i18n('eventtype'), sortable: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true },
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'timestrold', title: $.i18n('timestrold'), sortable: true },
+			{ field: 'timestrnew', title: $.i18n('timestrnew', ''), sortable: true },
+			{ field: 'source', title: $.i18n('source'), sortable: true }
+		]]
+	});
+	function GetPunchEditLog() {
+		try {
+			startdate = $("#StartDatePunchEditLog").datetimespinner('getValue');
+			enddate = $("#EndDatePunchEditLog").datetimespinner('getValue');
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			$('#tbPunchEditLog').datagrid({
+				queryParams: { startdate: startdate, enddate: enddate }
+			});
+		} catch (err) { message(err) }
+	}
+	function DeletePunchEditLog() {
+		try {
+			var rows = $('#tbPunchEditLog').datagrid('getChecked');
+			if (rows.length <= 0) { return }
+			$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete_item'), function (r) {
+				if (r) {
+					var url = 'puncheditlog?deletepuncheditlog'
+					$.post(url, JSON.stringify(rows),
+						function (data, status) {
+							if (status == "success") {
+								data = eval('(' + data + ')');
+								if (data.state == "success") {
+									for (var i = 0; i < rows.length; i++) {
+										var row = rows[i];
+										$('#tbPunchEditLog').datagrid('deleteRow', $('#tbPunchEditLog').datagrid('getRowIndex', row));
+									}
+
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+						});
+
+
+				}
+			});
+		} catch (err) { message(err) }
+	}
+
+</script>

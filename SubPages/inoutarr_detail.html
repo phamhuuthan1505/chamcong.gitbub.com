@@ -1,0 +1,19 @@
+﻿<form method="post" enctype="multipart/form-data">
+	<div style="margin-bottom:10px">
+		<div style="margin-bottom:5px"><input id="inoutcode" name="inoutcode"/></div>
+		<div style="margin-bottom:5px"><input id="inoutname" name="inoutname" /></div>
+		<div style="margin-bottom:5px"><input id="inoutmode" name="inoutmode"/></div>
+		<div style="margin-bottom:5px"><input id="automin" name="automin" class="easyui-numberbox" value="10" style="width:80px;" /></div>
+		<div style="margin-bottom:5px"><input id="automax" name="automax" class="easyui-numberbox" value="960" style="width:80px;" /></div>
+		<div style="margin-bottom:5px"><input id="autointerval" name="autointerval" class="easyui-numberbox" value="5" style="width:80px;" /></div>
+		<div style="margin-bottom:5px"><input id="daycount" name="daycount" class="easyui-numberspinner" value="0" data-options="min:0,max:3" style="width:80px;" /></div>
+		<div style="margin-bottom:5px"><input id="endtime" name="endtime" class="easyui-timespinner" value="05:00" style="width:80px;" /></div>
+		<div style="margin-bottom:5px"><input id="removeout" name="removeout" class="easyui-switchbutton" data-options="onText:'Có',offText:'Không'" /></div>
+		<div style="margin-bottom:5px"><input id="removestart" name="removestart" class="easyui-timespinner" value="05:00" style="width:80px;" /></div>
+		<div style="margin-bottom:5px"><input id="removeend" name="removeend" class="easyui-timespinner" value="08:00" style="width:80px;" /></div>
+	</div>
+	<div>
+		<a id="saveInOutArr" onclick="saveInOutArr(this)">Lưu</a>
+		<a id="cancelInOutArr" onclick="cancelInOutArr(this)">Hủy</a>
+	</div>
+</form>

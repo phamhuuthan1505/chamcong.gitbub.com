@@ -1,0 +1,174 @@
+﻿<table id="tbTitle"></table>
+<script type="text/javascript">
+	var toolbarTitle = [{
+		text: $.i18n('add'),
+		iconCls: 'icon-add',
+		disabled: MenuItem.IsAdd() ? false : true,
+		handler: function () { newTitle(); }
+	}, {
+		text: $.i18n('delete'),
+		iconCls: 'icon-remove',
+		disabled: MenuItem.IsDelete() ? false : true,
+		handler: function () {
+			deleteTitle();
+		}
+	}, '-', {
+		text: $.i18n('reload'),
+		iconCls: 'icon-reload',
+		handler: function () { $('#tbTitle').datagrid('reload', {}) }
+		}];	
+	function deleteTitle() {
+		var row = $('#tbTitle').datagrid('getSelected');
+		$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete', row.titlename), function (r) {
+			if (r) {
+				if (row.isNewRecord) {
+					$('#tbTitle').datagrid('deleteRow', $('#tbTitle').datagrid('getRowIndex', row));
+					return;
+				}
+				var data = { idt: row.idt }
+				$.post('title?deletetitle&locale=' + i18n.locale,
+					JSON.stringify(data),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "success") {
+							$('#tbTitle').datagrid('deleteRow', $('#tbTitle').datagrid('getRowIndex', row));
+
+						} else {
+							message(data.message);
+						}
+
+					});
+			}
+		});
+	}
+	$('#tbTitle').datagrid({
+		pagination: true,
+		pageSize: 20,
+		sortName: 'titlecode',
+		rownumbers: true,
+		singleSelect: true,
+		url: 'title?gettitle',
+		toolbar: toolbarTitle,
+		iconCls: 'icon-title',
+		fit: true,
+		border:false,
+		columns: [[
+			{ field: 'titlecode', title: $.i18n('titlecode'), sortable: true },
+			{ field: 'titlename', title: $.i18n('titlename'), sortable: true, width: 300},
+		]],
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 120,
+				border: false,
+				cache: false,
+				href: 'TitleDetail.html',
+				onLoad: function () {
+					$('#tbTitle').datagrid('fixDetailRowHeight', index);
+					$('#tbTitle').datagrid('selectRow', index);
+					$('#tbTitle').datagrid('getRowDetail', index).find('form').form('load', row);
+					SetTitleControls(row, index);
+
+				}
+			});
+			$('#tbTitle').datagrid('fixDetailRowHeight', index);
+
+		}
+	})
+	function SetTitleControls(row, index) {
+		var saveTitle = $('#tbTitle').datagrid('getRowDetail', index).find('#saveTitle');
+		$(saveTitle).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var cancelTitle = $('#tbTitle').datagrid('getRowDetail', index).find('#cancelTitle');
+		$(cancelTitle).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var titlecode = $('#tbTitle').datagrid('getRowDetail', index).find('#titlecode');
+		$(titlecode).textbox({
+			label: $.i18n('titlecode'),
+			required: true,
+			labelWidth: 80
+		});
+		var titlename = $('#tbTitle').datagrid('getRowDetail', index).find('#titlename');
+		$(titlename).textbox({
+			label: $.i18n('titlename'),
+			required: true,
+			labelWidth: 80
+		});
+	}
+	function newTitle() {
+		try {
+			var index = $('#tbTitle').datagrid('getRows').length - 1;
+			if (index > 0) {
+				var row = $('#tbTitle').datagrid('getRows')[index]
+				if (row.isNewRecord) { return }
+			}
+			$('#tbTitle').datagrid('appendRow', { isNewRecord: true });
+			index = $('#tbTitle').datagrid('getRows').length - 1;
+			$('#tbTitle').datagrid('expandRow', index);
+			$('#tbTitle').datagrid('selectRow', index);
+
+		} catch (err) { message(err) }
+	}
+	function cancelTitle(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbTitle').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbTitle').datagrid('deleteRow', index);
+		} else {
+			$('#tbTitle').datagrid('collapseRow', index);
+		}
+	}
+	function saveTitle(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbTitle').datagrid('getRows')[index];
+		var myForm = $('#tbTitle').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (isValid) {
+			var values = {};
+			$.each(myForm.serializeArray(), function (i, field) {
+				values[field.name] = field.value;
+			});
+			values['idt'] = row.idt;
+			var url = row.isNewRecord ? 'title?addtitle&locale=' + i18n.locale : 'title?updatetitle&locale=' + i18n.locale;
+			$.post(url,
+				JSON.stringify(values),
+				function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "error") {
+						if (data.messagekey) {
+							var msg = $.i18n(data.messagekey, values.titlecode);
+							message(msg);
+						} else {
+							message(data.message);
+						}
+
+					} else {
+						data.isNewRecord = false;
+						$('#tbTitle').datagrid('collapseRow', index);
+						$('#tbTitle').datagrid('updateRow', {
+							index: index,
+							row: data
+						});
+					}
+
+				});
+		}
+	}
+</script>

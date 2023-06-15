@@ -1,0 +1,598 @@
+﻿<div id="layoutUserDev" class="easyui-layout wse-layout" data-options="fit:true">
+	<div data-options="region:'west',split:true" style="width:230px;padding:3px;overflow:auto">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreasUserDev" style="width:285px;margin-bottom:3px" />-->
+				<a id="btAreaIDUserDev" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:5px;">
+				<ul id="treeUserDevice"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftUserDev" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="tbDevUsers"></table>
+	</div>
+</div>
+<div id="toolDevUsers" style="padding:2px 5px;">
+	<input id="findDevUser" style="width:270px" />
+	<span class="button-sep"></span>
+	<a id="UploadToOtherDev" onclick="SendUserToOtherDevices();">Tải lệnh đến thiết bị khác</a>
+	<span class="button-sep"></span>
+	<a id="exportDevUser" onclick="GetUserOnDevice()">Xuất danh sách</a>
+</div>
+<div id="mmFindDevUser">
+	<div id="m-enrollnumber" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercode" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-username" data-options="name:'username'">Tên nhân viên</div>
+		<div id="m-enrollname" data-options="name:'enrollname'">Tên chấm công</div>
+</div>
+<div id="DgFacePhotoDevUser" style="display:none">
+	<Center style="margin:10px"><img id="FacePhoto" src="" /></Center>
+</div>
+<div id="DgOtherDevices" style="display:none;padding:5px 5px 0px 5px">
+	<div id="layoutUserDevCmd" class="easyui-layout" >
+		<div data-options="region:'north',border:false" style="height:32px;">
+			<input id="cbAreaUserDevCmd" style="width:285px;margin-bottom:3px" />
+		</div>
+		<div data-options="region:'center',border:false" style="padding:5px;">
+			<input id="ftUserDevCmd" style="width:100%">
+			<ul id="UserDevCmdDevices"></ul>
+		</div>
+		<div data-options="region:'south',border:false" style="height:35px;">
+			<center style="margin-top:8px">
+				<label id="infoUserDevSocket" style="color:#009"></label>
+			</center>
+		</div>
+	</div>
+</div>
+<div id="DgLogCmd">
+	<div id="layoutUserDevCmdEvent" class="easyui-layout">
+		<div data-options="region:'center',border:false">
+			<table id="tbUserDevCmdEvent"></table>
+		</div>
+		<div data-options="region:'south',border:false" style="height:35px;">
+			<center style="margin-top:8px">
+				<label id="infoUserDevCmdSocket" style="color:#009"></label>
+			</center>
+		</div>
+	</div>
+	
+</div>
+<div id="toolUserDevCmdEvent" style="padding-left:5px;">
+	<a id="clearUserDevCmdEvent" onclick="$('#tbUserDevCmdEvent').datagrid({data:[]});">Xóa bỏ sự kiện</a>
+	<span class="button-sep"></span>
+	<input id="swStatus3" />
+	<input id="swData3" />
+</div>
+<div id="mmAreaUserDev" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaIDUserDev">	</div>
+</div>
+<script type="text/javascript">
+	var clientID = "";
+	$(function () {
+		SelPriObj.init();
+		$.get('basiccommand?getclientid')
+			.done(function (data) {
+				clientID = data;
+				clearInterval(EventsOfUserDevCommands.ReopenSocket);
+				EventsOfUserDevCommands.clientID = data;
+				EventsOfUserDevCommands.init(0);
+				clearInterval(StatusOfUserDevDevices.ReopenSocket);
+				StatusOfUserDevDevices.init(0);
+			});
+	});
+	$('#layoutUserDev').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('device'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true,
+		iconCls: 'icon-device'
+	});
+	$('#layoutUserDev').layout('panel', 'center').panel({
+		title: $.i18n('user'),
+		border: true,
+		iconCls: 'icon-user'
+	});
+	$('#m-username').text($.i18n('userfullname'));
+	$('#m-usercode').text($.i18n('userfullcode'));
+	$('#m-enrollnumber').text($.i18n('userenrollnumber'));
+	$('#m-enrollname').text($.i18n('userenrollname'));
+	$('#findDevUser').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindDevUser',
+		searcher: doSearchDevUser
+	});
+	$('#UploadToOtherDev').linkbutton({
+		iconCls: 'icon-logout',
+		plain: true,
+		text: $.i18n('upload_other_device')
+	});
+	$('#exportDevUser').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('user_export')
+	});
+	$('#clearUserDevCmdEvent').linkbutton({
+		iconCls: 'icon-clear',
+		plain: true,
+		text: $.i18n('clearevent')
+	});
+	$('#swStatus3').switchbutton({
+		label: $.i18n('requestevent'),
+		labelWidth: 120,
+		height: 24,
+		checked: true,
+		onChange: function (checked) {
+			var opt = $('#swData3').switchbutton('options');
+			var data = { IsDataShow: opt.checked, IsRequestShow: checked };
+			EventsOfUserDevCommands.send(data);
+		}
+	});
+	$('#swData3').switchbutton({
+		label: $.i18n('dataevent'),
+		labelWidth: 120,
+		height: 24,
+		checked: true,
+		onChange: function (checked) {
+			var opt = $('#swStatus3').switchbutton('options');
+			var data = { IsRequestShow: opt.checked, IsDataShow: checked };
+			EventsOfUserDevCommands.send(data);
+		}
+	});
+	$('#dlAreaIDUserDev').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonUserDev($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#treeUserDevice').tree({
+				url: 'syncgroup?getdevices',
+				lines: true,
+				queryParams: { areaid:row.id },
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+			});
+			loadMenuButtonUserDev(row.text);
+			$('#mmAreaUserDev').menu('hide');
+		}
+	});
+	function loadMenuButtonUserDev(txt) {
+		$('#btAreaIDUserDev').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaUserDev',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+
+	//$('#cbAreasUserDev').combobox({
+	//	label: $.i18n('area'),
+	//	labelWidth: 60,
+	//	url: 'areas?getusedarea&locale=' + i18n.locale,
+	//	panelHeight: 200,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	value: 0,
+	//	onSelect: function (record) {
+	//		$('#treeUserDevice').tree({
+	//			url: 'syncgroup?getdevices',
+	//			lines: true,
+	//			queryParams: { areaid: record.id },
+	//			method: 'POST',
+	//			loader: function (param, success, error) {
+	//				var opts = $(this).tree('options');
+	//				loaderWSE(opts, param, success, error)
+	//			}
+	//		});
+
+	//	},
+	//});
+	$('#ftUserDev').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeUserDevice').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeUserDevice').tree('doFilter', newValue);
+		}
+	}).textbox('addClearBtn', 'icon-clear');
+	$('#treeUserDevice').tree({
+		url: 'syncgroup?getdevices',
+		lines: true,
+		queryParams: { areaid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onClick: function (node) {
+			if (node.levelid == 2) {
+				$('#tbDevUsers').datagrid({
+					queryParams: {
+						serialnumber: node.code,
+						machinename: node.text
+					},
+					url: 'usersbydevice?getusers',
+					method: 'POST',
+					loader: function (param, success, error) {
+						var opts = $(this).datagrid('options');
+						loaderWSE(opts, param, success, error)
+					}
+
+				});
+			} else {
+				message($.i18n('choosedevice'));
+			}
+		}
+	});
+	$('#tbDevUsers').datagrid({
+		border: false,
+		//title: $.i18n('user'),
+		fit: true,
+		fitColumns: true,
+		striped: true,
+		toolbar: '#toolDevUsers',
+		pagination: true,
+		pageList: [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000],
+		pageSize: 30,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		rownumbers: true,
+		sortName: 'userfullcode',
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'pin', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'name', title: $.i18n('userenrollname'), sortable: true },
+			{ field: 'card', title: $.i18n('usercardno'), sortable: true },
+			{ field: 'passws', title: $.i18n('userpw') },
+			{ field: 'pri', title: $.i18n('userprivilege'), formatter: SelPriObj.PrivilegeName },
+			{ field: 'serialnumber', title: $.i18n('serialnumber') },
+			{ field: 'enrolled', title: $.i18n('enrolled') },
+			{ field: 'createdtime', title: $.i18n('createdtime') }
+		]],
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" ></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 360,
+				width: 402,
+				cache: false,
+				href: 'EnrolledUser.html',
+				title: $.i18n('user_fp_info'),
+				onLoad: function () {
+					var userFace = $('#tbDevUsers').datagrid('getRowDetail', index).find('#userFace');
+					$(userFace).text($.i18n('face'));
+					var userPalm = $('#tbDevUsers').datagrid('getRowDetail', index).find('#userPalm');
+					$(userPalm).text($.i18n('palm'));
+					var data = { userenrollnumber: row.pin, serialnumber: $('#tbDevUsers').datagrid('options').queryParams.serialnumber };
+					var url = 'usersbydevice?getfinger'
+					$.post(url, JSON.stringify(data), function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "error") {
+							message(data.message);
+						} else {
+							var fp0 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp0');
+							var fp1 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp1');
+							var fp2 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp2');
+							var fp3 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp3');
+							var fp4 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp4');
+							var fp5 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp5');
+							var fp6 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp6');
+							var fp7 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp7');
+							var fp8 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp8');
+							var fp9 = $('#tbDevUsers').datagrid('getRowDetail', index).find('#fp9');
+							var face = $('#tbDevUsers').datagrid('getRowDetail', index).find('#face');
+							$(fp0).attr('src', data.fp0);
+							$(fp1).attr('src', data.fp1);
+							$(fp2).attr('src', data.fp2);
+							$(fp3).attr('src', data.fp3);
+							$(fp4).attr('src', data.fp4);
+							$(fp5).attr('src', data.fp5);
+							$(fp6).attr('src', data.fp6);
+							$(fp7).attr('src', data.fp7);
+							$(fp8).attr('src', data.fp8);
+							$(fp9).attr('src', data.fp9);
+							$(face).attr('src', data.face);
+							$(palm).attr('src', data.palm);
+							$(face).click(function () {
+								$('#DgFacePhotoDevUser').dialog({
+									title: $.i18n('userfacephoto'),
+									width: 400,
+									height: 400,
+									closed: false,
+									cache: false,
+									modal: true,
+									iconCls: 'icon-wman',
+									onBeforeOpen: function () {
+										$.post('user?getfacephoto',
+											JSON.stringify({ userenrollnumber: row.pin }),
+											function (data) {
+												$("#FacePhoto").attr('src', data);
+
+											});
+									},
+									onClose: function () { $("#FacePhoto").attr('src', ""); }
+								});
+							});
+						}
+					});
+
+				}
+			})
+			$('#tbDevUsers').datagrid('fixDetailRowHeight', index);
+		}
+	});
+	function doSearchDevUser(value, name) {
+		if (value == "") {
+			message('Xin nhập một giá trị!');
+			return;
+		}
+		var node = $('#treeUserDevice').tree('getSelected');
+		//console.log(node);
+		if (!node) {
+			message($.i18n('choosedevice'));
+			return;
+		}
+		if (node.levelid == 2) {
+			var queryParams = {
+				serialnumber: node.code,
+				machinename: node.text,
+				SearchValue: value,
+				SearchName: name
+			}
+			$('#tbDevUsers').datagrid({
+				url: 'usersbydevice?findusers',
+				queryParams: queryParams,
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).datagrid('options');
+					loaderWSE(opts, param, success, error)
+				}
+
+			});
+		} else {
+			message($.i18n('choosedevice'));
+		}
+		//if (parseInt(node.id) == 0) {
+		//	message('Xin chọn một thiết bị!');
+		//	return;
+		//}
+		//if (parseInt(node.id) > ExtAreaID) {
+		//	message('Xin chọn một thiết bị!');
+		//	return;
+		//}
+
+		
+	}
+	$('#DgOtherDevices').dialog({
+		title: $.i18n('selectdevice'),
+		width: 400,
+		height: window.innerHeight - 150,
+		closed: true,
+		cache: false,
+		modal: true,
+		iconCls: 'icon-device',
+		buttons: [{
+			text: $.i18n('ok'),
+			iconCls: 'icon-ok',
+			handler: function () {
+				var nodes = $('#UserDevCmdDevices').tree('getChecked');
+				if (nodes.length <= 0) {
+					message($.i18n('choosedevice'));
+					return;
+				}
+				var dev = new Array;
+				for (var i = 0; i < nodes.length; i++) {
+					if (parseInt(nodes[i].levelid) ==2) {
+						dev.push(nodes[i].id)
+					}
+				}
+				if (dev.length <= 0) {
+					message($.i18n('choosedevice'));
+					return;
+				}
+				$('#DgOtherDevices').dialog('close');
+				$('#DgLogCmd').dialog('open');
+				var rows = $('#tbDevUsers').datagrid('getChecked');
+				var userenrollnumber = new Array;
+				for (var i = 0; i < rows.length; i++) {
+					userenrollnumber.push(rows[i].pin);
+				}
+				var url = 'usercommand?setusercommands&locale=' + i18n.locale;
+				var values = { cmdType: 11, description: 'Cập nhật nhân viên', userenrollnumber: userenrollnumber, machineid: dev, clientid: clientID }
+				$.post(url, JSON.stringify(values), function (res) {
+					res = eval('(' + res + ')');
+					if (res.state == 'success') {
+					} else {
+
+						$.messager.alert($.i18n('mytitle'), res.message, 'error');
+					}
+
+				});
+			}
+		}, {
+				text: $.i18n('exit'),
+				iconCls: 'icon-delete',
+			handler: function () {
+				$('#DgOtherDevices').dialog('close');
+			}
+		}],
+		onOpen: function () {
+			$('#layoutUserDevCmd').layout({ fit: true });
+		}
+	});
+	$('#ftUserDevCmd').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#UserDevCmdDevices').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#UserDevCmdDevices').tree('doFilter', newValue);
+		}
+	}).textbox('addClearBtn', 'icon-clear');
+	$('#UserDevCmdDevices').tree({
+		url: 'devicesstatus?getdevices',
+		lines: true,
+		checkbox: function (node) {
+			if (node.levelid == -1) return true;
+			if (node.levelid == 0) return true;
+			if (node.levelid == 1) return true;
+			if (node.iconCls == "icon-devonline") return true;
+		},
+		queryParams: { areaid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			var nodes = $('#UserDevCmdDevices').tree('getChecked');
+			var ids = new Array();
+			for (var i = 0; i < nodes.length; i++) {
+				if (nodes[i].levelid == 2) {
+					ids.push(nodes[i].id);
+				}
+			}
+			EventsOfUserDevCommands.machineids = ids;
+			EventsOfUserDevCommands.sendmachineids();
+		}
+
+	});
+	$('#cbAreaUserDevCmd').combobox({
+		label: $.i18n('area'),
+		labelWidth: 60,
+		width:375,
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		panelHeight: 200,
+		valueField: 'id',
+		textField: 'text',
+		value: 0,
+		onChange: function (newValue, oldValue) {
+			$('#UserDevCmdDevices').tree({
+				url: 'devicesstatus?getdevices',
+				lines: true,
+				queryParams: { areaid: newValue },
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+			});
+		},
+	});
+	function SendUserToOtherDevices() {
+		var rows = $('#tbDevUsers').datagrid('getChecked');
+		if (rows.length <= 0) {
+			message($.i18n('chooseuser'));
+			return;
+		}
+		$('#DgOtherDevices').dialog('open');
+	}
+	$('#tbUserDevCmdEvent').datagrid({
+		//title: $.i18n('event'),
+		columns: [[
+			{ field: 'timestr', title: $.i18n('eventtime'), width: 140 },
+			{ field: 'eventinfo', title: $.i18n('eventname'), width: 120 },
+			{ field: 'sessionname', title: $.i18n('devicename'), width: 120 },
+			{ field: 'info', title: $.i18n('eventinfo'), width: 800 },
+		]],
+		fit: true,
+		rownumbers: true,
+		iconCls: 'icon-text',
+		singleSelect: true,
+		toolbar: '#toolUserDevCmdEvent',
+		border: false,
+		rowStyler: function (index, row) { return 'color:' + row.colorcode + ';'; },
+	});
+	$('#DgLogCmd').dialog({
+		title: $.i18n('event'),
+		width: window.innerWidth - 450,
+		height: window.innerHeight - 100,
+		closed: true,
+		cache: false,
+		modal: true,
+		iconCls: 'icon-text',
+		onOpen: function () {
+			$('#layoutUserDevCmdEvent').layout({ fit: true });
+			var data = { clientid: EventsOfUserDevCommands.clientID };
+			EventsOfUserDevCommands.send(data)
+			$('#tbUserDevCmdEvents').datagrid().datagrid({ data: [] });
+		}
+	});
+	//function getMachinesList() {
+	//	var url = 'export?id=getdev&locale=' + i18n.locale;
+	//	GetExport(url);
+	//}
+	//if (node.levelid == 2) {
+	function GetUserOnDevice() {
+		//$('#DgLogCmd').dialog('open');
+		var node = $('#treeUserDevice').tree('getSelected');
+		console.log(node);
+		if (!node) {
+			message($.i18n('choosedevice'));
+			return;
+		}
+		if (node.levelid != 2) {
+			message($.i18n('choosedevice'));
+			return;
+		}
+		var url = 'export?id=getdevuser&serialnumber=' + node.code + '&locale=' + i18n.locale;
+		GetExport(url);
+
+		//showProgress();
+		//var values = {
+		//	serialnumber: node.code,
+		//	machinename: node.text
+		//};
+		//var url = 'report?getuserondevice';
+		//var bson = new BSON();
+		//var data = bson.serialize(values);
+		//$.post(url, JSON.stringify(data), function (res) {
+		//	var data = eval('(' + res + ')');
+		//	closeProgress();
+		//	if (data.state == 'error') {
+		//		$.messager.alert(myTitle, data.message, 'error');
+		//	} else {
+		//		document.getElementById('my_iframe_user').src = data.message;
+
+		//	}
+
+		//});
+	}
+</script>

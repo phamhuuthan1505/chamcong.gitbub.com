@@ -1,0 +1,58 @@
+﻿<div class="wse-layout"><table id="weekendRound" ></table></div>
+<script type="text/javascript">
+	$('#weekendRound').propertygrid({
+		url: 'rules?getWeekend&locale=' + i18n.locale,
+		scrollbarSize: 0,
+		//showGroup: true,
+		//fit: true,
+		width:320,
+		columns: [[
+			{ field: 'name', title: $.i18n('description'), width: 60,  sortable: false },
+			{
+				field: 'value', title: $.i18n('value'), width:60, resizable: false,
+				formatter: function (value, row) {
+					if (row.feildname == 'IsYes') {
+						if (value == 'True') { return $.i18n('yes') } else { return $.i18n('no') }
+					} else if (row.rowcode == 'RoundType') {
+						if (value == 1) { return $.i18n('roundforward') } else { return $.i18n('roundback') }
+					} else {
+						return value;
+					}
+
+				}
+			}
+		]],
+		onEndEdit: function (index, row) {
+			if (row.feildname == 'IsYes') {
+				if (row.value == true) {
+					row.value = 'True';
+				} else {
+					row.value = "False";
+				}
+
+			}
+			var url = 'rules?updateweekend';
+			var data = { rowcode: row.rowcode, value: row.value, itemname: row.feildname };
+			$.post(url, JSON.stringify(data), function (res) {
+				if (res.state == 'error') {
+					message(res.message);
+				}
+			});
+		},
+		onBeginEdit: function (index, row) {
+			if (row.feildname == 'IsYes') {
+				var ed = $('#weekendRound').propertygrid('getEditors', index)[0];
+				if (row.value == 'True') {
+					$(ed.target).switchbutton('check');
+				} else {
+					$(ed.target).switchbutton('uncheck');
+				}
+			}
+
+		},
+		onBeforeEdit: function (index, row) {
+			return MenuItem.IsEdit();
+		}
+	});
+
+</script>

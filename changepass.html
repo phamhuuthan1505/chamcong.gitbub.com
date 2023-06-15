@@ -1,0 +1,78 @@
+<form id="frmChangePass" method="post" enctype="multipart/form-data">
+	<table class="dv-table" style="padding:10px">
+    	<tr>
+            <td><label >Mật khẩu cũ:</label></td>
+            <td><input  name="oldpass" class="easyui-passwordbox" data-options="required:true,validateOnCreate:false,validateOnBlur:true" style="width:160px;" /></td> 
+        </tr><tr> 
+            <td><label >Mật khẩu mới:</label></td>
+            <td><input id="pass" name="userpass" class="easyui-passwordbox" data-options="required:true,validateOnCreate:false,validateOnBlur:true" style="width:160px;" /></td> 
+         </tr><tr> 
+            <td><label >Nhập lại mật khẩu:</label></td>
+            <td><input name="passagain" class="easyui-passwordbox" data-options="required:true,validateOnCreate:false,validateOnBlur:true" style="width:160px;" validType="confirmPass['#pass']" /></td>   
+		
+        </tr><tr>  
+        	<td></td>
+            <td><a class="easyui-linkbutton" iconCls="icon-ok" plain="false" style="margin-top:20px;margin-left:0px" onclick="sendPassword()">Thực hiện</a></td>
+        </tr>
+    </table>
+</form>
+<script type="text/javascript">
+function sendPassword(){
+		 //$('#frmChangePass').form('submit',{
+//			url: 'login?changepass',
+//			onSubmit: function(){
+//				return $(this).form('validate');
+//			},
+//			success: function(data){
+//				data = JSON.parse(data);
+//				if (data.state=="success"){
+//					$('#indexWindow').window('close');
+//					message(data.message);
+//				}else{
+//					 $.messager.alert(myTitle,data.message,'info');
+//				}
+//			}
+//		 
+//	 })
+	var url = 'index?changepass&locale=' + i18n.locale;//&inoutid='+row.inoutid;
+	var isValid = $('#frmChangePass').form('validate');
+	if(!isValid) return;
+	var values = {};
+	$.each($('#frmChangePass').serializeArray(), function(i, field) {
+		values[field.name] = field.value;
+	});
+	
+	$.post(url,JSON.stringify(values),
+		function(data){
+			var data = eval('('+data+')');
+			if (data.state=="error"){
+				$.messager.alert(myTitle,data.message,'info');
+			}else{
+				$('#indexWindowP').window('close');
+				message(data.message);
+					
+			}
+			
+	});
+	
+}
+</script>
+
+   <!--<style type="text/css">
+        form{
+            margin:0;
+            padding:0;
+        }
+		.dv-table{
+			background-color: #f8f9f9 ;	
+		}
+        .dv-table td{
+            border:0;
+			padding-right:5px;
+			padding-left:5px;
+        }
+        .dv-table input{
+            border:1px solid #ccc;
+        }
+    </style>-->
+

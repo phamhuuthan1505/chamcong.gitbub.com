@@ -1,0 +1,924 @@
+﻿<div id="layoutAcc" class="easyui-layout wse-layout">
+	<div data-options="region:'west',split: true" style="width:400px;">
+		<table id="tbUserAccount"></table>
+	</div>
+	<div data-options="region:'center',border:false" style="padding-bottom:3px">
+		<div id="tabAcc" class="easyui-tabs" style="display:none">
+			<div title="Tab1">
+				<div id="layoutMenuPri" class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'west',border:false" style="width:400px;">
+						<ul id="menuPrivilege"></ul>
+					</div>
+					<div data-options="region:'center',border:false" style="padding:10px 0px 0px 30px">
+						<div style="margin-bottom:5px"><input id="isadd" class="easyui-switchbutton" /></div>
+						<div style="margin-bottom:5px"><input id="isedit" class="easyui-switchbutton" /></div>
+						<div style="margin-bottom:8px"><input id="isdelete" class="easyui-switchbutton" /></div>
+						<div><a id="updateMenu" onclick="UpdateRoleMenu()">Save</a></div>
+					</div>
+				</div>
+			</div>
+			<div title="Tab2">
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'west',border:false" style="width:350px;padding:5px 0px 0px 5px">
+						<ul id="AreaPrivilege" class="easyui-tree"></ul>
+					</div>
+					<div data-options="region:'center',border:false" style="padding:3px;">
+
+					</div>
+				</div>
+
+			</div>
+			<div title="Tab3">
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'west',border:false" style="width:350px;padding:5px 0px 0px 5px">
+						<div class="easyui-layout" data-options="fit:true">
+							<div data-options="region:'north',border:false" style="height:32px;">
+								<input id="cbAreaDeptPri" style="width:336px;margin-bottom:3px" />
+							</div>
+							<div data-options="region:'center',border:false" style="padding:3px;">
+								<ul id="deptPrivilege" class="easyui-tree"></ul>
+							</div>
+							<div data-options="region:'south',border:false" style="height:32px;">
+								<input id="ftDeptPri" style="width:100%">
+							</div>
+						</div>
+					</div>
+					<div data-options="region:'center',border:false" style="padding:3px;">
+
+					</div>
+				</div>
+			</div>
+			<div title="Tab4">
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'west',border:false" style="width:350px;padding:5px 0px 0px 5px">
+						<div class="easyui-layout" data-options="fit:true">
+							<div data-options="region:'north',border:false" style="height:32px;">
+								<input id="cbAreaDevPri" style="width:336px;margin-bottom:3px" />
+							</div>
+							<div data-options="region:'center',border:false" style="padding:3px;">
+								<ul id="devPrivilege" class="easyui-tree"></ul>
+							</div>
+							<div data-options="region:'south',border:false" style="height:32px;">
+								<input id="ftDevPri" style="width:100%">
+							</div>
+						</div>
+					</div>
+					<div data-options="region:'center',border:false" style="padding:3px;">
+
+					</div>
+				</div>
+
+			</div>
+			<div title="Tab5">
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'west',border:false" style="width:350px;padding:5px 0px 0px 5px">
+						<ul id="CmdPrivilege" class="easyui-tree"></ul>
+					</div>
+					<div data-options="region:'center',border:false" style="padding:3px;">
+
+					</div>
+				</div>
+			</div>
+			</div>
+		</div>
+
+</div>
+<div id="toolUserAccount">
+	<a id="addAcc" onclick="newUserAccount()">Thêm mới</a>
+	<a id="deleteAcc" onclick="deleteUserAccount()">Xóa</a>
+	<span class="button-sep"></span>
+	<a id="reloadAcc" onclick="javascript:$('#tbUserAccount').datagrid('reload');">Tải lại</a>
+	<span class="button-sep"></span>
+	<a id="changePassAcc" class="easyui-linkbutton" iconCls="icon-restart" plain="true" onclick="ResetPassRole()">Đặt lại mật khẩu</a>
+</div>
+<script type="text/javascript">
+	$('#layoutAcc').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('acclist'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutAcc').layout().layout('panel', 'center').panel({
+		border: true,
+		title: $.i18n('accpermission')
+	});
+	var tabs = $('#tabAcc').tabs({
+		fit: true,
+		border: false
+	}).tabs('tabs');
+	$('#tabAcc').tabs('update', {
+		tab: tabs[0],
+		options: {
+			title: $.i18n('menu'),
+		}
+	});
+	$('#tabAcc').tabs('update', {
+		tab: tabs[1],
+		options: {
+			title: $.i18n('area'),
+		}
+	});
+	$('#tabAcc').tabs('update', {
+		tab: tabs[2],
+		options: {
+			title: $.i18n('dept'),
+		}
+	});
+	$('#tabAcc').tabs('update', {
+		tab: tabs[3],
+		options: {
+			title: $.i18n('device'),
+		}
+	});
+	$('#tabAcc').tabs('update', {
+		tab: tabs[4],
+		options: {
+			title: $.i18n('cmd'),
+		}
+	});
+	$('#addAcc').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('add')
+	});
+	$('#deleteAcc').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete')
+	});
+	$('#reloadAcc').linkbutton({
+		iconCls: 'icon-reload',
+		plain: true,
+		text: $.i18n('reload')
+	});
+	$('#changePassAcc').linkbutton({
+		iconCls: 'icon-restart',
+		plain: true,
+		text: $.i18n('resetpass')
+	});
+	$('#isadd').switchbutton({
+		label: $.i18n('add'),
+		required: true,
+		labelWidth: i18n.locale == 'vi' ? 65 :45,
+		height: 24,
+		//onChange: function (checked) {
+		//	UpdateRoleMenu();
+		//}
+	});
+	$('#isedit').switchbutton({
+		label: $.i18n('edit'),
+		required: true,
+		labelWidth: i18n.locale == 'vi' ? 65 : 45,
+		height: 24,
+		//onChange: function (checked) {
+		//	UpdateRoleMenu();
+		//}
+	});
+	$('#isdelete').switchbutton({
+		label: $.i18n('delete'),
+		required: true,
+		labelWidth: i18n.locale == 'vi' ? 65 : 45,
+		height: 24,
+		//onChange: function (checked) {
+		//	UpdateRoleMenu();
+		//}
+	});
+	$('#updateMenu').linkbutton({
+		iconCls: 'icon-save',
+		plain: true,
+		text: $.i18n('save')
+	});
+	$('#saveDeptPri').linkbutton({
+		iconCls: 'icon-save',
+		plain: true,
+		text: $.i18n('update')
+	});
+	$('#tbUserAccount').datagrid({
+		fit: true,
+		fitColumns: true,
+		border: false,
+		sortName: 'useraccount',
+		pagination: true,
+		pageSize: 20,
+		columns: [[
+			{ field: 'useraccount', title: $.i18n('accountname'), sortable: true, width:100 },
+		]],
+		rownumbers: true,
+		singleSelect: true,
+		toolbar: '#toolUserAccount',
+		iconCls: 'icon-useraccount',
+		striped: true,
+		url: 'roles?getrole',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: row.isNewRecord ? 250: 120,
+				border: false,
+				cache: false,
+				href: row.isNewRecord ? 'SubPages/roleuseradd.html' : 'SubPages/roleusername.html',
+				onLoad: function () {
+					if (row.isNewRecord) {
+						setroleuseradd(row, index)
+					} else {
+						setroleusername(row, index)
+					}
+					$('#tbUserAccount').datagrid('fixDetailRowHeight', index);
+					$('#tbUserAccount').datagrid('selectRow', index);
+					$('#tbUserAccount').datagrid('getRowDetail', index).find('form').form('load', row);
+				}
+			});
+			$('#tbUserAccount').datagrid('fixDetailRowHeight', index);
+
+		},
+		onClickRow: function (index, row) {
+			$("#tabAcc").show();
+			$('#tabAcc').tabs({
+				fit: true,
+				border: false
+			});
+			$('#layoutMenuPri').layout();
+			$('#menuPrivilege').tree({
+				queryParams: { userid: row.userid }
+			});
+			$('#AreaPrivilege').tree({
+				queryParams: { userid: row.userid }
+			});
+			var areaid = $('#cbAreaDeptPri').combobox('getValue');
+			$('#deptPrivilege').tree({
+				queryParams: { userid: row.userid, areaid:areaid }
+			})
+			var areaid = $('#cbAreaDevPri').combobox('getValue');
+			$('#devPrivilege').tree({
+				queryParams: { userid: row.userid, areaid: areaid }
+			});
+			$('#CmdPrivilege').tree({
+				queryParams: { userid: row.userid }
+			});
+			$('#isadd').switchbutton('uncheck');
+			$('#isedit').switchbutton('uncheck');
+			$('#isdelete').switchbutton('uncheck');
+		}
+	});
+	function setroleuseradd(row, index) {
+		var labelW = 150;var ctrW = 200
+		var saveUserAcc = $('#tbUserAccount').datagrid('getRowDetail', index).find('#saveUserAccount');
+		$(saveUserAcc).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save')
+		});
+		var cancelUserAcc = $('#tbUserAccount').datagrid('getRowDetail', index).find('#cancelUserAccount');
+		$(cancelUserAcc).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var useraccount = $('#tbUserAccount').datagrid('getRowDetail', index).find('#useraccount');
+		$(useraccount).textbox({
+			label: $.i18n('accountname'),
+			labelWidth: labelW,
+			required: true,
+			width: ctrW,
+			labelPosition: 'top'
+		});
+		var pass = $('#tbUserAccount').datagrid('getRowDetail', index).find('#pass');
+		$(pass).passwordbox({
+			label: $.i18n('pass'),
+			labelWidth: labelW,
+			required: true,
+			width: ctrW,
+			iconWidth: 28,
+			labelPosition: 'top'
+		});
+		var passagain = $('#tbUserAccount').datagrid('getRowDetail', index).find('#passagain');
+		$(passagain).passwordbox({
+			label: $.i18n('passagain'),
+			labelWidth: labelW,
+			required: true,
+			width: ctrW,
+			iconWidth: 28,
+			validType: "confirmPass['#pass']",
+			labelPosition: 'top'
+		});
+	}
+	function setroleusername(row, index) {
+		var saveRole = $('#tbUserAccount').datagrid('getRowDetail', index).find('#saveRole');
+		$(saveRole).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save')
+		});
+		var cancelRole = $('#tbUserAccount').datagrid('getRowDetail', index).find('#cancelRole');
+		$(cancelRole).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var useraccount = $('#tbUserAccount').datagrid('getRowDetail', index).find('#useraccount');
+		$(useraccount).textbox({
+			label: $.i18n('accountname'),
+			labelWidth: 120,
+			required: true,
+			width: 200,
+			labelPosition:'top'
+		});
+	}
+	function newUserAccount() {
+		var index = $('#tbUserAccount').datagrid('getRows').length - 1;
+		if (index > 0) {
+			var row = $('#tbUserAccount').datagrid('getRows')[index];
+			if (row.isNewRecord) { return }
+		}
+
+		$('#tbUserAccount').datagrid('appendRow', { isNewRecord: true });
+		index = $('#tbUserAccount').datagrid('getRows').length - 1;
+		$('#tbUserAccount').datagrid('expandRow', index);
+		$('#tbUserAccount').datagrid('selectRow', index);
+	}
+	function cancelUserAccount(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbUserAccount').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbUserAccount').datagrid('deleteRow', index);
+		} else {
+			$('#tbUserAccount').datagrid('collapseRow', index);
+		}
+	}
+	function saveRoleName(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		saveItemRole(index);
+	}
+	function cancelRoleName(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbUserAccount').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbUserAccount').datagrid('deleteRow', index);
+		} else {
+			$('#tbUserAccount').datagrid('collapseRow', index);
+		}
+	}
+	function saveUserAccount(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var myForm = $('#tbUserAccount').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (isValid) {
+			var values = {};
+			$.each(myForm.serializeArray(), function (i, field) {
+				values[field.name] = field.value;
+			});
+			var url = 'roles?addnewaccount&locale=' + i18n.locale;
+			$.post(url, JSON.stringify(values),
+				function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "error") {
+						message(data.message);
+					} else {
+						data.isNewRecord = false;
+						$('#tbUserAccount').datagrid('collapseRow', index);
+						$('#tbUserAccount').datagrid('updateRow', {
+							index: index,
+							row: data
+						});
+
+					}
+
+				});
+		}
+
+
+	}
+	function saveItemRole(index) {
+		var row = $('#tbUserAccount').datagrid('getRows')[index];
+		var myForm = $('#tbUserAccount').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (isValid) {
+			var values = {};
+			$.each(myForm.serializeArray(), function (i, field) {
+				values[field.name] = field.value;
+			});
+			values['userid'] = row.userid;
+			var url =  'roles?rolename&locale=' + i18n.locale;
+			$.post(url, JSON.stringify(values),
+				function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "error") {
+					message(data.message);
+
+					} else {
+						$('#tbUserAccount').datagrid('collapseRow', index);
+						$('#tbUserAccount').datagrid('updateRow', {
+							index: index,
+							row: data
+						});
+					}
+
+				});
+		}
+
+	}
+	function ResetPassRole() {
+		var row = $('#tbUserAccount').datagrid('getSelected');
+		if (row) {
+			if (row.isNewRecord) {
+				return;
+			}
+			openResetPass(row);
+		}
+	} 
+	function openResetPass(row) {
+		$('body').append('<div id="PassWindow" style="display:none;padding:5px"></div>');
+		$('#PassWindow').dialog({
+			width: 380,
+			height: 200,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-restart',
+			title: $.i18n('resetpassof', row.useraccount),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			queryParams: { userid: row.userid },
+			extractor: function (data) {
+				return CheckSessionTimeOut(data);
+			},
+			onClose: function () {
+				$('#PassWindow').remove();
+			},
+			buttons: [{
+				text: $.i18n('ok'),
+				iconCls: 'icon-ok',
+				handler: function () {
+					ResetPassword();
+				}
+			}, {
+					text: $.i18n('cancel'),
+					iconCls: 'icon-cancel',
+				handler: function () {
+					$('#PassWindow').dialog('close');
+				}
+			}],
+			onLoad: function () {
+				var labelW = 150; var ctrW = 350
+				$('#pass').passwordbox({
+					label: $.i18n('pass'),
+					labelWidth: labelW,
+					required: true,
+					width: ctrW,
+					iconWidth: 28,
+				});
+				$('#passagain').passwordbox({
+					label: $.i18n('passagain'),
+					labelWidth: labelW,
+					required: true,
+					width: ctrW,
+					iconWidth: 28,
+					validType: "confirmPass['#pass']",
+				});
+			}
+		}).dialog('open').dialog('refresh', 'SubPages/ResetUserPass.html').dialog('dialog');
+	}
+	function ResetPassword() {
+		var url = 'roles?resetpass&locale=' + i18n.locale;
+		var isValid = $('#frmResetPass').form('validate');
+		if (!isValid) return;
+		var values = {};
+		$.each($('#frmResetPass').serializeArray(), function (i, field) {
+			values[field.name] = field.value;
+		});
+		var opts = $('#PassWindow').dialog('options');
+		values['userid'] = opts.queryParams.userid;
+		$.post(url, JSON.stringify(values),
+			function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "error") {
+					$.messager.alert($.i18n('mytitle'), data.message, 'info');
+				} else {
+					$('#PassWindow').dialog('close');
+					message(data.message);
+				}
+
+			});
+
+	}
+	$('#menuPrivilege').tree({
+		url: 'roles?getmenu&locale=' + i18n.locale,
+		lines: true,
+		checkbox: true,
+		queryParams: { userid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			var row = $('#tbUserAccount').datagrid('getSelected');
+			if (!row) return;
+			
+			if (node.levelid == 2) {
+				var data = {
+					userid: row.userid,
+					privilegeid: node.id,
+					isyes: checked
+				}
+				UpdatePri('roles?updateprimenu',data)
+			} else {
+				var nodes = $(this).tree('getChildren', node.target)
+				if (nodes.length <= 0) return;
+				var values = new Array();
+				for (var i = 0; i < nodes.length; i++) {
+					var node = nodes[i];
+					var data = {
+						userid: row.userid,
+						privilegeid: node.id,
+						isyes: node.checked
+					}
+					values.push(data);
+				}
+				$.post('roles?updatemultiprimenu', JSON.stringify(values),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "success") {
+
+						} else {
+							message(data.message);
+						}
+					});
+			}
+			
+		},
+		onSelect: function (node) {
+			if (node.levelid == 2) {
+				node.isadd ? $('#isadd').switchbutton('check') : $('#isadd').switchbutton('uncheck');
+				node.isedit ? $('#isedit').switchbutton('check') : $('#isedit').switchbutton('uncheck');
+				node.isdelete ? $('#isdelete').switchbutton('check') : $('#isdelete').switchbutton('uncheck');
+			} else {
+				 $('#isadd').switchbutton('uncheck');
+				 $('#isedit').switchbutton('uncheck');
+				$('#isdelete').switchbutton('uncheck');
+			}
+			
+		}
+	});
+	function UpdatePri(url,data) {
+		$.post(url, JSON.stringify(data),
+			function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "success") {
+
+				} else {
+					message(data.message);
+				}
+			});
+	}
+	$('#AreaPrivilege').tree({
+		url: 'roles?getareas&locale=' + i18n.locale,
+		lines: true,
+		checkbox: true,
+		queryParams: { userid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			var row = $('#tbUserAccount').datagrid('getSelected');
+			if (!row) return;
+
+			if (node.levelid == 1) {
+				var data = {
+					userid: row.userid,
+					privilegeid: node.id,
+					isyes: checked
+				}
+				UpdatePri('roles?updatepriarea',data)
+			} else {
+				var nodes = $(this).tree('getChildren', node.target)
+				if (nodes.length <= 0) return;
+				var values = new Array();
+				for (var i = 0; i < nodes.length; i++) {
+					var node = nodes[i];
+					var data = {
+						userid: row.userid,
+						privilegeid: node.id,
+						isyes: node.checked
+					}
+					values.push(data);
+				}
+				$.post('roles?updatemultipriarea', JSON.stringify(values),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "success") {
+
+						} else {
+							message(data.message);
+						}
+					});
+			}
+
+		}
+		
+	});
+	$('#cbAreaDeptPri').combobox({
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		panelHeight: 250,
+		valueField: 'id',
+		textField: 'text',
+		value: 0,
+		label: $.i18n('area'),
+		labelWidth: 60,
+		onSelect: function (record) {
+			var row = $('#tbUserAccount').datagrid('getSelected');
+			if (!row) return;
+			$('#deptPrivilege').tree({
+				queryParams: { userid: row.userid, areaid: record.id }
+			})
+		}
+	});
+	$('#ftDeptPri').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#deptPrivilege').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#deptPrivilege').tree('doFilter', newValue);
+		}
+	});
+	$('#deptPrivilege').tree({
+		url: 'roles?getdept&locale=' + i18n.locale,
+		lines: true,
+		checkbox: true,
+		queryParams: { userid: 0, areaid:0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			UpdateDeptPri();
+		}
+	});
+	function UpdateDeptPri() {
+		try {
+			var values = new Array();
+			var row = $('#tbUserAccount').datagrid('getSelected');
+			if (!row) return;
+			//showProgress();
+			var nodes = $('#deptPrivilege').tree('getChecked');
+			for (var i = 0; i < nodes.length; i++) {
+				var node = nodes[i];
+				var data = {
+					userid: row.userid,
+					privilegeid: node.id,
+					isyes: true,
+					isindeterminate: false
+				}
+				values.push(data);
+			}
+			var nodes = $('#deptPrivilege').tree('getChecked', 'unchecked');
+			for (var i = 0; i < nodes.length; i++) {
+				var node = nodes[i];
+				var data = {
+					userid: row.userid,
+					privilegeid: node.id,
+					isyes: false,
+					isindeterminate: false
+				}
+				values.push(data);
+			}
+			var nodes = $('#deptPrivilege').tree('getChecked', 'indeterminate');
+			for (var i = 0; i < nodes.length; i++) {
+				var node = nodes[i];
+				var data = {
+					userid: row.userid,
+					privilegeid: node.id,
+					isyes: false,
+					isindeterminate: true
+				}
+				values.push(data);
+			}
+			$.post('roles?updatemultipridept', JSON.stringify(values),
+				function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "success") {
+
+					} else {
+						message(data.message);
+					}
+				});
+			//setTimeout(function () {
+			//	closeProgress();
+			//}, 200);
+		} catch (error) {
+			message(error);
+			closeProgress();
+		}
+	}
+	$('#cbAreaDevPri').combobox({
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		panelHeight: 250,
+		valueField: 'id',
+		textField: 'text',
+		value: 0,
+		label: $.i18n('area'),
+		labelWidth: 60,
+		onSelect: function (record) {
+			var row = $('#tbUserAccount').datagrid('getSelected');
+			if (!row) return;
+			$('#devPrivilege').tree({
+				queryParams: { userid: row.userid, areaid: record.id }
+			})
+		}
+	});
+	$('#ftDevPri').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#devPrivilege').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#devPrivilege').tree('doFilter', newValue);
+		}
+	});
+	$('#devPrivilege').tree({
+		url: 'roles?getdevice&locale=' + i18n.locale,
+		lines: true,
+		checkbox: true,
+		queryParams: { userid: 0, areaid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			var row = $('#tbUserAccount').datagrid('getSelected');
+			if (!row) return;
+
+			if (node.levelid == 2) {
+				var data = {
+					userid: row.userid,
+					privilegeid: node.id,
+					isyes: checked
+				}
+				UpdatePri('roles?updatepridev', data)
+			} else {
+				var nodes = $(this).tree('getChildren', node.target)
+				if (nodes.length <= 0) return;
+				var values = new Array();
+				for (var i = 0; i < nodes.length; i++) {
+					var node = nodes[i];
+					if (node.levelid == 2) {
+						var data = {
+							userid: row.userid,
+							privilegeid: node.id,
+							isyes: node.checked
+						}
+						values.push(data);
+					}
+				}
+				if (values.length <= 0) return;
+				$.post('roles?updatemultipridev', JSON.stringify(values),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "success") {
+
+						} else {
+							message(data.message);
+						}
+					});
+			}
+
+		}
+	});
+	function UpdateRoleMenu() {
+		var row = $('#tbUserAccount').datagrid('getSelected');
+		if (!row) return;
+		var node = $('#menuPrivilege').tree('getSelected');
+		if (!node) return;
+		if (node.levelid != 2) return;
+
+		var opt = $('#isadd').switchbutton('options');
+		var opt1 = $('#isedit').switchbutton('options');
+		var opt2 = $('#isdelete').switchbutton('options');
+	
+		var data = {
+			userid: row.userid,
+			privilegeid: node.id,
+			isadd: opt.checked,
+			isedit: opt1.checked,
+			isdelete: opt2.checked
+		}
+		$.post('roles?updaterolemenu', JSON.stringify(data),
+			function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "success") {
+					$('#menuPrivilege').tree('update', {
+						target: node.target,
+						isadd: opt.checked,
+						isedit: opt1.checked,
+						isdelete: opt2.checked
+					})
+					message($.i18n('doneupdate'));
+				} else {
+					message(data.message);
+				}
+			});
+
+	}
+	function deleteUserAccount() {
+		var row = $('#tbUserAccount').datagrid('getSelected');
+		if (row) {
+			$.messager.confirm($.i18n('mytitle'), $.i18n('deleterole_ask'), function (r) {
+				if (r) {
+					if (row.isNewRecord) {
+						$('#tbUserAccount').datagrid('deleteRow', $('#tbUserAccount').datagrid('getRowIndex', row));
+						return;
+					}
+					var data = { userid: row.userid };
+					var url = 'roles?deleterole'
+					$.post(url, JSON.stringify(data),
+						function (data, status) {
+							if (status == "success") {
+								data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#tbUserAccount').datagrid('deleteRow', $('#tbUserAccount').datagrid('getRowIndex', row));
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+						}
+					);
+				}
+			});
+		}
+	}
+	$('#CmdPrivilege').tree({
+		url: 'roles?getcmd&locale=' + i18n.locale,
+		lines: true,
+		checkbox: true,
+		queryParams: { userid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			var row = $('#tbUserAccount').datagrid('getSelected');
+			if (!row) return;
+			if (node.levelid == 2) {
+				var data = {
+					userid: row.userid,
+					privilegeid: node.id,
+					isyes: checked
+				}
+				UpdatePri('roles?updatepricmd', data)
+			} else {
+				var nodes = $(this).tree('getChildren', node.target)
+				if (nodes.length <= 0) return;
+				var values = new Array();
+				for (var i = 0; i < nodes.length; i++) {
+					var node = nodes[i];
+					var data = {
+						userid: row.userid,
+						privilegeid: node.id,
+						isyes: node.checked
+					}
+					values.push(data);
+				}
+				$.post('roles?updatemultipricmd', JSON.stringify(values),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "success") {
+
+						} else {
+							message(data.message);
+						}
+					});
+			}
+
+		}
+
+	});
+
+</script>

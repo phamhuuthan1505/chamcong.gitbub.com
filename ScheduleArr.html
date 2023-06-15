@@ -1,0 +1,478 @@
+﻿<div id="layoutSchArr" class="easyui-layout wse-layout">
+	<div data-options="region:'west',split:true" style="width:260px;overflow:hidden;padding-bottom:2px">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreaSchArr" style="width:306px;margin-bottom:3px" />-->
+				<a id="btAreaSchArr" />
+			</div>
+			<div data-options="region:'center',border:false">
+				<ul id="treeDeptSchArr"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height: 32px; padding: 1px">
+				<input id="ftDeptSchArr" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center'" style="padding-bottom:4px">	
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false" >
+				<table id="tbSchArrange"></table>
+			</div>
+			<div data-options="region:'south',border:false" style="height:230px;">
+				<table id="tbTempSchArrange"></table>
+			</div>
+		</div>
+	</div>
+
+</div>
+<div id="toolSchArrange">
+	<input id="findUserSchArr" style="width:300px" />
+	<span class="button-sep"></span>
+	<input id="cbSchedule">
+	<a id="reloadSchArr" onclick="javascript:$('#cbSchedule').combobox();"></a>
+	<a id="doUserSchArr" onclick="UpdateScheduleSchArrange()">Thực hiên</a>
+
+
+</div>
+<div id="toolTempSchArrange">
+	<a id="addTempSch" onclick="showTempScheduleW()">Thêm lịch trình phụ</a>
+	<span class="button-sep"></span>
+	<a id="deleteTempSch" onclick="DeleteTempSchedule()"></a>
+	<span class="button-sep"></span>
+	<a id="deleteAllTempSch" onclick="delUserTempScheduleSchArrange()">Xóa tất cả lịch trình phụ</a>
+</div>
+<div id="mmFindUserSchArr">
+	<div id="m-enrollnumberSchArr" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercodeSchArr" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-usernameSchArr" data-options="name:'username'">Tên nhân viên</div>
+</div>
+<div id="mmAreaSchArr" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaSchArr">	</div>
+</div>
+<script type="text/javascript">
+	$(function () {
+		SelAreaObj.init();
+		SelSchObj.init();
+		GetUserSchArr(0, 0);
+	});
+	$('#layoutSchArr').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('dept'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutSchArr').layout().layout('panel', 'center').panel({
+		border: false
+	});
+	$('#m-usernameSchArr').text($.i18n('userfullname'));
+	$('#m-usercodeSchArr').text($.i18n('userfullcode'));
+	$('#m-enrollnumberSchArr').text($.i18n('userenrollnumber'));
+	$('#findUserSchArr').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindUserSchArr',
+		searcher: doSearchUserSchArr
+	});
+	$('#doUserSchArr').linkbutton({
+		iconCls: 'icon-ok',
+		plain: true,
+		text: $.i18n('apply')
+	});
+	$('#cbSchedule').combobox({
+		url: 'schedule?getselectschedule&locale=' + i18n.locale,
+		panelHeight: 200,
+		valueField: 'id',
+		textField: 'text',
+		label: $.i18n('schedule'),
+		labelWidth: 70,
+		width: 240,
+	});
+	$('#reloadSchArr').linkbutton({
+		iconCls: 'icon-reload',
+		plain: true,
+	});
+	$('#doUserSchArr').linkbutton({
+		iconCls: 'icon-ok',
+		plain: false,
+		text: $.i18n('apply'),
+		disabled: MenuItem.IsEdit() ? false : true
+	});
+	$('#addTempSch').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#deleteTempSch').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#deleteAllTempSch').linkbutton({
+		iconCls: 'icon-delete',
+		plain: true,
+		text: $.i18n('delalltemplsch'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#dlAreaSchArr').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonSchArr($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#treeDeptSchArr').tree({
+				queryParams: { areaid: row.id }
+			});
+			loadMenuButtonSchArr(row.text);
+			$('#mmAreaSchArr').menu('hide');
+		}
+	});
+	function loadMenuButtonSchArr(txt) {
+		$('#btAreaSchArr').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaSchArr',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+	//$('#cbAreaSchArr').combobox({
+	//	url: 'areas?getusedarea&locale=' + i18n.locale,
+	//	panelHeight: 250,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	value: 0,
+	//	label: $.i18n('area'),
+	//	labelWidth: 60,
+	//	onSelect: function (record) {
+	//		$('#treeDeptSchArr').tree({
+	//			queryParams: { areaid: record.id }
+	//		});
+	//	}
+	//});
+	$('#treeDeptSchArr').tree({
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (node) {
+			//var areaid = $('#cbAreaSchArr').combobox('getValue');
+			var sl = $('#dlAreaSchArr').datalist('getSelected');
+			var areaid = sl ? sl.id : 0;
+			GetUserSchArr(areaid, node.id);
+		}
+	});
+	$('#ftDeptSchArr').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeDeptSchArr').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeDeptSchArr').tree('doFilter', newValue);
+		}
+	});
+	$('#tbSchArrange').datagrid({
+		title: $.i18n('regularsch'),
+		fit: true,
+		rownumbers: true,
+		toolbar: '#toolSchArrange',
+		pagination: true,
+		pageList: [10, 15, 20, 25, 30, 50, 100, 200, 500, 1000, 2000, 3000, 5000],
+		pageSize: 30,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		striped: true,
+		sortName: 'userfullcode',
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'schid', title: $.i18n('schedule'), formatter: SelSchObj.SchName },
+			{ field: 'areaid', title: $.i18n('area'), formatter: SelAreaObj.AreaName }
+		]],
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onClickRow: function (index, row) {
+			$('#tbTempSchArrange').datagrid({
+				queryParams: {
+					userenrollnumber: row.userenrollnumber,
+				}
+			});
+		}
+	});
+	function GetUserSchArr(areaid,useridd) {
+		$('#tbSchArrange').datagrid({
+			queryParams: {
+				areaid: areaid,
+				useridd: useridd,
+				userenrollnumber: 0,
+			},
+			url: 'scharrange?getuser'
+		});
+	}
+	function doSearchUserSchArr(value, name) {
+		try {
+			if (!value == "") {
+				//var AreaID = $('#cbAreaSchArr').combobox('getValue');
+				var sl = $('#dlAreaSchArr').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				if (name == 'enrollnumber') {
+					$('#tbSchArrange').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						},
+						url: 'scharrange?getuser',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				} else if (name == 'username') {
+					$('#tbSchArrange').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						},
+						url: 'scharrange?getuser',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				} else if (name == 'usercode') {
+					$('#tbSchArrange').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -3,
+							SearchValue: value
+						},
+						url: 'scharrange?getuser',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+	}
+	function UpdateScheduleSchArrange() {
+		try {
+			var schid = $('#cbSchedule').combobox('getValue');
+			if (!schid) { return }
+			var rows = $("#tbSchArrange").datagrid('getChecked');
+			if (rows.length == 0) { return }
+			showProgress();
+			var data = new Array();
+			for (var i = 0; i < rows.length; i++) {
+				var row = rows[i];
+				data.push(row.userenrollnumber);
+			}
+			var myJsonString = { schid: schid, userenrollnumber: data };
+			$.post("scharrange?updateschedule", JSON.stringify(myJsonString),
+				function (data, status) {
+					if (status == "success") {
+						data = eval('(' + data + ')');
+						if (data.state == "success") {
+							for (var i = 0; i < rows.length; i++) {
+								var row = rows[i];
+								var index = $("#tbSchArrange").datagrid('getRowIndex', row);
+								row.schid = schid;
+								$("#tbSchArrange").datagrid('updateRow', index, row);
+								$("#tbSchArrange").datagrid('refreshRow', index);
+							}
+						} else {
+							message(data.message);
+						}
+					} else {
+						message('error');
+					}
+					closeProgress();
+				}
+			);
+		} catch (err) {
+			message(err);
+		}
+	}
+	function showTempScheduleW() {
+		var rows = $('#tbSchArrange').datagrid('getChecked');
+		if (rows.length <= 0) {
+			message($.i18n('chooseuser'))
+			return;
+		}
+		$('body').append('<div id="indexWindow" style="display:none;overflow:hidden;padding:5px"></div>');
+		$('#indexWindow').window({
+			width: 320,
+			height: 210,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-schedule',
+			title: $.i18n('addtempsch'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			extractor: function (data) {
+				return CheckSessionTimeOut(data);
+			},
+			onClose: function () {
+				$('#indexWindow').remove();
+			},
+			onLoad: function () {
+				$('#cbTempSchedule').combobox({
+					url: 'schedule?getselectschedule&locale=' + i18n.locale,
+					panelHeight: 200,
+					valueField: 'id',
+					textField: 'text',
+					label: $.i18n('schedule'),
+					labelWidth: 70,
+					width: 220,
+				});
+
+			}
+		}).window('open').window('refresh', 'ScheduleStemp.html').window('center');
+	}
+	$('#tbTempSchArrange').datagrid({
+		title: $.i18n('tempsch'),
+		fit: true,
+		rownumbers: true,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		toolbar: '#toolTempSchArrange',
+		method: 'POST',
+		queryParams: {
+			userenrollnumber: 0,
+		},
+		url: 'scharrange?gettempschedule',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		columns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode')},
+			{ field: 'userfullname', title: $.i18n('userfullname') },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber')},
+			{ field: 'startdate', title: $.i18n('fromdate') },
+			{ field: 'enddate', title: $.i18n('todate') },
+			{ field: 'schid', title: $.i18n('schedule'), formatter: SelSchObj.SchName }
+		]]
+	});
+	function DeleteTempSchedule() {
+		var rows = $('#tbTempSchArrange').datagrid('getChecked');
+		if (rows.length <= 0) {
+			return;
+		}
+		$.messager.confirm($.i18n('mytitle'), $.i18n('deltempsch_ask'), function (r) {
+			if (r) {
+				var data = new Array();
+				for (var i = 0; i < rows.length; i++) {
+					var row = rows[i];
+					data.push(row.id);
+				}
+				var myJsonString = { ids: data };
+				$.post('scharrange?deletetempschedule', JSON.stringify(myJsonString),
+					function (data, status) {
+						if (status == "success") {
+							data = eval('(' + data + ')');
+							if (data.state == "success") {
+								var row = $('#tbSchArrange').datagrid('getSelected');
+								$('#tbTempSchArrange').datagrid({
+									queryParams: {
+										userenrollnumber: row.userenrollnumber,
+									}
+								});
+								message($.i18n('donedelete'));
+							} else {
+								message(data.message);
+							}
+
+						} else {
+							message('error');
+						}
+					}
+				);
+			}
+		});
+	}
+	function delUserTempScheduleSchArrange() {
+		try {
+			var rows = $('#tbSchArrange').datagrid('getChecked');
+			if (rows.length <= 0) {
+				message($.i18n('chooseuser'))
+				return;
+			}
+			$.messager.confirm($.i18n('mytitle'), $.i18n('deltempsch_ask_all'), function (r) {
+				if (r) {
+					showProgress();
+					var data = new Array();
+					for (var i = 0; i < rows.length; i++) {
+						var row = rows[i];
+						data.push(row.userenrollnumber);
+					}
+					var myJsonString = { userenrollnumber: data };
+					$.post('scharrange?deleteusertempschedule', JSON.stringify(myJsonString),
+						function (data, status) {
+							if (status == "success") {
+								data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#tbTempSchArrange').datagrid({
+										queryParams: {
+											userenrollnumber: rows[0].userenrollnumber,
+										}
+									});
+									message($.i18n('donedelete'));
+								} else {
+									message(data.message);
+								}
+															
+							} else {
+								message('error');
+							}
+							closeProgress();
+						}
+					);
+
+
+				}
+			});
+
+
+		} catch (err) {
+			closeProgress();
+			message(err);
+		}
+	}
+</script>

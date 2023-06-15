@@ -1,0 +1,1383 @@
+﻿<div  class="easyui-layout wse-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="height:38px;padding:2px">
+		<a id="btAreaIDUserCmd" />
+		<a id="selectUser"></a>
+		<!--<span class="button-sep"></span>-->
+		<!--<span class="button-sep"></span>-->
+		<input id="findUserCmd" style="width:300px" />
+		<a id="excelUser" onclick="openChooseUserCmd()"></a>
+
+	</div>
+	<div data-options="region:'west',border:false,split:true" style="width:625px;padding:0px">
+		<div id="layoutUserCmd" class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',split: true" style="width:230px;padding:3px">		
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'center',border:false" style="padding:5px;">
+						<ul id="UserCmdDevices"></ul>
+					</div>
+					<div data-options="region:'south',border:false" style="height:32px;">
+						<input id="ftUserCmdDev" style="width:100%">
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:true">
+				<table id="tableUsersCommands"></table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="tbUserCmdEvents"></table>
+	</div>
+	<div data-options="region:'south',border:false" style="height:35px;">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false,split:true" style="width:700px;">
+				<center style="margin-top:8px">
+					<label id="infoUserCmdSocket" style="color:#009">Socket Info</label>
+				</center>
+			</div>
+			<div data-options="region:'center',border:false">
+				<center style="margin-top:8px">
+					<label id="infoEventUserCmdSocket" style="color:#009">Socket Info</label>
+				</center>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="toolUserCmdEvents" style="padding-left:5px;">
+	<a id="clearUserCmdEvent" onclick="$('#tbUserCmdEvents').datagrid({data:[]});">Xóa bỏ sự kiện</a>
+	<span class="button-sep"></span>
+	<input id="swStatus2"/>
+	<input id="swData2"/>
+</div>
+<div id="mmUser" class="menu-content" data-options="hideOnUnhover: false,
+		onShow: function(){
+			$('#ccUser').layout('resize');
+		}
+		" style="background: #3c8dbc;padding:1px">
+	<div id="ccUser" class="easyui-layout" style="width:860px;height:450px;">
+		<div data-options="region:'west',split:true" style="width:250px;">
+			<div id="layoutWest" class="easyui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false" style="padding:5px;">
+					<ul id="deptGetUser" class="easyui-tree"></ul>
+				</div>
+				<div data-options="region:'south',border:false" style="height:32px;">
+					<input id="ftUserCmdDept" style="width:100%" />
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center'">
+			<table id="tableUsersCommandsList"></table>
+		</div>
+		<div data-options="region:'south'" style="height:50px;">
+			
+			<div style="top: 10px;right: 20px;position: absolute">
+				<input id="IsAddMore" class="easyui-switchbutton">
+				<a id="applyUser" style="margin:0px 20px 0px 20px" onclick="moveUserCommands()">Áp dụng</a>
+				<a id="applyUser_Exit" onclick="moveUserCommands();$('#mmUser').menu('hide')">Áp dụng & Thoát</a>
+			</div>
+		</div>
+	</div>
+	</div>
+<div id="userTool">
+	<input id="UserEnrollNumberSearch" style="width:200px" />
+	<input id="UserNameSearch" style="width:200px" />
+</div>
+<div id="toolUserCommands">
+	<a id="usercmdmenu">Lệnh cho học sinh</a>
+	<a id="removeUser" onclick="removeUserCommand()">Loại bỏ</a>
+	<a id="removeUser_All" onclick="$('#tableUsersCommands').datagrid('loadData',[]);">Loại bỏ tất cả</a>
+</div>
+
+<div id="FPDeleteComdW" style="display: none; background-color: #DBDADD">
+	<div>
+		<img src="images/finger/choosefingerbkg.png" />
+		<img id="cfp0" class="f00" src="images/finger/0.png" />
+		<img id="cfp1" class="f01" src="images/finger/1.png" />
+		<img id="cfp2" class="f02" src="images/finger/2.png" />
+		<img id="cfp3" class="f03" src="images/finger/3.png" />
+		<img id="cfp4" class="f04" src="images/finger/4.png" />
+		<img id="cfp5" class="f05" src="images/finger/5.png" />
+		<img id="cfp6" class="f06" src="images/finger/6.png" />
+		<img id="cfp7" class="f07" src="images/finger/7.png" />
+		<img id="cfp8" class="f08" src="images/finger/8.png" />
+		<img id="cfp9" class="f09" src="images/finger/9.png" />
+
+	</div>
+	<div style="padding:3px;margin-left:20px">
+		<input id="chkAllcomdFP">
+		<input id="chkIsDeleteOnDB">
+	</div>
+</div>
+<div id="mmFindUserCmd">
+	<div id="m-enrollnumberUserCmd" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercodeUserCmd" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-usernameUserCmd" data-options="name:'username'">Tên nhân viên</div>
+</div>
+<div id="mmAreaUserCmd" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaIDUserCmd">	</div>
+</div>
+<div id="searchResult" style="display: none" ;>
+	<table id="tbUserResult"></table>
+</div>
+<script type="text/javascript">
+	var clientCmdID = 0;
+	
+	//$('#chkAllcomdFP').text($.i18n('selectallfp'));
+	$('#layoutUserCmd').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('device'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		iconCls:'icon-device'
+	});
+	$('#layoutUserCmd').layout('panel', 'center').panel({
+		title: $.i18n('user'),
+		border: true,
+		iconCls: 'icon-user'
+	});
+	$('#removeUser').linkbutton({
+		iconCls: 'icon-clear',
+		plain: true,
+		text: $.i18n('remove')
+	});
+	$('#removeUser_All').linkbutton({
+		iconCls: 'icon-delete',
+		plain: true,
+		text: $.i18n('removeall')
+	});
+	$('#clearUserCmdEvent').linkbutton({
+		iconCls: 'icon-clear',
+		plain: true,
+		text: $.i18n('clearevent')
+	});
+	$('#m-usernameUserCmd').text($.i18n('userfullname'));
+	$('#m-usercodeUserCmd').text($.i18n('userfullcode'));
+	$('#m-enrollnumberUserCmd').text($.i18n('userenrollnumber'));
+	
+	$('#findUserCmd').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindUserCmd',
+		searcher: doSearchUserCmd,
+		plain:true
+	});
+	
+	$('#excelUser').linkbutton({
+		iconCls: 'icon-import-excel',
+		plain:false,
+		text: 'Chọn từ file excel'
+	});
+	$('#IsAddMore').switchbutton({
+		checked: false,
+		label: $.i18n('choosemore'),
+		labelWidth: i18n.locale == 'vi' ? 68 : 80,
+		height: 24
+	})
+	$(function () {
+		SelObj.init();
+		$.get('usercommand?getusercmdmenu&locale=' + i18n.locale)
+			.done(function (data) {
+				var data = eval('(' + data + ')');
+				$('#usercmdmenu').menubutton(
+					$.extend({}, this, {
+						text: $.i18n('usercmd'),
+						iconCls: 'icon-cmdUser',
+						menu: createMenu(data, menuUserHandler)
+					}));
+			});
+		$.get('basiccommand?getclientid')
+			.done(function (data) {
+				clientCmdID = data;
+				clearInterval(EventsOfUserCommands.ReopenSocket);
+				EventsOfUserCommands.clientID = data;
+				EventsOfUserCommands.init(0);
+				clearInterval(StatusOfUserCmdDevices.ReopenSocket);
+				StatusOfUserCmdDevices.init(0);
+			});
+	});
+	$('#ccUser').layout().layout('panel', 'west').panel({
+		title: $.i18n('dept'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		iconCls: 'icon-dept'
+	});
+	$('#layoutWest').layout();
+	$('#applyUser').linkbutton({
+		iconCls: 'icon-ok',
+		plain: false,
+		text: $.i18n('apply')
+	});
+	$('#applyUser_Exit').linkbutton({
+		iconCls: 'icon-exit',
+		plain: false,
+		text: $.i18n('apply_exit')
+	});
+	$('#UserEnrollNumberSearch').searchbox({
+		prompt: $.i18n('userenrollnumber'),
+		searcher: function (value) {
+			doSearchUserCommands(value, 'enrollnumber')
+		}
+	});
+	$('#UserNameSearch').searchbox({
+		prompt: $.i18n('userfullname'),
+		searcher: function (value) {
+			doSearchUserCommands(value, 'username')
+		}
+	});
+	
+	$('#selectUser').menubutton({
+		text: $.i18n('selectuser'),
+		menu: '#mmUser',
+		iconCls: 'icon-user',
+		plain: false,
+		showEvent: 'click'
+	});
+	//$('#ccUser').layout('resize');
+	$('#dlAreaIDUserCmd').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonUserCmd($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#UserCmdDevices').tree({
+				url: 'devicesstatus?getdevices',
+				lines: true,
+				queryParams: { areaid: row.id },
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+			});
+			$('#deptGetUser').tree({
+				queryParams: { areaid: row.id },
+				url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+
+			});
+			loadMenuButtonUserCmd(row.text);
+			$('#mmAreaUserCmd').menu('hide');
+		}
+	});
+	function loadMenuButtonUserCmd(txt) {
+		$('#btAreaIDUserCmd').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaUserCmd',
+			iconCls: 'icon-area',
+			plain: false,
+			showEvent: 'click'
+		});
+	}
+
+	$('#UserCmdDevices').tree({
+		url: 'devicesstatus?getdevices',
+		lines: true,
+		//checkbox:true,
+		checkbox: function (node) {
+			if (node.levelid == -1) return true;
+			if (node.levelid == 0) return true;
+			if (node.levelid == 1) return true;
+			if (node.iconCls == "icon-devonline") return true;
+		},
+		queryParams: { areaid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			var nodes = $('#UserCmdDevices').tree('getChecked');
+			var ids = new Array();
+			for (var i = 0; i < nodes.length; i++) {
+				if (nodes[i].levelid == 2) {
+					ids.push(nodes[i].id);
+				}
+			}
+			EventsOfUserCommands.machineids = ids;
+			EventsOfUserCommands.sendmachineids();
+		}
+
+	});
+	$('#swStatus2').checkbox({
+		label: $.i18n('requestevent'),
+		labelWidth: i18n.locale == 'vi' ? 92 : 90,
+		height: 15,
+		width: 15,
+		labelPosition: 'after',
+		checked: true,
+		onChange: function (checked) {
+			var opt = $('#swData2').checkbox('options');
+			var data = { IsDataShow: opt.checked, IsRequestShow: checked };
+			EventsOfUserCommands.send(data);
+		}
+	});
+	$('#swData2').checkbox({
+		label: $.i18n('dataevent'),
+		labelWidth: i18n.locale == 'vi' ? 92 : 70,
+		height: 15,
+		width: 15,
+		labelPosition: 'after',
+		checked: true,
+		onChange: function (checked) {
+			var opt = $('#swStatus2').checkbox('options');
+			var data = { IsRequestShow: opt.checked, IsDataShow: checked };
+			EventsOfUserCommands.send(data);
+		}
+	});
+
+	$('#ftUserCmdDev').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#UserCmdDevices').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#UserCmdDevices').tree('doFilter', newValue);
+		}
+	}).textbox('addClearBtn', 'icon-clear');
+	$('#tbUserCmdEvents').datagrid({
+		title:$.i18n('event'),
+		columns: [[
+			{ field: 'timestr', title: $.i18n('eventtime'), width: 140 },
+			{ field: 'eventinfo', title: $.i18n('eventname'), width: 120 },
+			{ field: 'sessionname', title: $.i18n('devicename'), width: 120 },
+			{ field: 'info', title: $.i18n('eventinfo'), width: 800 },
+		]],
+		fit: true,
+		rownumbers: true,
+		iconCls: 'icon-text',
+		singleSelect: true,
+		toolbar: '#toolUserCmdEvents',
+		border: true,
+		rowStyler: function (index, row) { return 'color:' + row.colorcode + ';'; },
+	}).datagrid('fixColumnSize');
+	$('#deptGetUser').tree({
+		fit: true,
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		queryParams: {
+			areaid: 0
+		},
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onClick: function (node) {
+			//var AreaID = $('#cbAreaUserCmd').combobox('getValue');
+			var sl = $('#dlAreaIDUserCmd').datalist('getSelected');
+			var AreaID = sl ? sl.id : 0;
+			$('#tableUsersCommandsList').datagrid({
+				queryParams: {
+					areaid: AreaID,
+					useridd: node.id,
+					userenrollnumber: 0,
+				},
+				url: 'user?getusers',
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).datagrid('options');
+					loaderWSE(opts, param, success, error)
+				}
+
+			});
+		}
+	});
+	$('#ftUserCmdDept').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#deptGetUser').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			console.log(newValue);
+			$('#deptGetUser').tree('doFilter', newValue);
+		}
+	}).textbox('addClearBtn', 'icon-clear').textbox('setBorder', false);
+	$('#tableUsersCommands').datagrid({
+		border: false,
+		fit: true,
+		striped: true,
+		rownumbers: true,
+		singleSelect: true,
+		toolbar: '#toolUserCommands',
+		frozenColumns: [[
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'usersex', title: $.i18n('gender'), formatter: SelObj.GenderName, sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'userenrollname', title: $.i18n('userenrollname'), sortable: true },
+			{ field: 'usercardno', title: $.i18n('usercardno'), sortable: true },
+			{ field: 'userpw', title: $.i18n('userpw') },
+			{ field: 'userprivilege', title: $.i18n('userprivilege'), formatter: SelObj.PrivilegeName },
+			{ field: 'useridd', title: $.i18n('dept'), formatter: SelObj.DeptName }
+		]],
+	});
+	$('#tableUsersCommandsList').datagrid({
+		title: $.i18n('user'),
+		iconCls: 'icon-user',
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'usersex', title: $.i18n('gender'), formatter: SelObj.GenderName, sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'userenrollname', title: $.i18n('userenrollname'), sortable: true },
+			{ field: 'usercardno', title: $.i18n('usercardno'), sortable: true },
+			{ field: 'userpw', title: $.i18n('userpw') },
+			{ field: 'userprivilege', title: $.i18n('userprivilege'), formatter: SelObj.PrivilegeName },
+			{ field: 'useridd', title: $.i18n('dept'), formatter: SelObj.DeptName }
+		]],
+		border:false,
+		fit: true,
+		//fitColumns: true,
+		striped: true,
+		pagination: true,
+		pageList: [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000],
+		pageSize: 30,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		rownumbers: true,
+		toolbar: '#userTool',
+		sortName: 'userenrollnumber',
+		queryParams: {
+			areaid: 0,
+			useridd: 0,
+			userenrollnumber: 0,
+		},
+		url: 'user?getusers',
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" ></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 360,
+				width: 402,
+				cache: false,
+				href: 'EnrolledUser.html',
+				title: $.i18n('user_fp_info'),
+				onLoad: function () {
+					var userFace = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#userFace');
+					$(userFace).text($.i18n('face'));
+					var userPalm = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#userPalm');
+					$(userPalm).text($.i18n('palm'));
+					var data = { userenrollnumber: row.userenrollnumber };
+					var url = 'user?getfinger'
+					$.post(url, JSON.stringify(data), function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "error") {
+							message(data.message);
+						} else {
+							var fp0 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp0');
+							var fp1 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp1');
+							var fp2 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp2');
+							var fp3 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp3');
+							var fp4 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp4');
+							var fp5 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp5');
+							var fp6 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp6');
+							var fp7 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp7');
+							var fp8 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp8');
+							var fp9 = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#fp9');
+							//var face = $('#tableUsersCommandsList').datagrid('getRowDetail', index).find('#face');
+							$(fp0).attr('src', data.fp0);
+							$(fp1).attr('src', data.fp1);
+							$(fp2).attr('src', data.fp2);
+							$(fp3).attr('src', data.fp3);
+							$(fp4).attr('src', data.fp4);
+							$(fp5).attr('src', data.fp5);
+							$(fp6).attr('src', data.fp6);
+							$(fp7).attr('src', data.fp7);
+							$(fp8).attr('src', data.fp8);
+							$(fp9).attr('src', data.fp9);
+							$(face).attr('src', data.face);
+							$(palm).attr('src', data.palm);
+							
+						}
+					});
+
+				}
+			})
+			$('#tableUsersCommandsList').datagrid('fixDetailRowHeight', index);
+		}
+
+	}).datagrid('resize');
+	//#region function
+	function doSearchUserCmd(value, name) {
+		try {
+			var url = 'usercommand?finduser';
+			if (!value == "") {
+				//var AreaID = $('#cbAreaUserCmd').combobox('getValue');
+				var sl = $('#dlAreaIDUserCmd').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				if (name == 'enrollnumber') {
+					$('#tbUserResult').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						},
+						url: url,
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						},
+						onLoadSuccess: function () {
+							openUserResearch();
+						}
+					});
+					
+				} else if (name == 'username') {
+					$('#tbUserResult').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						},
+						url: url,
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						},
+						onLoadSuccess: function () {
+							openUserResearch();
+						}
+					});
+				} else if (name == 'usercode') {
+					$('#tbUserResult').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -3,
+							SearchValue: value
+						},
+						url: url,
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						},
+						onLoadSuccess: function () {
+							openUserResearch();
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+	}
+
+	function doSearchUserCommands(value,name) {
+		try {
+			if (!value == "") {
+				//var AreaID = $('#cbAreaUserCmd').combobox('getValue');
+				var sl = $('#dlAreaIDUserCmd').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				if (name == 'enrollnumber') {
+					$('#tableUsersCommandsList').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				} else if (name == 'username') {
+					$('#tableUsersCommandsList').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+	}
+	function moveUserCommands() {
+		try {
+			$('#tableUsersCommands').datagrid('loading');
+			setTimeout(function () {
+				var rows = $("#tableUsersCommandsList").datagrid('getChecked');
+				if (rows.length == 0) {
+					$('#tableUsersCommands').datagrid('loaded');
+					return;
+				}
+				var opt = $('#IsAddMore').switchbutton('options');
+				if (opt.checked) {
+					for (var i = 0; i < rows.length; i++) {
+						var data = rows[i];
+						if (!isExistedCommand(data.userenrollnumber)) {
+							$('#tableUsersCommands').datagrid('appendRow', data);
+						}
+
+					}
+				} else {
+					$('#tableUsersCommands').datagrid('loadData', rows);
+				}
+
+				$('#tableUsersCommands').datagrid('autoSizeColumn');
+				var lastIndex = $('#tableUsersCommands').datagrid('getRows').length - 1;
+				$('#tableUsersCommands').datagrid('scrollTo', lastIndex);
+				$('#tableUsersCommands').datagrid('loaded');
+			}, 100);
+		} catch (err) { $('#tableUsersCommands').datagrid('loaded'); message(err) }
+	}
+	function isExistedCommand(userenrollnumber) {
+		var rows = $('#tableUsersCommands').datagrid('getRows');
+		for (var i = 0; i < rows.length; i++) {
+			if (rows[i].userenrollnumber == userenrollnumber) return true;
+		}
+		return false;
+	}
+	function removeUserCommand() {
+		try {
+			var rows = $('#tableUsersCommands').datagrid('getSelections');
+			for (var i = 0; i < rows.length; i++) {
+				var row = rows[i];
+				$('#tableUsersCommands').datagrid('deleteRow', $('#tableUsersCommands').datagrid('getRowIndex', row));
+			}
+
+		} catch (err) { message(err) }
+	}
+	function menuUserHandler(item) {
+		var data = { clientid: clientCmdID };
+		EventsOfUserCommands.send(data)
+		var userCmdRows = $("#tableUsersCommands").datagrid('getRows');
+		if (userCmdRows.length == 0) { $.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info'); return; }
+		var nodes = $('#UserCmdDevices').tree('getChecked');
+		var ids = new Array();
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].levelid == 2) {
+				ids.push(nodes[i].id);
+			}
+		}
+		if (ids.length == 0) {
+			$.messager.alert($.i18n('mytitle'), $.i18n('choosedevice'), 'info');
+			return;
+		}
+		if (item.name == 'deleteuser') {
+			DeleteUserCommand(userCmdRows, ids, item, $.i18n('cmd_ask_deleteuser'));
+		} else if (item.name == 'deleteface') {
+			DeleteUserCommand(userCmdRows, ids, item, $.i18n('cmd_ask_deleteface'));
+		} else if (item.name == 'deletepic') {
+			DeleteUserCommand(userCmdRows, ids, item, $.i18n('cmd_ask_deletepic'));
+		} else if (item.name == 'deletebio') {
+			DeleteUserCommand(userCmdRows, ids, item, $.i18n('cmd_ask_deletebio'));
+		} else if (item.name == 'deletefp') {
+			deleteFPComd(userCmdRows, ids, item, $.i18n('cmd_ask_deletefp'))
+		} else if (item.name == 'importbiophoto') {
+			ViewGetFacePhoto(item);
+		} else {
+			SetUserCommand(userCmdRows, ids, item);
+		}
+	
+	}
+	function SetUserCommand(userCmdRows, ids,item) {
+		showProgress();
+		var userenrollnumber = new Array;
+		for (var i = 0; i < userCmdRows.length; i++) {
+			userenrollnumber.push(userCmdRows[i].userenrollnumber);
+		}
+		var url = 'usercommand?setusercommands&locale=' + i18n.locale;
+		var data = { cmdType: item.cmdid, description: item.text, userenrollnumber: userenrollnumber, machineid: ids, clientid: clientCmdID }
+		$.post(url, JSON.stringify(data), function (res) {
+			res = eval('(' + res + ')');
+			closeProgress()
+			if (res.state == 'success') {
+				message(res.message);
+			} else {
+				$.messager.alert($.i18n('mytitle'), res.message, 'error');
+			}
+
+		});
+	}
+	function DeleteUserCommand(userCmdRows, ids, item,ask) {
+		$.messager.confirm($.i18n('mytitle'), ask, function (r) {
+			if (r) {
+				showProgress();
+				var userenrollnumber = new Array;
+				for (var i = 0; i < userCmdRows.length; i++) {
+					userenrollnumber.push(userCmdRows[i].userenrollnumber);
+				}
+				var url = 'usercommand?setusercommands';
+				var data = { cmdType: item.cmdid, description: item.text, userenrollnumber: userenrollnumber, machineid: ids, clientid: clientCmdID }
+				$.post(url, JSON.stringify(data), function (res) {
+					res = eval('(' + res + ')');
+					closeProgress()
+					if (res.state == 'success') {
+						message(res.message);
+					} else {
+
+						$.messager.alert($.i18n('mytitle'), res.message, 'error');
+					}
+
+				});
+			}
+		});
+	}
+
+	//#endregion 
+	//#region Vân tay
+	$('#chkAllcomdFP').checkbox({
+		label: $.i18n('selectallfp'),
+		labelWidth: 160,
+		height: 15,
+		width: 15,
+		labelPosition: 'after',
+		checked: false,
+		onChange: function (checked) {
+			CheckAllFPComd(checked)
+		}
+		
+	});
+	$('#chkIsDeleteOnDB').checkbox({
+		label: $.i18n('delondb'),
+		labelWidth: 160,
+		height: 15,
+		width: 15,
+		labelPosition: 'after',
+		checked: false
+
+	});
+	function deleteFPComd(rows,ids,item,ask) {
+		try {
+			$('#chkAllcomdFP').prop('checked', false);
+			if (rows.length > 1) {
+				setAllFingerFirstComd();
+			} else {
+				var data = { userenrollnumber: rows[0].userenrollnumber };
+				var url = 'user?getfinger'
+				$.post(url, JSON.stringify(data), function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "error") {
+						message(data.message);
+						setAllFingerFirstComd();
+					} else {
+						$('#cfp0').attr('src', data.fp0);
+						$('#cfp1').attr('src', data.fp1);
+						$('#cfp2').attr('src', data.fp2);
+						$('#cfp3').attr('src', data.fp3);
+						$('#cfp4').attr('src', data.fp4);
+						$('#cfp5').attr('src', data.fp5);
+						$('#cfp6').attr('src', data.fp6);
+						$('#cfp7').attr('src', data.fp7);
+						$('#cfp8').attr('src', data.fp8);
+						$('#cfp9').attr('src', data.fp9);
+					}
+				});
+			}
+			$('#FPDeleteComdW').dialog({
+				width: 460,
+				height: 340,
+				modal: true,
+				closed: true,
+				iconCls: 'icon-clear',
+				title: $.i18n('choosefid'),
+				collapsible: false,
+				minimizable: false,
+				maximizable: false,
+				cls: 'c6',
+				buttons: [{
+					text: $.i18n('ok'),
+					iconCls: 'icon-ok',
+					handler: function () {
+						deleteFPByIDComd(rows, ids, item,ask);
+					}
+				}, {
+					text: $.i18n('cancel'),
+					iconCls: 'icon-cancel',
+					handler: function () {
+						$('#FPDeleteComdW').dialog('close');
+					}
+				}]
+
+			}).dialog('open').dialog('center');
+		} catch (err) { message(err) }
+	}
+	function deleteFPByIDComd(rows,ids,item,ask) {
+		try {
+			var FP = new Array();
+			var src = $('#cfp0').attr('src');
+			if (src == 'images/finger/000.png' || src == 'images/finger/0000.png') { FP.push(0) }
+			src = $('#cfp1').attr('src');
+			if (src == 'images/finger/001.png' || src == 'images/finger/0001.png') { FP.push(1) }
+			src = $('#cfp2').attr('src');
+			if (src == 'images/finger/002.png' || src == 'images/finger/0002.png') { FP.push(2) }
+			src = $('#cfp3').attr('src');
+			if (src == 'images/finger/003.png' || src == 'images/finger/0003.png') { FP.push(3) }
+			src = $('#cfp4').attr('src');
+			if (src == 'images/finger/004.png' || src == 'images/finger/0004.png') { FP.push(4) }
+			src = $('#cfp5').attr('src');
+			if (src == 'images/finger/005.png' || src == 'images/finger/0005.png') { FP.push(5) }
+			src = $('#cfp6').attr('src');
+			if (src == 'images/finger/006.png' || src == 'images/finger/0006.png') { FP.push(6) }
+			src = $('#cfp7').attr('src');
+			if (src == 'images/finger/007.png' || src == 'images/finger/0007.png') { FP.push(7) }
+			src = $('#cfp8').attr('src');
+			if (src == 'images/finger/008.png' || src == 'images/finger/0008.png') { FP.push(8) }
+			src = $('#cfp9').attr('src');
+			if (src == 'images/finger/009.png' || src == 'images/finger/0009.png') { FP.push(9) }
+			if (FP.length <= 0) {
+				$.messager.alert(myTitle, $.i18n('choosefingerid'), 'info');
+				return;
+			}
+			var user = new Array();
+			for (var i = 0; i < rows.length; i++) {
+				user.push(rows[i].userenrollnumber);
+			}
+			$.messager.confirm(myTitle, ask, function (r) {
+				if (r) {
+					var opt = $('#chkIsDeleteOnDB').checkbox('options')
+					var data = {
+						cmdType: item.cmdid,
+						description: item.text,
+						userenrollnumber: user,
+						FP: FP,
+						machineid: ids,
+						clientid: clientCmdID,
+						isdelondatabase:opt.checked
+					}
+					$.post("usercommand?setusercommands", JSON.stringify(data),
+						function (data, status) {
+							var data = eval('(' + data + ')');
+							if (status == "success") {
+								$('#FPDeleteComdW').dialog('close');
+								message(data.message);
+							} else {
+								message('error');
+							}
+						}
+					);
+					//$('#DgLogCmd').dialog('open');
+				}
+			});
+		} catch (err) { message(err) }
+	}
+	function setAllFingerFirstComd() {
+		$('#cfp0').attr('src', "images/finger/0.png");
+		$('#cfp1').attr('src', "images/finger/1.png");
+		$('#cfp2').attr('src', "images/finger/2.png");
+		$('#cfp3').attr('src', "images/finger/3.png");
+		$('#cfp4').attr('src', "images/finger/4.png");
+		$('#cfp5').attr('src', "images/finger/5.png");
+		$('#cfp6').attr('src', "images/finger/6.png");
+		$('#cfp7').attr('src', "images/finger/7.png");
+		$('#cfp8').attr('src', "images/finger/8.png");
+		$('#cfp9').attr('src', "images/finger/9.png");
+	}
+	$('#cfp0').on({
+		'click': function () {
+			//var src = ($(this).attr('src') === 'images/finger/0.png')
+			//            ? 'images/finger/000.png'
+			//            : 'images/finger/0.png';
+			//         $(this).attr('src', src);
+			var src = $(this).attr('src');
+			if (src == 'images/finger/0.png') {
+				src = 'images/finger/000.png';
+			} else if (src == 'images/finger/000.png') {
+				src = 'images/finger/0.png'
+			} else if (src == 'images/finger/00.png') {
+				src = 'images/finger/0000.png'
+			} else if (src == 'images/finger/0000.png') {
+				src = 'images/finger/00.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp1').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/1.png') {
+				src = 'images/finger/001.png';
+			} else if (src == 'images/finger/001.png') {
+				src = 'images/finger/1.png'
+			} else if (src == 'images/finger/01.png') {
+				src = 'images/finger/0001.png'
+			} else if (src == 'images/finger/0001.png') {
+				src = 'images/finger/01.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp2').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/2.png') {
+				src = 'images/finger/002.png';
+			} else if (src == 'images/finger/002.png') {
+				src = 'images/finger/2.png'
+			} else if (src == 'images/finger/02.png') {
+				src = 'images/finger/0002.png'
+			} else if (src == 'images/finger/0002.png') {
+				src = 'images/finger/02.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp3').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/3.png') {
+				src = 'images/finger/003.png';
+			} else if (src == 'images/finger/003.png') {
+				src = 'images/finger/3.png'
+			} else if (src == 'images/finger/03.png') {
+				src = 'images/finger/0003.png'
+			} else if (src == 'images/finger/0003.png') {
+				src = 'images/finger/03.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp4').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/4.png') {
+				src = 'images/finger/004.png';
+			} else if (src == 'images/finger/004.png') {
+				src = 'images/finger/4.png'
+			} else if (src == 'images/finger/04.png') {
+				src = 'images/finger/0004.png'
+			} else if (src == 'images/finger/0004.png') {
+				src = 'images/finger/04.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp5').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/5.png') {
+				src = 'images/finger/005.png';
+			} else if (src == 'images/finger/005.png') {
+				src = 'images/finger/5.png'
+			} else if (src == 'images/finger/05.png') {
+				src = 'images/finger/0005.png'
+			} else if (src == 'images/finger/0005.png') {
+				src = 'images/finger/05.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp6').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/6.png') {
+				src = 'images/finger/006.png';
+			} else if (src == 'images/finger/006.png') {
+				src = 'images/finger/6.png'
+			} else if (src == 'images/finger/06.png') {
+				src = 'images/finger/0006.png'
+			} else if (src == 'images/finger/0006.png') {
+				src = 'images/finger/06.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp7').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/7.png') {
+				src = 'images/finger/007.png';
+			} else if (src == 'images/finger/007.png') {
+				src = 'images/finger/7.png'
+			} else if (src == 'images/finger/07.png') {
+				src = 'images/finger/0007.png'
+			} else if (src == 'images/finger/0007.png') {
+				src = 'images/finger/07.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp8').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/8.png') {
+				src = 'images/finger/008.png';
+			} else if (src == 'images/finger/008.png') {
+				src = 'images/finger/8.png'
+			} else if (src == 'images/finger/08.png') {
+				src = 'images/finger/0008.png'
+			} else if (src == 'images/finger/0008.png') {
+				src = 'images/finger/08.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	$('#cfp9').on({
+		'click': function () {
+			var src = $(this).attr('src');
+			if (src == 'images/finger/9.png') {
+				src = 'images/finger/009.png';
+			} else if (src == 'images/finger/009.png') {
+				src = 'images/finger/9.png'
+			} else if (src == 'images/finger/09.png') {
+				src = 'images/finger/0009.png'
+			} else if (src == 'images/finger/0009.png') {
+				src = 'images/finger/09.png'
+			}
+			$(this).attr('src', src);
+		}
+	});
+	//$('#chkAllcomdFP').on({
+	//	'click': function () {
+	//		CheckAllFPComd(this.checked)
+	//	}
+	//});
+	function CheckAllFPComd(checked) {
+		var src;
+		if (checked) {
+			src = $('#cfp0').attr('src');
+			if (src == 'images/finger/0.png') {
+				src = 'images/finger/000.png';
+			} else if (src == 'images/finger/00.png') {
+				src = 'images/finger/0000.png'
+			}
+			$('#cfp0').attr('src', src);
+
+			src = $('#cfp1').attr('src');
+			if (src == 'images/finger/1.png') {
+				src = 'images/finger/001.png';
+			} else if (src == 'images/finger/01.png') {
+				src = 'images/finger/0001.png'
+			}
+			$('#cfp1').attr('src', src);
+
+			src = $('#cfp2').attr('src');
+			if (src == 'images/finger/2.png') {
+				src = 'images/finger/002.png';
+			} else if (src == 'images/finger/02.png') {
+				src = 'images/finger/0002.png'
+			}
+			$('#cfp2').attr('src', src);
+
+			src = $('#cfp3').attr('src');
+			if (src == 'images/finger/3.png') {
+				src = 'images/finger/003.png';
+			} else if (src == 'images/finger/03.png') {
+				src = 'images/finger/0003.png'
+			}
+			$('#cfp3').attr('src', src);
+
+			src = $('#cfp4').attr('src');
+			if (src == 'images/finger/4.png') {
+				src = 'images/finger/004.png';
+			} else if (src == 'images/finger/04.png') {
+				src = 'images/finger/0004.png'
+			}
+			$('#cfp4').attr('src', src);
+
+			src = $('#cfp5').attr('src');
+			if (src == 'images/finger/5.png') {
+				src = 'images/finger/005.png';
+			} else if (src == 'images/finger/05.png') {
+				src = 'images/finger/0005.png'
+			}
+			$('#cfp5').attr('src', src);
+
+			src = $('#cfp6').attr('src');
+			if (src == 'images/finger/6.png') {
+				src = 'images/finger/006.png';
+			} else if (src == 'images/finger/06.png') {
+				src = 'images/finger/0006.png'
+			}
+			$('#cfp6').attr('src', src);
+
+			src = $('#cfp7').attr('src');
+			if (src == 'images/finger/7.png') {
+				src = 'images/finger/007.png';
+			} else if (src == 'images/finger/07.png') {
+				src = 'images/finger/0007.png'
+			}
+			$('#cfp7').attr('src', src);
+
+			src = $('#cfp8').attr('src');
+			if (src == 'images/finger/8.png') {
+				src = 'images/finger/008.png';
+			} else if (src == 'images/finger/08.png') {
+				src = 'images/finger/0008.png'
+			}
+			$('#cfp8').attr('src', src);
+
+
+			src = $('#cfp9').attr('src');
+			if (src == 'images/finger/9.png') {
+				src = 'images/finger/009.png';
+			} else if (src == 'images/finger/09.png') {
+				src = 'images/finger/0009.png'
+			}
+			$('#cfp9').attr('src', src);
+		} else {
+			src = $('#cfp0').attr('src');
+			if (src == 'images/finger/000.png') {
+				src = 'images/finger/0.png';
+			} else if (src == 'images/finger/0000.png') {
+				src = 'images/finger/00.png'
+			}
+			$('#cfp0').attr('src', src);
+
+			src = $('#cfp1').attr('src');
+			if (src == 'images/finger/001.png') {
+				src = 'images/finger/1.png';
+			} else if (src == 'images/finger/0001.png') {
+				src = 'images/finger/01.png'
+			}
+			$('#cfp1').attr('src', src);
+
+			src = $('#cfp2').attr('src');
+			if (src == 'images/finger/002.png') {
+				src = 'images/finger/2.png';
+			} else if (src == 'images/finger/0002.png') {
+				src = 'images/finger/02.png'
+			}
+			$('#cfp2').attr('src', src);
+
+			src = $('#cfp3').attr('src');
+			if (src == 'images/finger/003.png') {
+				src = 'images/finger/3.png';
+			} else if (src == 'images/finger/0003.png') {
+				src = 'images/finger/03.png'
+			}
+			$('#cfp3').attr('src', src);
+
+			src = $('#cfp4').attr('src');
+			if (src == 'images/finger/004.png') {
+				src = 'images/finger/4.png';
+			} else if (src == 'images/finger/0004.png') {
+				src = 'images/finger/04.png'
+			}
+			$('#cfp4').attr('src', src);
+
+			src = $('#cfp5').attr('src');
+			if (src == 'images/finger/005.png') {
+				src = 'images/finger/5.png';
+			} else if (src == 'images/finger/0005.png') {
+				src = 'images/finger/05.png'
+			}
+			$('#cfp5').attr('src', src);
+
+			src = $('#cfp6').attr('src');
+			if (src == 'images/finger/006.png') {
+				src = 'images/finger/6.png';
+			} else if (src == 'images/finger/0006.png') {
+				src = 'images/finger/06.png'
+			}
+			$('#cfp6').attr('src', src);
+
+			src = $('#cfp7').attr('src');
+			if (src == 'images/finger/007.png') {
+				src = 'images/finger/7.png';
+			} else if (src == 'images/finger/0007.png') {
+				src = 'images/finger/07.png'
+			}
+			$('#cfp7').attr('src', src);
+
+			src = $('#cfp8').attr('src');
+			if (src == 'images/finger/008.png') {
+				src = 'images/finger/8.png';
+			} else if (src == 'images/finger/0008.png') {
+				src = 'images/finger/08.png'
+			}
+			$('#cfp8').attr('src', src);
+
+			src = $('#cfp9').attr('src');
+			if (src == 'images/finger/009.png') {
+				src = 'images/finger/9.png';
+			} else if (src == 'images/finger/0009.png') {
+				src = 'images/finger/09.png'
+			}
+			$('#cfp9').attr('src', src);
+		}
+		//console.log(src);
+	}
+
+	//#endregion
+	//#region Face phôt
+	function ViewGetFacePhoto(item) {
+		var row = $('#tableUsersCommands').datagrid('getSelected');
+		if (!row) {
+			$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'));
+			return;
+		}
+		var nodes = $('#UserCmdDevices').tree('getChecked');
+		var ids = new Array();
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].levelid == 2) {
+				ids.push(nodes[i].id);
+			}
+		}
+		if (ids.length == 0) {
+			$.messager.alert($.i18n('mytitle'), $.i18n('choosedevice'), 'info');
+			return;
+		}
+
+		$('body').append('<div id="indexWindow1" style="display:none;overflow:hidden;padding:3px"></div>');
+		$('#indexWindow1').dialog({
+			width:700,
+			height: 530,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-face',
+			title: $.i18n('importbiophoto'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			constrain: true,
+			queryParams: { userenrollnumber: row.userenrollnumber },
+			extractor: function (data) {
+				data = $.fn.panel.defaults.extractor(data);
+				return data;
+			},
+			onClose: function () {
+				$('#indexWindow1').remove();
+			},
+			buttons: [{
+				text: $.i18n('ok'),
+				iconCls: 'icon-ok',
+				handler: function () {
+					SetBioPhotoCommand(item, row.userenrollnumber, ids)
+				}
+			}, {
+				text: $.i18n('cancel'),
+				iconCls: 'icon-cancel',
+				handler: function () {
+					$('#indexWindow1').dialog('close');
+				}
+			}]
+		}).dialog('open').dialog('refresh', 'SubPages/DetectUserPhoto.html').dialog('center');
+	}
+	//#endregion
+	//#region User Search
+	$('#tbUserResult').datagrid({
+		//title: $.i18n('user'),
+		//iconCls: 'icon-user',
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'usersex', title: $.i18n('gender'), formatter: SelObj.GenderName, sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'userenrollname', title: $.i18n('userenrollname'), sortable: true },
+			{ field: 'usercardno', title: $.i18n('usercardno'), sortable: true },
+			{ field: 'userpw', title: $.i18n('userpw') },
+			{ field: 'userprivilege', title: $.i18n('userprivilege'), formatter: SelObj.PrivilegeName },
+			{ field: 'useridd', title: $.i18n('dept'), formatter: SelObj.DeptName }
+		]],
+		border: false,
+		fit: true,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		rownumbers: true
+	});
+	function openUserResearch() {
+		try {
+
+			$('#searchResult').dialog({
+				title: $.i18n('user'),
+				modal: true,
+				closed: true,
+				iconCls: 'icon-user',
+				collapsible: false,
+				minimizable: false,
+				maximizable: false,
+				resizable: true,
+				height: 450,
+				width: 600,
+				buttons: [{
+					text: $.i18n('ok'),
+					iconCls: 'icon-ok',
+					handler: function () {
+						$('#searchResult').dialog('close');
+						moveUserSearch();
+					}
+				}, {
+					text: $.i18n('cancel'),
+					iconCls: 'icon-cancel',
+					handler: function () {
+						$('#searchResult').dialog('close');
+					}
+				}],
+				onBeforeOpen: function () {
+					
+
+				}
+
+			}).dialog('open').dialog('center');
+
+		} catch (err) { message(err) }
+	}
+	function moveUserSearch() {
+		try {
+			$('#tableUsersCommands').datagrid('loading');
+			setTimeout(function () {
+				var rows = $("#tbUserResult").datagrid('getChecked');
+				if (rows.length == 0) {
+					$('#tableUsersCommands').datagrid('loaded');
+					return;
+				}
+					for (var i = 0; i < rows.length; i++) {
+						var data = rows[i];
+						if (!isExistedCommand(data.userenrollnumber)) {
+							$('#tableUsersCommands').datagrid('appendRow', data);
+						}
+
+					}
+				
+
+				$('#tableUsersCommands').datagrid('autoSizeColumn');
+				var lastIndex = $('#tableUsersCommands').datagrid('getRows').length - 1;
+				$('#tableUsersCommands').datagrid('scrollTo', lastIndex);
+				$('#tableUsersCommands').datagrid('loaded');
+			}, 100);
+		} catch (err) { $('#tableUsersCommands').datagrid('loaded'); message(err) }
+	}
+	//#endregion
+</script>

@@ -1,0 +1,85 @@
+﻿<div class="easyui-layout" data-options="fit:true">
+	<div idata-options="region:'center',border:true" style="padding:10px">
+		<form id="tempSchForm">
+			<div style="margin-bottom:5px"><input id="startdateSchArrange" /></div>
+			<div style="margin-bottom:5px"><input id="enddateSchArrange" /></div>
+			<div><input id="cbTempSchedule"></div>
+		</form>
+	</div>
+	<div data-options="region:'south',border:false" style="height:36px;padding:5px 0px 0px 3px">
+		<a id="doSaveManyTempSchedule" onclick="saveManyTempSchedule()">Ok</a>
+		<a id="closeSaveManyTempSchedule" onclick="javascript:$('#indexWindow').window('close');">Cancel</a>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#closeSaveManyTempSchedule').linkbutton({
+		iconCls: 'icon-delete',
+		plain: true,
+		text: $.i18n('cancel')
+	});
+	$('#doSaveManyTempSchedule').linkbutton({
+		iconCls: 'icon-ok',
+		plain: true,
+		text: $.i18n('ok')
+	});
+	$('#startdateSchArrange').datebox({
+		required: true,
+		formatter: mydateformatter,
+		parser: mydateparser,
+		label: $.i18n('fromdate'),
+		labelWidth: 70,
+		width: 220
+	});
+	$('#enddateSchArrange').datebox({
+		required: true,
+		formatter: mydateformatter,
+		parser: mydateparser,
+		label: $.i18n('todate'),
+		labelWidth: 70,
+		width:220
+	});
+	function saveManyTempSchedule() {
+		try {
+			var isValid = $('#tempSchForm').form('validate');
+			if (!isValid) return;
+			var startdate = $("#startdateSchArrange").datebox('getValue');
+			var enddate = $("#enddateSchArrange").datebox('getValue');
+			var schid = $("#cbTempSchedule").combobox('getValue');
+			$('#indexWindow').window('close');
+			showProgress();
+			var rows = $('#tbSchArrange').datagrid('getChecked');
+			var data = new Array();
+			for (var i = 0; i < rows.length; i++) {
+				var row = rows[i];
+				data.push(row.userenrollnumber);
+			}
+			var myJsonString = { schid: schid, startdate: startdate, enddate: enddate, userenrollnumber: data };
+			$.post('scharrange?updatemanytempschedule', JSON.stringify(myJsonString),
+				function (data, status) {
+					if (status == "success") {
+						data = eval('(' + data + ')');
+						if (data.state == "success") {
+							$('#tbTempSchArrange').datagrid({
+								queryParams: {
+									userenrollnumber: rows[0].userenrollnumber,
+								}
+							});
+							message($.i18n('doneupdate'));
+						} else {
+							message(data.message);
+						}
+					} else {
+						message('error');
+					}
+					closeProgress();
+				}
+			);
+
+		} catch (err) {
+			closeProgress();
+			message(err);
+		}
+
+	}
+
+</script>

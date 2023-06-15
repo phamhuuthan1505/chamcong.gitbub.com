@@ -1,0 +1,73 @@
+﻿<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'north',border:false" style="height:35px;padding-top:5px;padding-left:5px">
+        <input id="cbAreaMachineArrSync" style="width:325px;" />
+    </div>
+    <div data-options="region:'center',border:false" style="padding:5px;">
+        <ul id="MachineArrSyncTree"></ul>
+    </div>
+    <div data-options="region:'south',border:false" style="height:32px;">
+        <input id="ftMachineArrSync" style="width:100%">
+    </div>
+</div>
+<script type="text/javascript">
+    $('#cbAreaMachineArrSync').combobox({
+		label: $.i18n('area'),
+		labelWidth: 60,
+        url: 'areas?getusedarea&locale=' + i18n.locale,
+        panelHeight: 200,
+        valueField: 'id',
+        textField: 'text',
+        value: 0,
+        onSelect: function (record) {
+            $('#MachineArrSyncTree').tree({
+				url: 'syncgroup?getdevices',
+                lines: true,
+				checkbox: true,
+				queryParams: { areaid: record.id },
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+            });
+
+        },
+    });
+        $('#ftMachineArrSync').textbox({
+        icons: [{
+            iconCls: 'icon-filter',
+            handler: function (e) {
+                $('#MachineArrSyncTree').tree('doFilter', $(e.data.target).textbox('getValue'))
+            },
+
+        }],
+			prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+        onChange: function (newValue, oldValue) {
+            $('#MachineArrSyncTree').tree('doFilter', newValue);
+        }
+    }).textbox('addClearBtn', 'icon-clear');
+  //  $('#MachineArrSyncTree').tree({
+		//url: 'syncgroup?getdevices',
+  //      lines: true,
+  //      checkbox: true,
+  //      queryParams: { areaid: 0 },
+  //      method: 'POST',       
+		//loader: function (param, success, error) {
+		//	var opts = $(this).tree('options');
+		//	loaderWSE(opts, param, success, error)
+		//}
+  //  });
+    function SetMachineArr() {
+            var nodes = $('#MachineArrSyncTree').tree('getChecked');
+            var ids = new Array();
+            for (var i = 0; i < nodes.length; i++) {
+                if (parseInt(nodes[i].id) < ExtAreaID && parseInt(nodes[i].id) > 0) {
+                    ids.push(nodes[i].id);
+                }
+            }
+            if (ids.length == 0) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedevice'), 'info');
+                return;
+            }
+        }
+</script>

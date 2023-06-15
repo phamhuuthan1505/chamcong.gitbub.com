@@ -1,0 +1,152 @@
+﻿<div class="easyui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="height:50px;">
+		<div style="margin:3px"><input id="inputbiophoto" name="inputbiophoto" style="width:100%;" /></div>
+		<div></div>
+	</div>
+	<div data-options="region:'south',border:false" style="height:50px;padding-left:10px">
+		<div style="margin-bottom:5px">	<input id="chkUpdateUserPhoto" /></div>
+		<div><input id="IsOverwrite"></div>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div class="easyui-layout" data-options="fit:true">
+			<!--<div data-options="region:'north',border:false" style="height:50px;">
+				<center style="margin-top:5px">
+					<a id="btCropImage" class="easyui-linkbutton" data-options="iconCls:'icon-next'" onclick="CropImage()" >Crop image</a>
+				</center>
+			</div>-->
+			<div data-options="region:'west',split:false,border:false" style="width:50%;">
+				<center style="margin-bottom:5px">
+					<span id="Txt1">Original image</span>
+				</center>
+				<center>
+					<img id="imgOriginPhoto" src="" style="width:300px;height:300px;" />
+				</center>
+			</div>
+			<div data-options="region:'center',border:false">
+				<span class="vertical-sep"></span>
+			</div>
+			<div data-options="region:'east',split:false,border:false" style="width:49%;">
+				<center style="margin-bottom:5px">
+					<span id="Txt2">Cropped image</span>
+				</center>
+				<center>
+					<img id="imgCroppedPhoto" src="" style="width:300px;height:300px;" />
+				</center>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	var srcData = '';
+	$('#Txt1').html($.i18n('originalimage'));
+	$('#Txt2').html($.i18n('croppedimage'));
+	$('#inputbiophoto').filebox({
+		prompt: $.i18n('chooseimage'),
+		buttonText: $.i18n('chooseimage'),
+		accept: 'image/*',
+		onChange: onChangeBioPhoto
+	});
+	$('#btCropImage').linkbutton({
+		iconCls: 'icon-next',
+		plain: true,
+		text: $.i18n('cropimage')
+	});
+	//$('#IsOverwrite').combobox({
+	//	label: $.i18n('overwrite'),
+	//	required: true,
+	//	labelWidth: 60,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	panelHeight: 80,
+	//	data: [{
+	//		"id": 0,
+	//		"text": $.i18n('no')
+	//	}, {
+	//			"id": 1,
+	//		"text": $.i18n('yes')
+	//		}]
+	//});
+	$('#IsOverwrite').checkbox({
+		label: $.i18n('overwrite'),
+		checked: false,
+		labelWidth: 170
+	});
+	$('#chkUpdateUserPhoto').checkbox({
+		label: $.i18n('UpdateUserPhoto'),
+		checked: true,
+		labelWidth:170
+	});
+	function onChangeBioPhoto(newValue, oldValue) {
+		var file = $(this).next().find('input[type=file]')[0];
+		if (file.files && file.files[0]) {
+			var fileToLoad = file.files[0];
+			var fileReader = new FileReader();
+			fileReader.onload = function (fileLoadedEvent) {
+				srcData = fileLoadedEvent.target.result;
+				$("#imgOriginPhoto").attr('src', srcData);
+				CropImage();
+			}
+			fileReader.readAsDataURL(fileToLoad);
+		}
+
+	}
+	function CropImage() {
+		//srcData = $("#imgOriginPhoto").attr('src')
+		//if (!srcData) {
+		//	$.messager.alert($.i18n('mytitle'), $.i18n('chooseimage'), 'info');
+		//	return;
+		//}
+		showProgress();
+		var opts = $('#indexWindow1').dialog('options');
+		var doc = {
+			photodata: srcData,
+			userenrollnumber: opts.queryParams.userenrollnumber
+		}
+		$.post('usercommand?cropimage&locale=' + i18n.locale,
+			JSON.stringify(doc),
+			function (data) {
+				closeProgress()
+				var data = eval('(' + data + ')');
+				if (data.state == "success") {
+					//$('#imgCroppedPhoto').attr('src', data.message + '?' + Math.random());
+					$('#imgCroppedPhoto').attr('src', data.message );
+				} else {
+					$.messager.alert($.i18n('mytitle'), data.message, 'error');
+				}
+
+			});
+	}
+	function SetBioPhotoCommand(item, userenrollnumber, ids) {
+		var PhotoData = $("#imgCroppedPhoto").attr('src')
+		if (!PhotoData) {
+			$.messager.alert($.i18n('mytitle'), $.i18n('chooseimage'), 'info');
+			return;
+		}
+		showProgress();
+		var url = 'usercommand?setuserbiophoto&locale=' + i18n.locale;
+		var opt1 = $('#IsOverwrite').checkbox('options');
+		var opt2 = $('#chkUpdateUserPhoto').checkbox('options');
+		var data = {
+			photodata: PhotoData,
+			cmdType: item.cmdid,
+			description: item.text,
+			userenrollnumber: userenrollnumber,
+			machineid: ids,
+			overwrite: opt1.checked,
+			updateuserphoto:opt2.checked,
+			clientid: clientCmdID
+		}
+		$.post(url, JSON.stringify(data), function (res) {
+			res = eval('(' + res + ')');
+			closeProgress()
+			if (res.state == 'success') {
+				message(res.message);
+				$('#indexWindow1').dialog('close');
+			} else {
+				//console.log($.messager);
+				$.messager.alert($.i18n('mytitle'), res.message, 'error');
+			}
+
+		});
+	}
+</script>

@@ -1,0 +1,47 @@
+﻿body {
+	
+}
+.app-logo {
+	/*width: 103px;
+	height: 28px;*/
+	margin: 8px 5px 5px 10px;
+	position: absolute;
+	left: 30px;
+}
+.bar-center {
+	display: inline-block;
+	width: 0;
+	height: 100%;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #fff;
+	vertical-align: middle;
+}
+.div-login {
+	/*margin: 8px 5px 5px 10px;*/
+	position: absolute;
+	top: 50%;
+	left: 5%;
+	background-color: #FDFEFE;
+	height: 280px;
+	width: 300px;
+	/*margin-left: 10px;*/
+	margin-top: -140px;
+	border: 1px solid gray;
+	padding: 20px;
+	border-radius: 10px;
+	box-shadow: 3px 3px 2px 1px #999
+}
+.div-bg {
+	/*margin: 8px 5px 5px 10px;*/
+	position: absolute;
+	top: 50%;
+	right: 0%;
+	/*background-color: gray;*/
+	height: 230px;
+	width: 200px;
+	/*margin-left: -350px;*/
+	margin-top: -115px;
+	/*border: 2px solid gray;*/
+	/*padding: 20px;*/
+	/*border-radius: 10px;*/
+}

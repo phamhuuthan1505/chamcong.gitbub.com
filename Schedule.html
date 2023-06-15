@@ -1,0 +1,526 @@
+﻿<div id="layoutSch" class="easyui-layout wse-layout" data-options="fit:true">
+	<!--<div data-options="region:'north',border:false" style="height:38px;padding:2px">
+		<input id="cbAreaSch" class="easyui-combobox" />
+	</div>-->
+	<div data-options="region:'west',split:true" style="width:580px;">
+		<table id="tbSch"></table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="scheduledetails"></table>
+	</div>
+</div>
+<div id="toolSch">
+	<a id="btAreaSch" />
+	<span class="button-sep"></span>
+	<a id="addSch" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newItemSchedule()">Thêm mới</a>
+	<a id="deleteSch" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="deleteSchedule()">Xóa</a>
+	<!--<span class="button-sep"></span>
+	<a id="reloadSch" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="javascript:$('#tbSch').datagrid('reload');">Tải lại</a>-->
+	<span class="button-sep"></span>
+	<a id="assignShift" onclick="showAssignShift()">Chỉ định ca làm việc</a>
+
+</div>
+<div id="mmAreaSch" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaSch">	</div>
+</div>
+<script type="text/javascript">
+	$(function () {
+		SelAreaObj.init();
+		SelInOutArrObj.init();
+		loadSchedule(0);
+		//$('#cbAreaSch').combobox({
+		//	label: $.i18n('area'),
+		//	labelWidth: 60,
+		//	width: 390,
+		//	url: 'areas?getusedarea&locale=' + i18n.locale,
+		//	panelHeight: 200,
+		//	valueField: 'id',
+		//	textField: 'text',
+		//	value: 0,
+		//	onSelect: function (record) {
+		//		loadSchedule(record.id);
+		//	},
+		//});
+	});
+	$('#dlAreaSch').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonSch($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			loadSchedule(row.id);
+			loadMenuButtonSch(row.text);
+			$('#mmAreaSch').menu('hide');
+		}
+	});
+	function loadMenuButtonSch(txt) {
+		$('#btAreaSch').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaSch',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+	$('#layoutSch').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('schlist'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutSch').layout('panel', 'center').panel({
+		title: $.i18n('schdetail'),
+		border: true
+	});
+	$('#addSch').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#deleteSch').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	//$('#reloadSch').linkbutton({
+	//	iconCls: 'icon-reload',
+	//	plain: true,
+	//	text: $.i18n('reload')
+	//});
+	$('#assignShift').linkbutton({
+		iconCls: 'icon-shift',
+		text: $.i18n('assignshift'),
+		disabled: MenuItem.IsEdit() ? false : true,
+		plain: true,
+	});
+	$('#tbSch').datagrid({
+		fit: true,
+		fitColumns: true,
+		border: false,
+		sortName: 'schname',
+		pagination: true,
+		pageSize: 20,
+		columns: [[
+			{ field: 'schname', title: $.i18n('schname'), sortable: true },
+			{ field: 'inoutid', title: $.i18n('inoutarr'), formatter: SelInOutArrObj.InOutArrName },
+			{ field: 'areaid', title: $.i18n('area'), formatter: SelAreaObj.AreaName, width: 150 }
+		]],
+		rownumbers: true,
+		singleSelect: true,
+		toolbar: '#toolSch',
+		iconCls: 'icon-schedule',
+		striped: true,
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 160,
+				border: false,
+				cache: false,
+				href: 'SubPages/ScheduleName.html',
+				onLoad: function () {
+					$('#tbSch').datagrid('fixDetailRowHeight', index);
+					$('#tbSch').datagrid('selectRow', index);
+					SetSchControls(row, index);
+					$('#tbSch').datagrid('getRowDetail', index).find('form').form('load', row);
+				}
+			});
+			$('#tbSch').datagrid('fixDetailRowHeight', index);
+
+		},
+		onClickRow: function (index, row) {
+			$('#scheduledetails').propertygrid({
+				queryParams: { schid: row.schid }
+			});
+		}
+	});
+	function SetSchControls(row, index) {
+		var saveSch = $('#tbSch').datagrid('getRowDetail', index).find('#saveSch');
+		$(saveSch).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var cancelSch = $('#tbSch').datagrid('getRowDetail', index).find('#cancelSch');
+		$(cancelSch).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var cbAreaID = $('#tbSch').datagrid('getRowDetail', index).find('#cbAreaID');
+		$(cbAreaID).combobox({
+			label: $.i18n('area'),
+			labelWidth: 120,
+			data: SelAreaObj.AreaData(),
+			required: true,
+			panelHeight: 200,
+			valueField: 'id',
+			textField: 'text',
+			width: 370
+		});
+		var schname = $('#tbSch').datagrid('getRowDetail', index).find('#schname');
+		$(schname).textbox({
+			label: $.i18n('schname'),
+			labelWidth: 120,
+			required: true,
+			width: 370
+		});
+		var cbInOutID = $('#tbSch').datagrid('getRowDetail', index).find('#cbInOutID');
+		$(cbInOutID).combobox({
+			label: $.i18n('inoutarr'),
+			labelWidth: 120,
+			data: SelInOutArrObj.InOutArrData(),
+			required: true,
+			panelHeight: 200,
+			valueField: 'id',
+			textField: 'text',
+			width: 370
+		});
+	}
+	function loadSchedule(areaid) {
+		$('#tbSch').datagrid({
+			queryParams: { areaid: areaid },
+			method: 'POST',
+			url: 'schedule?getschedule',
+			loader: function (param, success, error) {
+				var opts = $(this).datagrid('options');
+				loaderWSE(opts, param, success, error)
+			}
+		});
+	}
+	function saveSchedule(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		saveItemSchedule(index);
+	}
+	function cancelSchedule(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbSch').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbSch').datagrid('deleteRow', index);
+		} else {
+			$('#tbSch').datagrid('collapseRow', index);
+		}
+	}
+	function saveItemSchedule(index) {
+		var row = $('#tbSch').datagrid('getRows')[index];
+		var url = row.isNewRecord ? 'schedule?addschedule' : 'schedule?updateschedule'//&schid=' + row.schid;
+		var myForm = $('#tbSch').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (!isValid) return;
+		var values = {};
+		$.each(myForm.serializeArray(), function (i, field) {
+			values[field.name] = field.value;
+		});
+		values['schid'] = row.schid;
+		$.post(url, JSON.stringify(values),
+			function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "error") {
+					message(data.message);
+
+				} else {
+					data.isNewRecord = false;
+					$('#tbSch').datagrid('collapseRow', index);
+					$('#tbSch').datagrid('updateRow', {
+						index: index,
+						row: data
+					});
+				}
+
+			});
+	}
+	function newItemSchedule() {
+		try {
+			var index = $('#tbSch').datagrid('getRows').length - 1;
+			if (index > 0) {
+				var row = $("#tbSch").datagrid('getRows')[index]
+				if (row.isNewRecord) { return }
+			}
+			$('#tbSch').datagrid('appendRow', { isNewRecord: true,inoutid:1,areaid:0 });
+			var index = $('#tbSch').datagrid('getRows').length - 1;
+			$('#tbSch').datagrid('expandRow', index);
+			$('#tbSch').datagrid('selectRow', index);
+		} catch (err) { message(err) }
+	}
+	function deleteSchedule() {
+		try {
+			var row = $('#tbSch').datagrid('getSelected');
+			if (row) {
+				if (row.isNewRecord) {
+					$('#tbSch').datagrid('deleteRow', $('#tbSch').datagrid('getRowIndex', row));
+					return;
+				}
+				$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete_item'), function (r) {
+					if (r) {
+						var data = { schid: row.schid };
+						$.post('schedule?deleteschedule&locale=' + i18n.locale, JSON.stringify(data),
+							function (data, status) {
+								if (status == "success") {
+									data = eval('(' + data + ')');
+									if (data.state == "success") {
+										$('#tbSch').datagrid('deleteRow', $('#tbSch').datagrid('getRowIndex', row));
+									} else {
+										message(data.message);
+									}
+								} else {
+									message('error');
+								}
+							}
+						);
+					}
+				});
+			}
+		} catch (err) { message(err) }
+	}
+	$('#scheduledetails').propertygrid({
+		width: 450,
+		border:false,
+		url: 'schedule?scheduledetails&locale=' + i18n.locale,
+		showGroup: true,
+		scrollbarSize: 0,
+		queryParams: { schid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).propertygrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		columns: [[
+			{ field: 'name', title: $.i18n('description'), width: 80 },
+			{
+				field: 'value', title: $.i18n('value'), width: 30,//includes
+				formatter: function (value, row) {
+					if (row.feildname.includes('Is')) {
+						if (value == 'True') { return $.i18n('yes') } else { return $.i18n('no') }
+					} else if (row.feildname == 'roundtype') {
+						if (value == 0) { return $.i18n('roundback') } else { return $.i18n('roundforward') }
+					} else {
+						return value;
+					}
+				}
+			}
+		]],
+		onEndEdit: function (index, row) {
+			var value1 = row.value;
+			if (row.feildname.includes('Is')) {
+				if (row.value == true) {
+					row.value = 'True';
+					value1 = 'true';
+				} else {
+					row.value = "False";
+					value1 = 'false'
+				}
+
+			}
+			var rw = $('#tbSch').datagrid('getSelected');
+			if (!rw) return;
+			if (row.feildname == 'shift') return;
+			var url = 'schedule?updateitemschedule'
+			var data = { id: rw.schid, value: value1, itemname: row.feildname };
+			$.post(url, JSON.stringify(data),
+				function (res) {
+					res = eval('(' + res + ')');
+					if (res.state == 'error') {
+						message(res.message);
+					}
+				});
+		},
+		onBeginEdit: function (index, row) {
+			if (row.feildname.includes('Is')) {
+				var ed = $('#scheduledetails').propertygrid('getEditors', index)[0];
+				if (row.value == 'True') {
+					$(ed.target).switchbutton('check');
+				} else {
+					$(ed.target).switchbutton('uncheck');
+				}
+			}
+
+		},
+		onBeforeEdit: function (index, row) {
+			return MenuItem.IsEdit();
+		}
+	});
+	function showAssignShift() {
+		var row = $('#tbSch').datagrid('getSelected');
+		if (!row) {
+			return;
+		}
+		$('body').append('<div id="indexWindow" style="display:none;overflow:hidden;padding:3px"></div>');
+		$('#indexWindow').dialog({
+			width: 650,
+			height: 500,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-shift',
+			title: $.i18n('assignshift'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			extractor: function (data) {
+				return CheckSessionTimeOut(data);
+			},
+			onClose: function () {
+				$('#indexWindow').remove();
+			},
+			onLoad: function () {
+				var sl = $('#dlAreaSch').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				$('#listShift').datalist({
+					queryParams: { areaid: AreaID },
+					url: 'shift?listshift'
+				});
+				$('#listWeekday').datalist();
+				$('#treeShift').tree({
+					queryParams: { schid: row.schid },
+					url: 'schedule?treearrange&locale=' + i18n.locale
+				});	
+
+			},
+			buttons: [{
+				text: $.i18n('execute'),
+				iconCls: 'icon-ok',
+				width: 100,
+				handler: function () {
+					arangeShiftSchedule();
+				}
+			}, {
+				text: $.i18n('exit'),
+				iconCls: 'icon-exit',
+				width: 100,
+				handler: function () {
+					$('#indexWindow').dialog('close');
+					$('#scheduledetails').propertygrid();
+				}
+			}],
+
+		}).dialog('open').dialog('refresh', 'AssignShift.html').dialog('center');
+	}
+	function deleteShiftSchedule() {
+		try {
+			var row = $('#tbSch').datagrid('getSelected');
+			var nodes = $('#treeShift').tree('getChecked');
+			if (nodes.length == 0) { return }
+			$('#mmAssignShift').menu('hide');
+			$.messager.confirm($.i18n('mytitle'), $.i18n('unassign_ask'), function (r) {
+				if (r) {
+					var data = new Array();
+					for (var i = 0; i < nodes.length; i++) {
+						data.push(nodes[i].levelid + ';' + nodes[i].relationid);
+					}
+					var myJsonString = { schid: row.schid, choiceid: data };
+					$.post('schedule?unassign', JSON.stringify(myJsonString),
+						function (data, status) {
+							if (status == "success") {
+								data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#treeShift').tree({
+										queryParams: { schid: row.schid }
+									});
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+
+						})
+					$('#mmAssignShift').menu('show');
+				} else {
+					$('#mmAssignShift').menu('show');
+				}
+			})
+			
+		} catch (err) { message(err) }
+	}
+	function deleteAllShiftSchedule() {
+		try {
+			var row = $('#tbSch').datagrid('getSelected');
+			$.messager.confirm($.i18n('mytitle'), $.i18n('unassign_ask'), function (r) {
+				if (r) {
+					var data = { schid: row.schid };
+					$.post('schedule?unassignall', JSON.stringify(data),
+						function (data, status) {
+							if (status == "success") {
+								data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#treeShift').tree({
+										queryParams: { schid: row.schid }
+									});
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+
+						}
+					)
+				}
+			})
+		} catch (err) { message(err) }
+	}
+	function arangeShiftSchedule() {
+		try {
+			var row = $('#tbSch').datagrid('getSelected');
+			var rowW = $('#listWeekday').datalist('getChecked');
+			var rowS = $('#listShift').datalist('getChecked');
+			if (rowS.length == 0) {
+				message($.i18n('chooseshift'));
+				return
+			}
+			if (rowW.length == 0) {
+				message($.i18n('chooseday'));
+				return
+			}
+			var dataS = new Array();
+			var dataW = new Array();
+			for (var i = 0; i < rowS.length; i++) {
+				var rw = rowS[i];
+				dataS.push(parseInt(rw.value));
+			}
+			for (var i = 0; i < rowW.length; i++) {
+				var rw = rowW[i];
+				dataW.push(parseInt(rw.value));
+			}
+			var myJsonString = { schid: row.schid, shiftid: dataS, dayid: dataW };
+			$.post('schedule?doassignshift', JSON.stringify(myJsonString),
+				function (data, status) {
+					if (status == "success") {
+						data = eval('(' + data + ')');
+						if (data.state == "success") {
+							
+						//	$('#indexWindow').window('close');
+							$('#treeShift').tree({
+								queryParams: { schid: row.schid }
+							});
+							$('#scheduledetails').propertygrid();
+						} else {
+							message(data.message);
+						}
+					} else {
+						message('error');
+					}
+				});
+		} catch (err) { message(err) }
+	}
+
+</script>

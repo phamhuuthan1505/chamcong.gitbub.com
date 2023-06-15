@@ -1,0 +1,282 @@
+﻿<div id="layoutPunchTime" class="easyui-layout wse-layout" data-options="fit:true">
+	<div data-options="region:'west',split:true" style="width:300px;padding:3px;overflow:auto">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<a id="btAreaPunchTime" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:5px;">
+				<ul id="treeDevPunchTime"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftDevPunchTime" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:2px 2px 4px 2px">
+		<table id="tbRecords"></table>
+	</div>
+</div>
+<div id="mmAreaPunchTime" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaPunchTime">	</div>
+</div>
+<div id="toolPunchTime">
+	<input id="dateStartPunchTime" />
+	<input id="dateEndPunchTime" />
+	<a id="getPunchTime"></a>
+	<span class="button-sep"></span>
+	<a id="btGetRecord" onclick="GetRecord()">Xem giờ</a>
+	<span class="button-sep"></span>
+	<a id="gridpunchtime" onclick="GetGridPunchTime()">Xuất lưới</a>
+	<span class="button-sep"></span>
+	<a id="punchtimeR1" onclick="GetPunchTimeR1()">Xuất giờ 1</a>
+	<a id="punchtimeR2" onclick="GetPunchTimeR2()">Xuất giờ 2</a>
+</div>
+
+	<script type="text/javascript">
+		var nodeIdRec;
+		$(function () {
+			SelDevObj.init();
+			getStartDateRec();
+			getEndDateRec();
+		});
+		$('#layoutPunchTime').layout({ fit: true }).layout('panel', 'west').panel({
+			title: $.i18n('device'),
+			hideCollapsedContent: false,
+			collapsible: true,
+			border: true,
+			split: true,
+			iconCls: 'icon-device'
+		});
+		$('#layoutPunchTime').layout('panel', 'center').panel({
+			title: $.i18n('time'),
+			border: true,
+			iconCls: 'icon-text'
+		});
+		$('#dlAreaPunchTime').datalist({
+			method: 'get',
+			url: 'areas?getusedarea&locale=' + i18n.locale,
+			loader: function (param, success, error) {
+				var opts = $(this).datalist('options');
+				loaderWSE(opts, param, success, error)
+			},
+			valueField: 'id',
+			textField: 'text',
+			width: 200,
+			height: 250,
+			border: 0,
+			onLoadSuccess: function () {
+				loadMenuButtonPunchTime($.i18n('all'));
+			},
+			onSelect: function (index, row) {
+				$('#treeDevPunchTime').tree({
+					url: 'syncgroup?getdevices',
+					lines: true,
+					queryParams: { areaid: row.id },
+					method: 'POST',
+					loader: function (param, success, error) {
+						var opts = $(this).tree('options');
+						loaderWSE(opts, param, success, error)
+					}
+				});
+				loadMenuButtonPunchTime(row.text);
+				$('#mmAreaPunchTime').menu('hide');
+			}
+		});
+		function loadMenuButtonPunchTime(txt) {
+			$('#btAreaPunchTime').menubutton({
+				text: $.i18n('area') + ': ' + txt,
+				menu: '#mmAreaPunchTime',
+				iconCls: 'icon-area',
+				plain: true,
+				showEvent: 'click'
+			});
+		}
+		$('#ftDevPunchTime').textbox({
+			icons: [{
+				iconCls: 'icon-filter',
+				handler: function (e) {
+					$('#treeDevPunchTime').tree('doFilter', $(e.data.target).textbox('getValue'))
+				},
+
+			}],
+			prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+			onChange: function (newValue, oldValue) {
+				$('#treeDevPunchTime').tree('doFilter', newValue);
+			}
+		}).textbox('addClearBtn', 'icon-clear');
+
+		$('#treeDevPunchTime').tree({
+			url: 'syncgroup?getdevices',
+			lines: true,
+			queryParams: { areaid: 0 },
+			method: 'POST',
+			loader: function (param, success, error) {
+				var opts = $(this).tree('options');
+				loaderWSE(opts, param, success, error)
+			},
+			onClick: function (node) {
+				//if (node.levelid == 2) {
+				nodeIdRec = node;
+				GetRecord();
+				//} else {
+				//	message($.i18n('choosedevice'));
+				//}
+			}
+		});
+
+		$('#tbRecords').datagrid({
+			fit: true,
+			rownumbers: true,
+			striped: true,
+			pagination: true,
+			singleSelect: true,
+			pageList: [10, 15, 20, 25, 30, 50, 100, 200, 300],
+			pageSize: 30,
+			method: 'get',
+			toolbar: '#toolPunchTime',
+			iconCls: 'icon-text',
+			columns: [[
+				{ field: 'userfullcode', title: $.i18n('userfullcode') },
+				{ field: 'userfullname', title: $.i18n('userfullname') },
+				{ field: 'timedate', title: $.i18n('date') },
+				{ field: 'time', title: $.i18n('time') },
+				{ field: 'origintype', title: $.i18n('type') },
+				{ field: 'source', title: $.i18n('source') },
+				{ field: 'userenrollnumber', title: $.i18n('userenrollnumber') },
+				{ field: 'machineno', title: $.i18n('device'), formatter: SelDevObj.DevName }
+			]]
+		});
+		$('#dateStartPunchTime').datetimespinner({
+			required: true,
+			formatter: mydatetimeformatter,
+			parser: mydatetimeparser,
+			label: $.i18n('fromdate'),
+			labelWidth: 63,
+			width: 230,
+			//value: getDate(),
+			
+		});
+		$('#dateEndPunchTime').datetimespinner({
+			required: true,
+			formatter: mydatetimeformatter,
+			parser: mydatetimeparser,
+			label: $.i18n('todate'),
+			labelWidth: 63,
+			width: 230,
+			//value: getDate(),
+
+		});
+		$('#btGetRecord').linkbutton({
+			iconCls: 'icon-attview',
+			plain: false,
+			text: $.i18n('view')
+		});
+		function getStartDateRec() {
+			try {
+				var startdate = getCookie("dateStartPunchTime");
+				if (startdate == "") {
+					var d = new Date();
+					startdate = '1/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' 00:00:00';
+					$('#dateStartPunchTime').datetimespinner('setValue', startdate);
+				} else {
+					$('#dateStartPunchTime').datetimespinner('setValue', startdate);
+				}
+			} catch (err) { message(err) }
+		}
+		function getEndDateRec() {
+			var enddate = getCookie("dateEndPunchTime");
+			if (enddate == "") {
+				var d = new Date();
+				enddate = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' 23:59:59';
+				$('#dateEndPunchTime').datetimespinner('setValue', enddate);
+			} else {
+				$('#dateEndPunchTime').datetimespinner('setValue', enddate);
+			}
+
+		}
+		function GetRecord() {
+			var startdate = $("#dateStartPunchTime").datetimespinner('getValue');
+			var enddate = $("#dateEndPunchTime").datetimespinner('getValue');
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			setCookie("dateStartPunchTime", startdate, 365);
+			setCookie("dateEndPunchTime", enddate, 365);
+			$('#tbRecords').datagrid({
+				queryParams: {
+					startdate: startdate,
+					enddate: enddate,
+					id: nodeIdRec ? nodeIdRec.id : 0,
+					levelid: nodeIdRec ? nodeIdRec.levelid : -1,
+				},
+				url: 'records?getrecords',
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).datagrid('options');
+					loaderWSE(opts, param, success, error)
+				}
+
+			});
+		};
+		$('#gridpunchtime').linkbutton({
+			iconCls: 'icon-excel',
+			plain: true,
+			text: $.i18n('gridexport')
+		});
+		$('#punchtimeR1').linkbutton({
+			iconCls: 'icon-excel',
+			plain: true,
+			text: $.i18n('punchtime', 1)
+		});
+		$('#punchtimeR2').linkbutton({
+			iconCls: 'icon-excel',
+			plain: true,
+			text: $.i18n('punchtime', 2)
+		});
+		function GetGridPunchTime() {
+			var url = 'report?id=getgridpunchtime&locale=' + i18n.locale;
+			GetPunchTimeReport(url);
+		}
+		function GetPunchTimeR1() {
+			var url = 'report?id=getpunchtimeR1&locale=' + i18n.locale;
+			GetPunchTimeReport(url);
+		}
+		function GetPunchTimeR2() {
+			var url = 'report?id=getpunchtimeR2&locale=' + i18n.locale;
+			GetPunchTimeReport(url);
+		}
+		function GetPunchTimeReport(url) {
+			try {
+				var startdate = $("#dateStartPunchTime").datetimespinner('getValue');
+				var enddate = $("#dateEndPunchTime").datetimespinner('getValue');
+				if (startdate == "" || enddate == "") {
+					$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+					return;
+				}
+				if (getValidDate(startdate, enddate) == false) {
+					$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+					return;
+				}
+				setCookie("dateStartPunchTime", startdate, 365);
+				setCookie("dateEndPunchTime", enddate, 365);
+				
+				showProgress();
+				var values = {
+					startdate: startdate,
+					enddate: enddate,
+					id: nodeIdRec ? nodeIdRec.id : 0,
+					levelid: nodeIdRec ? nodeIdRec.levelid : -1
+				};
+				$.post(url, JSON.stringify(values), function (res) {
+					res = eval('(' + res + ')');
+					closeProgress();
+					if (res.state == 'success') {
+						document.getElementById('exp_iframe').src = res.message;
+					} else {
+						$.messager.alert($.i18n('mytitle'), res.message, 'info');
+					}
+				});
+			} catch (err) { closeProgress(); message(err) }
+		}
+	</script>

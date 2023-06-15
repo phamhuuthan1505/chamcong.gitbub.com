@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Wise Eye ITS</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <!--<link rel="stylesheet" type="text/css" href="css/WseTheme.css" />-->
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/wse_easyui.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/icon.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/themes/wse_default/css/sidemenu_style.css" />
+
+    <link rel="stylesheet" type="text/css" href="jquery-easyui-1.10.3/exticons/wseicon.css" />
+
+
+    <script type="text/javascript" src="jquery-easyui-1.10.3/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/ext1.0.4/datagrid-detailview.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/ext1.0.4/datagrid-groupview.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/ext1.0.4/datagrid-filter.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/easyloader.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/ext1.0.4/treegrid-dnd.js"></script>
+    <script type="text/javascript" src="jquery-easyui-1.10.3/ext1.0.4/datagrid-export.js"></script>
+    <script type="text/javascript" src="jquery.i18n/libs/CLDRPluralRuleParser.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.messagestore.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.fallbacks.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.parser.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.emitter.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.emitter.bidi.js"></script>
+    <script type="text/javascript" src="jquery.i18n/src/jquery.i18n.language.js"></script>
+    <script type="text/javascript" src="js/FileSaver.js"></script>
+    <script type="text/javascript" src="js/js.js"></script>
+    <script type="text/javascript" src="js/events.js"></script>
+    <script type="text/javascript" src="js/extend.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+</head>
+<body class="easyui-layout" style="display:none">
+    <div data-options="region:'north',split:false,border:false" class="main-header">
+        <div>
+            <!--<img class="app-logo" src="images/wselogo.png">-->
+            <a class="app-logo" href="https://wiseeye.info" target="_blank"><img src="images/wselogo.png"></a>
+        </div>
+        <div id="menubar" class="wse-menubar">
+
+        </div>
+        <div class="logonuser">
+            <a id="mnuserlogin"></a>
+        </div>
+    </div>
+    <div data-options="region:'west',split:false,hideCollapsedContent:false,border:false" class="main-left">
+        <div id="mainmenu" class="wrapper">
+            <div class="hamburger">
+                <div class="first"></div>
+                <div class="second"></div>
+                <div class="third"></div>
+            </div>
+            <div id="sm" style="width:200px"></div>
+
+        </div>
+
+    </div>
+    <div data-options="region:'center', border:false" style="padding-bottom:0px">
+        <div id="tab" class="easyui-tabs"></div>
+    </div>
+
+    <div id="mm10">
+        <div id="mnchangepass" data-options="iconCls:'icon-switchpass',name:'changepass'" onclick="openChangePass()">Đổi mật khẩu</div>
+        <div id="mnchangelang" data-options="iconCls:'icon-lang',name:'changelang'" onclick="openChangeLang()"></div>
+        <div id="mnchangetheme" data-options="iconCls:'icon-theme',name:'changetheme'" onclick="openChangeTheme()"></div>
+        <div class="menu-sep"></div>
+        <div id="mnlogout" data-options="iconCls:'icon-logout',name:'logout'" onclick="Reload()">Đăng xuất</div>
+    </div>
+    <iframe id="exp_iframe" style="display:none;"></iframe>
+    <div id="ChangeLangW" style="padding:20px 5px 20px 10px;display:none">
+        <input id="cbLang" style="width:100%" />
+    </div>
+    <div id="ChangeTheme" style="padding:20px 5px 20px 10px;display:none">
+        <!--<input id="cbThemes" style="width:100%" />-->
+        <select id="cbThemes" class="easyui-combobox" panelHeight="200" style="width:100%;">
+            <option value="wse_default">Default</option>
+            <option value="wse_forest">Forest</option>
+            <option value="wse_sunny">Sunny</option>
+            <option value="wse_dark_hive">Dark Hive</option>
+            <option value="wse_cupertino">Cupertino</option>
+            <option value="wse_pepper_grinder">Pepper Grinder</option>
+            <option value="wse_black">Black</option>
+            <option value="wse_red">Red</option>
+            <option value="wse_gray">Gray</option>
+        </select>
+    </div>
+</body>
+</html >

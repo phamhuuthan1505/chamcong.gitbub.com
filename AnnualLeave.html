@@ -1,0 +1,472 @@
+﻿<div id="layoutAL" class="easyui-layout wse-layout">
+	<div data-options="region:'west',split: true" style="width:250px;padding:2px 2px 2px 2px;overflow:hidden">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreaAL" style="width:303px;margin-bottom:3px" />-->
+				<a id="btAreaAL" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:3px;">
+				<ul id="treeDeptAL"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftDeptAL" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center'" style="padding-bottom:5px">
+		<table id="tableALUsers"></table>
+	</div>
+</div>
+<div id="ALUserTool">
+	<input id="findUserAL" style="width:300px" />
+	<span class="button-sep"></span>
+	<a id="BeginningAL" onclick="openSetBeginningLeave();">Cài đặt lại ban đầu</a>
+	<span class="button-sep"></span>
+	<a id="deleteAL" onclick="deleteLeave()">Xóa</a>
+	<span class="button-sep"></span>
+	<a id="BeginningALExcel" onclick="openSetBeginningLeaveExcel();">Cài đặt lại ban đầu từ Excel</a>
+	<span class="button-sep"></span>
+	<a id="exportAL" onclick="ExportAL()">Export</a>
+</div>
+<div id="mmFindUserAL">
+
+	<div id="m-enrollnumberAL" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercodeAL" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-usernameAL" data-options="name:'username'">Tên nhân viên</div>
+</div>
+<div id="mmAreaAL" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaAL">	</div>
+</div>
+<script type="text/javascript">
+	$('#layoutAL').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('dept'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutAL').layout().layout('panel', 'center').panel({
+		border: false
+	});
+	$('#m-usernameAL').text($.i18n('userfullname'));
+	$('#m-usercodeAL').text($.i18n('userfullcode'));
+	$('#m-enrollnumberAL').text($.i18n('userenrollnumber'));
+	$('#findUserAL').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindUserAL',
+		searcher: doSearchUserAL
+	});
+	$('#BeginningAL').linkbutton({
+		iconCls: 'icon-event',
+		plain: true,
+		text: $.i18n('beginningvalue')
+	});
+	$('#BeginningALExcel').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('beginningvalue-import')
+	});
+	$('#deleteAL').linkbutton({
+		iconCls: 'icon-delete',
+		plain: true,
+		text: $.i18n('cancel')
+	});
+	$('#exportAL').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('export')
+	});
+	$('#dlAreaAL').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonAL($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#treeDeptAL').tree({
+				queryParams: { areaid: row.id }
+			});
+			loadMenuButtonAL(row.text);
+			$('#mmAreaAL').menu('hide');
+		}
+	});
+	function loadMenuButtonAL(txt) {
+		$('#btAreaAL').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaAL',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+	//$('#cbAreaAL').combobox({
+	//	url: 'areas?getusedarea&locale=' + i18n.locale,
+	//	panelHeight: 250,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	value: 0,
+	//	label: $.i18n('area'),
+	//	labelWidth: 60,
+	//	onSelect: function (record) {
+	//		$('#treeDeptAL').tree({
+	//			queryParams: { areaid: record.id }
+	//		});
+	//	}
+	//});
+	$('#treeDeptAL').tree({
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (node) {
+			//var areaid = $('#cbAreaAL').combobox('getValue');
+			var sl = $('#dlAreaAL').datalist('getSelected');
+			var areaid = sl ? sl.id : 0;
+			$('#tableALUsers').datagrid({
+				queryParams: {
+					areaid: areaid,
+					useridd: node.id,
+					userenrollnumber: 0,
+					userfullcode: ''
+				}
+			});
+		}
+	});
+	$('#ftDeptAL').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeDeptAL').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeDeptAL').tree('doFilter', newValue);
+		}
+	});
+	$('#tableALUsers').datagrid({
+		title: $.i18n('annualleave'),
+		fit: true,
+		rownumbers: true,
+		toolbar: '#ALUserTool',
+		pagination: true,
+		pageList: [10, 15, 20, 25, 30, 50, 100, 200, 500, 1000, 2000, 3000, 5000],
+		pageSize: 30,
+		singleSelect: true,
+		striped: true,
+		sortName: 'userfullcode',
+		frozenColumns: [[
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'beginningdate', title: $.i18n('beginningdate') },
+			{ field: 'beginningvalue', title: $.i18n('beginningvalue') },
+			{ field: 'paidvalue', title: $.i18n('paidvalue') },
+			{ field: 'balancevalue', title: $.i18n('balancevalue') }
+		]],
+		queryParams: {
+			areaid: 0,
+			useridd: 0,
+			userenrollnumber: 0,
+		},
+		url: 'annualleave?getalusers',
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div style="padding:2px;position:relative;"><table class="ddv"></table></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
+			ddv.datagrid({
+				url: 'annualleave?getpaidleave', //&userenrollnumber=' + row.userenrollnumber + '&absentcode=' + row.absentcode,
+				method: 'POST',
+				queryParams: {
+					userenrollnumber: row.userenrollnumber,
+					absentcode: row.absentcode,
+					beginningdate: row.beginningdate,
+				},
+				loader: function (param, success, error) {
+					var opts = $(this).datagrid('options');
+					loaderWSE(opts, param, success, error)
+				},
+				fitColumns: true,
+				singleSelect: true,
+				rownumbers: true,
+				height: 'auto',
+				width: 250,
+				title: $.i18n('annualleave-delail'),
+				columns: [[
+					{ field: 'leavedate', title: $.i18n('date') },
+					{ field: 'leavesymbol', title: $.i18n('symbol',''), align: 'right' },
+					{ field: 'leavevalue', title: $.i18n('value'), align: 'right' }
+				]],
+				onResize: function () {
+					$('#tableALUsers').datagrid('fixDetailRowHeight', index);
+				},
+				onLoadSuccess: function () {
+					setTimeout(function () {
+						$('#tableALUsers').datagrid('fixDetailRowHeight', index);
+					}, 0);
+				}
+			});
+			$('#tableALUsers').datagrid('fixDetailRowHeight', index);
+		}
+	});
+	function doSearchUserAL(value, name) {
+		try {
+			if (!value == "") {
+				//var AreaID = $('#cbAreaAL').combobox('getValue');
+				var sl = $('#dlAreaAL').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				if (name == 'enrollnumber') {
+					$('#tableALUsers').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						}
+					});
+				} else if (name == 'usercode') {
+					$('#tableALUsers').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						}
+					});
+				} else if (name == 'username') {
+					$('#tableALUsers').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -3,
+							SearchValue: value
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+
+	}
+	function openSetBeginningLeave() {
+		var node = $('#treeDeptAL').tree('getSelected');
+		if (!node) return;
+		if (node.id == 0) return;
+		$('body').append('<div id="indexWindow1" style="display:none;overflow:hidden;padding:3px"></div>');
+		$('#indexWindow1').dialog({
+			width: 720,
+			height: 580,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-user',
+			title: $.i18n('beginningvalue'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			constrain: true,
+			extractor: function (data) {
+
+				data = $.fn.panel.defaults.extractor(data);
+				return data;
+
+			},
+			onClose: function () {
+				$('#indexWindow1').remove();
+				//var areaid = $('#cbAreaAL').combobox('getValue');
+				var sl = $('#dlAreaAL').datalist('getSelected');
+				var areaid = sl ? sl.id : 0;
+				$('#tableALUsers').datagrid({
+					queryParams: {
+						areaid: areaid,
+						useridd: node.id,
+						userenrollnumber: 0,
+						userfullcode: ''
+					}
+				});
+			},
+			buttons: [{
+				text: $.i18n('ok'),
+				iconCls: 'icon-ok',
+				width: 100,
+				handler: function () {
+					var isValid = $('#frmAddAL').form('validate');
+					if (isValid) {
+						var rows = $("#tbUsersSetAL").datagrid('getChecked');
+						if (rows.length == 0) {
+							message($.i18n('chooseuser'));
+							return;
+						}
+
+						showProgress();
+						var values = {};
+						$.each($('#frmAddAL').serializeArray(), function (i, field) {
+							values[field.name] = field.value;
+						});
+						var userenrollnumber = new Array();
+						for (var i = 0; i < rows.length; i++) {
+							var row = rows[i];
+							userenrollnumber.push(row.userenrollnumber);
+						}
+						values['userenrollnumber'] = userenrollnumber;
+						$.post('annualleave?setalusers', JSON.stringify(values),
+							function (data) {
+								closeProgress();
+								var data = eval('(' + data + ')');
+								if (data.state == "success") {
+									message($.i18n('doneupdate'));
+								} else {
+									message(data.message);
+								}
+								
+							}
+						);
+					}
+				}
+			}, {
+				text: $.i18n('exit'),
+				iconCls: 'icon-exit',
+				width: 100,
+				handler: function () {
+					$('#indexWindow1').dialog('close');
+				}
+			}],
+			onLoad: function () {
+				//var AreaID = $('#cbAreaAL').combobox('getValue');
+				var sl = $('#dlAreaAL').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				$('#tbUsersSetAL').datagrid({
+					title: $.i18n('user'),
+					fit: true,
+					border: false,
+					pagination: true,
+					pageList: [10, 15, 20, 25, 30, 50, 100, 200, 500, 1000, 2000, 3000, 5000],
+					pageSize: 30,
+					singleSelect: true,
+					checkOnSelect: false,
+					selectOnCheck: false,
+					striped: true,
+					queryParams: {
+						areaid: AreaID,
+						useridd: node.id,
+						userenrollnumber: 0,
+					},
+					url: 'user?getusers',
+					method: 'POST',
+					loader: function (param, success, error) {
+						var opts = $(this).datagrid('options');
+						loaderWSE(opts, param, success, error)
+					},
+					sortName: 'userfullcode',
+					frozenColumns: [[
+						{ field: 'chk', checkbox: true },
+						{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+					]],
+					columns: [[
+						{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+						{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true }
+					]],
+				});
+				var flag; var Absent;
+				$('#cbAsentCode').combobox({
+					label: $.i18n('chooseabsence'),
+					labelWidth: 100,
+					width: 300,
+					valueField: 'AbsentCode',
+					textField: 'AbsentDescription',
+					url: 'noneworking?getusedabsent',
+					required: true,
+					readonly:true,
+					loadFilter: function (data) {
+						Absent = data;
+						if (data.length <= 0) {
+							flag = 0;
+						} else {
+							flag = 1
+						}
+						return data;
+					},
+					onLoadSuccess: function () {
+						if (flag == 1) {
+							$.each(Absent, function (index, value) {
+								if (value.AbsentCode == 'A01') {
+									$('#cbAsentCode').combobox('setValue', value.AbsentCode);
+									return;
+								}
+							});
+							
+						}
+					}
+				});
+				$('#beginningdate').datebox({
+					required: true,
+					formatter: mydateformatter,
+					parser: mydateparser,
+					label: $.i18n('beginningdate'),
+					labelWidth: 100,
+					width: 300
+				});
+				$('#beginningvalue').numberspinner({
+					required: true,
+					label: $.i18n('beginningvalue'),
+					labelWidth: 100,
+					width: 300,
+					value: 12,
+					min: 1,
+					max: 100,
+					increment: 0.5,
+					precision: 1
+				});
+			}
+		}).dialog('open').dialog('refresh', 'SubPages/SetBeginningLeave.html').dialog('center');
+	}
+	function deleteLeave() {
+		try {
+			var absentRow = $('#tableALUsers').datagrid('getSelected');
+			if (absentRow) {
+				$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete_item'), function (r) {
+					if (r) {
+						var url = 'annualleave?deleteleave';
+						var myJsonString = { userenrollnumber: absentRow.userenrollnumber };
+						$.post(url, JSON.stringify(myJsonString), function (data) {
+							data = eval('(' + data + ')');
+							if (data.state == "success") {
+								$('#tableALUsers').datagrid('reload');
+								//message(data.message);
+
+							} else {
+								message(data.message);
+							}
+						});
+					}
+				});
+
+			}
+
+		} catch (err) { message(err); }
+	}
+	function ExportAL() {
+		var node = $('#treeDeptAL').tree('getSelected');
+		if (!node) return;
+		var url = 'export?id=getannualleave&locale=' + i18n.locale + '&deptid=' + node.id;
+		GetExport(url);
+	}
+</script>

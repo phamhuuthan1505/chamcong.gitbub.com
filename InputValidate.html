@@ -1,0 +1,64 @@
+﻿<div class="easyui-layout wse-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="height:32px;padding:5px">
+		<label id="desLimit"></label>
+	</div>
+	<div data-options="region:'west',border:true" style="width:170px;padding:5px 0px 0px 5px;overflow:hidden">
+		<table id="InputValidate" class="easyui-propertygrid"></table>
+	</div>
+	<!--<div data-options="region:'center',border:false" style="padding:3px;">
+		
+	</div>-->
+</div>
+<script type="text/javascript">
+	$('#desLimit').html('<b>' + $.i18n('limitdes') + '</b>');
+    $('#InputValidate').propertygrid({
+				  url: 'inputvalid?getinputvalid',
+                  fit:true,
+		border: false,
+		fitColumns:true,
+				  columns: [[
+					  {field:'name',title:$.i18n('day'),width:40,sortable:false},
+					  {field:'value',title:$.i18n('value'),width:60,resizable:false,
+					  	formatter: function(value,row){
+							 if (row.feildname == 'IsYes'){
+								 if (value == 'True') { return $.i18n('yes') } else { return $.i18n('no')}
+							 }else{
+								 return value;
+							 }
+
+						}
+					  }
+				  ]],
+				  onEndEdit: function(index,row){
+					 if (row.feildname == 'IsYes'){
+						  if ( row.value==true){
+							  row.value = 'True';
+						  }else{
+							  row.value = "False";
+						  }
+
+					  }
+					  var url = 'inputvalid?updateinputvalid';
+						var data = {rowcode:row.rowcode,value:row.value,itemname:row.feildname};
+					  $.post(url,JSON.stringify(data),function(res){
+						  	if(res.state=='error'){
+								message(res.message);
+							}
+						  });
+				  }	,
+			  onBeginEdit:function(index,row){
+				  if (row.feildname == 'IsYes'){
+					  var ed = $('#InputValidate').propertygrid('getEditors',index)[0];
+					  if (row.value=='True'){
+						  $(ed.target).switchbutton('check');
+					  }else{
+						  $(ed.target).switchbutton('uncheck');
+					  }
+				  }
+
+		},
+		onBeforeEdit: function (index, row) {
+			return MenuItem.IsEdit();
+		}
+	});
+</script>

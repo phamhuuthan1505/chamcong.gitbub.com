@@ -1,0 +1,936 @@
+﻿<div id="layoutAtt" class="easyui-layout wse-layout">
+	<div data-options="region:'north',border:true" style="height:36px;padding:2px">
+		<a id="selectDept">Chọn phòng ban</a>
+		<span class="button-sep"></span>
+		<input id="startdateAtt" />
+		<input id="enddateAtt" />
+		<a id="CalAtt" onclick="AttCalNew()">Tính công</a>
+		<span class="button-sep"></span>
+		<input id="rollupdate" />
+		<a id="rollup" onclick="GetWhoInWhoOut()">Điểm danh</a>
+	</div>
+	<div data-options="region:'west',split:true" style="width:420px;">
+		<table id="tbUserAtt"></table>
+	</div>
+	<div data-options="region:'center',border:true">
+		<div id="tabAtt" class="easyui-tabs">
+			<div title="Tab1">
+				<table id="tbCheckInOut"></table>
+			</div>
+			<div title="Tab2">
+				<table id="tbInOutCol"></table>
+			</div>
+			<div title="Tab3">
+				<table id="tbPunch"></table>
+			</div>
+		</div>
+	</div>
+
+</div>
+<div id="mmDept" class="menu-content" data-options="hideOnUnhover: false,
+		onShow: function(){
+			//$('#ccDept').layout('resize');
+		}
+		" style="background: #3c8dbc;padding:1px;">
+	<div id="ccDept" class="easyui-layout" style="width:320px;height:420px;">
+		<div data-options="region:'north',border:false" style="height:40px;padding:5px 0px 3px 5px">
+			<input id="cbAreaAtt" style="width:303px;margin-bottom:3px" />
+		</div>
+		<div data-options="region:'center',border:false" style="padding:3px;">
+			<ul id="treeDeptAtt"></ul>
+		</div>
+		<div data-options="region:'south',border:false" style="height:32px;">
+			<input id="ftDeptAtt" style="width:100%">
+		</div>
+	</div>
+</div>
+<div id="toolUserAtt">
+	<input id="findUserAtt" style="width:300px" />
+</div>
+<div id="mmFindUserAtt">
+	<div id="m-enrollnumberAtt" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercodeAtt" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-usernameAtt" data-options="name:'username'">Tên nhân viên</div>
+</div>
+<div id="toolCheckInOut">
+	<a id="view1" onclick="CheckInOutView()">Xem giờ</a>
+	<span class="button-sep"></span>
+	<a id="gridexport" onclick="GetCheckInOut()">Xuất lưới</a>
+	<span class="button-sep"></span>
+	<a id="punchtime1" onclick="GetPunchDetails1()">Xuất giờ 1</a>
+	<a id="punchtime2" onclick="GetPunchDetails2()">Xuất giờ 2</a>
+	<a id="punchtime3" onclick="GetPunchDetails3()">Xuất giờ 3</a>
+</div>
+<div id="toolInOutCol">
+	<a id="view2" onclick="InOutColView()">Xem giờ</a>
+	<span class="button-sep"></span>
+	<a id="gridexport1" onclick="GetInOutCol()">Xuất lưới</a>
+	<span class="button-sep"></span>
+	<a id="reportInOutCol" onclick="InOutColReport()">Xuất lưới</a>
+</div>
+<div id="toolPunch">
+	<a id="view3" onclick="attView()">Xem công</a>
+	<span class="button-sep"></span>
+	<a id="gridexport2" onclick="GridReport()">Xuất lưới</a>
+	<span class="button-sep"></span>
+	<a id="latein" onclick="LateInReport()">Đi trễ</a>
+	<a id="earlyout" onclick="EarlyOutReport()">Về sớm</a>
+	<a id="missingpunch" onclick="NoInOrNoOutReport()">Thiếu lượt</a>
+	<a id="absence" onclick="AbsentReport()">Vắng</a>
+	<span class="button-sep"></span>
+	<a id="summary" onclick="TotalReport()">Tổng hợp</a>
+	<span class="button-sep"></span>
+	<a id="mbStatistic">Thống kê</a>
+</div>
+<div id="mmThongKe" style="width:205px">
+	<div id="mm-bysymbol" data-options="iconCls:'icon-excel'" onclick="StatisticsReport()">Theo ký hiệu</div>
+	<div id="mm-bysymbolwithot" data-options="iconCls:'icon-excel'" onclick="StatisticsReport1()">Theo ký hiệu có tăng ca</div>
+	<div id="mm-bytotal" data-options="iconCls:'icon-excel'" onclick="StatisticsReport2()">Theo giờ tổng</div>
+	<div id="mm-byworkday" data-options="iconCls:'icon-excel'" onclick="StatisticsReport3()">Theo giờ tổng</div>
+	<div class="menu-sep"></div>
+	<div id="mm-by2punches" data-options="iconCls:'icon-excel'" onclick="StatisticsReport4()">2 lần giờ vào ra</div>
+	<div id="mm-by4punches" data-options="iconCls:'icon-excel'" onclick="StatisticsReport5()">4 lần giờ vào ra</div>
+	<div id="mm-by6punches" data-options="iconCls:'icon-excel'" onclick="StatisticsReport6()">6 lần giờ vào ra</div>
+</div>
+<iframe id="my_iframe" style="display:none;"></iframe>
+<script type="text/javascript">
+	$(function () {
+		SelAreaObj.init();
+		SelSchObj.init();
+		SelDeptObj.init(0);
+		SelDevObj.init();
+		GetUserAtt(0, 0);
+		var tabs = $('#tabAtt').tabs({
+			fit: true,
+			border: false
+		}).tabs('tabs');
+		$('#tabAtt').tabs('update', {
+			tab: tabs[0],
+			options: {
+				title: $.i18n('originaltime'),
+			}
+		});
+		$('#tabAtt').tabs('update', {
+			tab: tabs[1],
+			options: {
+				title: $.i18n('inouttime'),
+			}
+		});
+		$('#tabAtt').tabs('update', {
+			tab: tabs[2],
+			options: {
+				title: $.i18n('attdetails'),
+			}
+		}).tabs('select', 2);
+	});
+	$('#layoutAtt').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('user'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: false
+	});
+	$('#layoutAtt').layout().layout('panel', 'center').panel({
+		title: $.i18n('detail'),
+		border: true
+	});
+	$('#ccDept').layout();
+	$('#m-usernameAtt').text($.i18n('userfullname'));
+	$('#m-usercodeAtt').text($.i18n('userfullcode'));
+	$('#m-enrollnumberAtt').text($.i18n('userenrollnumber'));
+	$('#findUserAtt').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindUserAtt',
+		searcher: doSearchUserAtt
+	});
+	$('#selectDept').menubutton({
+		text: $.i18n('selectdept'),
+		menu: '#mmDept',
+		iconCls: 'icon-dept',
+		plain: true,
+		showEvent: 'click'
+	});
+	$('#startdateAtt').datebox({
+		label: $.i18n('fromdate'),
+		required: true,
+		labelWidth: 63,
+		width: 180,
+		formatter: mydateformatter,
+		parser: mydateparser,
+		onChange: function (newValue, oldValue) {
+			setCookie("startdateatt", newValue, 365)
+		},
+		value: getStartDate()
+	});
+	$('#enddateAtt').datebox({
+		label: $.i18n('todate'),
+		required: true,
+		labelWidth: 60,
+		width: 177,
+		formatter: mydateformatter,
+		parser: mydateparser,
+		onChange: function (newValue, oldValue) {
+			setCookie("enddateatt", newValue, 365)
+		},
+		value: getEndDate()
+	});
+	function getStartDate() {
+		var startdate = getCookie("startdateatt");
+		if (startdate == "") {
+			var d = new Date();
+			startdate = '1/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+		}
+		return startdate;
+	}
+	function getEndDate() {
+		var enddate = getCookie("enddateatt");
+		if (enddate == "") {
+			var d = new Date();
+			enddate = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+		}
+		return enddate;
+	}
+	$('#CalAtt').linkbutton({
+		iconCls: 'icon-attcal',
+		plain:true,
+		text: $.i18n('calatt')
+	});
+	$('#rollupdate').datebox({
+		required: true,
+		width: 110,
+		formatter: mydateformatter,
+		parser: mydateparser,
+		value: getEndDate()
+	});
+	$('#rollup').linkbutton({
+		iconCls: 'icon-user-list',
+		plain: true,
+		text: $.i18n('rollup')
+	});
+	$('#cbAreaAtt').combobox({
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		panelHeight: 250,
+		valueField: 'id',
+		textField: 'text',
+		value: 0,
+		label: $.i18n('area'),
+		labelWidth: 60,
+		onSelect: function (record) {
+			SelDeptObj.init(record.id);
+			$('#treeDeptAtt').tree({
+				queryParams: { areaid: record.id }
+			});
+		}
+	});
+	$('#treeDeptAtt').tree({
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (node) {
+			$('#mmDept').menu('hide');
+			var areaid = $('#cbAreaAtt').combobox('getValue');
+			GetUserAtt(areaid, node.id);
+			$('#selectDept').menubutton({
+				text: $.i18n('dept') + ": " + node.text,
+				menu: '#mmDept',
+				iconCls: 'icon-dept',
+				plain: true,
+				showEvent: 'click'
+			});
+			
+		}
+	});
+	$('#ftDeptAtt').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeDeptAtt').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeDeptAtt').tree('doFilter', newValue);
+		}
+	});
+	$('#tbUserAtt').datagrid({
+		fit: true,
+		border: false,
+		rownumbers: true,
+		toolbar: '#toolUserAtt',
+		pagination: true,
+		pageList: [10, 15, 20, 25, 30, 50, 100, 200, 500, 1000, 2000, 3000, 5000],
+		pageSize: 30,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		striped: true,
+		sortName: 'userfullcode',
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'schid', title: $.i18n('schedule'), formatter: SelSchObj.SchName },
+			{ field: 'useridd', title: $.i18n('dept'), formatter: SelDeptObj.DeptName },
+			{ field: 'areaid', title: $.i18n('area'), formatter: SelAreaObj.AreaName }
+		]],
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onLoadSuccess: function (data) {
+			$(this).datagrid('checkAll');
+			var panel = $('#layoutAtt').layout('panel', 'west');
+			//console.log(panel[0].clientWidth);
+			if (panel[0].clientWidth==0) $('#layoutAtt').layout('expand', 'west');
+		}
+	});
+	function GetUserAtt(areaid, useridd) {
+		$('#tbUserAtt').datagrid({
+			queryParams: {
+				areaid: areaid,
+				useridd: useridd,
+				userenrollnumber: 0,
+			},
+			url: 'user?getusers'
+		});
+	}
+	function doSearchUserAtt(value, name) {
+		try {
+			if (!value == "") {
+				var AreaID = $('#cbAreaAtt').combobox('getValue');
+				if (name == 'enrollnumber') {
+					$('#tbUserAtt').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						}
+					});
+				} else if (name == 'username') {
+					$('#tbUserAtt').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						}
+					});
+				} else if (name == 'usercode') {
+					$('#tbUserAtt').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -3,
+							SearchValue: value
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+	}
+	$('#tbCheckInOut').datagrid({
+		rowStyler: rowStyler,
+		fit: true,
+		border: true,
+		rownumbers: true,
+		striped: true,
+		singleSelect: true,
+		pagination: true,
+		pageSize: 30,
+		method: 'post',
+		toolbar: '#toolCheckInOut',
+		url: 'att?getcheckinout',
+		queryParams: {
+			users: "",
+			startdate: "",
+			enddate: ""
+		},
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		columns: [[
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber') },
+			{ field: 'timedate', title: $.i18n('date') },
+			{ field: 'time', title: $.i18n('time') },
+			{ field: 'origintype', title: $.i18n('type') },
+			{ field: 'source', title: $.i18n('source') },
+			{ field: 'machineno', title: $.i18n('device'), formatter: SelDevObj.DevName },
+			{ field: 'newtype', title: $.i18n('newtype') }
+		]]
+	});
+	$('#tbInOutCol').datagrid({
+		fit: true,
+		border: true,
+		rownumbers: true,
+		striped: true,
+		singleSelect: true,
+		pagination: true,
+		pageSize: 30,
+		method: 'post',
+		toolbar: '#toolInOutCol',
+		url: 'att?getinoutcol&locale=' + i18n.locale,
+		queryParams: {
+			users: "",
+			startdate: "",
+			enddate: ""
+		},
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		columns: [[
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber') },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true },
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'timedate', title: $.i18n('date') },
+			{ field: 'timein', title: $.i18n('timein','') },
+			{ field: 'timeout', title: $.i18n('timeout','') },
+			{ field: 'overday', title: $.i18n('crossday') },
+			{ field: 'machinenoin', title: $.i18n('devicein'), formatter: SelDevObj.DevName },
+			{ field: 'machinenoout', title: $.i18n('deviceout'), formatter: SelDevObj.DevName },
+			{ field: 'useridd', title: $.i18n('dept'), formatter: SelDeptObj.DeptName }
+		]]
+	});
+	$('#tbPunch').datagrid({
+		fit: true,
+		border: true,
+		rownumbers: true,
+		striped: true,
+		singleSelect: true,
+		pagination: true,
+		pageSize: 10,
+		method: 'post',
+		toolbar: '#toolPunch',
+		url: 'att?getpunch',
+		pageList: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 50],
+		queryParams: {
+			users: "",
+			startdate: "",
+			enddate: ""
+		},
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		frozenColumns: [[
+			{ field: 'timedate', title: $.i18n('date') },
+			{ field: 'weekday', title: $.i18n('weekday') },
+			{ field: 'userfullcode', title: $.i18n('userfullcode') },
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), rowspan: 2 },
+			{ title: $.i18n('punchatt'), colspan: 17 },
+			{ title: $.i18n('leave'), colspan: 3 },
+			{ title: $.i18n('report'), colspan: 3 }
+		], [
+			{ field: 'timein1', title: $.i18n('timein', 1), styler: stylerLateIn1 },
+			{ field: 'timeout1', title: $.i18n('timeout', 1), styler: stylerEarlyOut1 },
+			{ field: 'timein2', title: $.i18n('timein', 2), styler: stylerLateIn2 },
+			{ field: 'timeout2', title: $.i18n('timeout', 2), styler: stylerEarlyOut2 },
+			{ field: 'timein3', title: $.i18n('timein', 3), styler: stylerLateIn3 },
+			{ field: 'timeout3', title: $.i18n('timeout', 3), styler: stylerEarlyOut3 },
+			{ field: 'latein', title: $.i18n('latein')},
+			{ field: 'earlyout', title: $.i18n('earlyout')},
+			{ field: 'workhour', title: $.i18n('workhour', '')},
+			{ field: 'workday', title: $.i18n('workday', '') },
+			{ field: 'overtime1', title: $.i18n('ot', 1) },
+			{ field: 'overtime2', title: $.i18n('ot', 2) },
+			{ field: 'overtime3', title: $.i18n('ot', 3) },
+			{ field: 'overtime3', title: $.i18n('ot', 3) },
+			{ field: 'benefitwh', title: $.i18n('benefitwh') },
+			{ field: 'symbol', title: $.i18n('symbol', '') },
+			{ field: 'shift', title: $.i18n('shift') },
+			{ field: 'extworkhour', title: $.i18n('workhour', '') },
+			{ field: 'extworkday', title: $.i18n('workday', '') },
+			{ field: 'extsymbol', title: $.i18n('symbol', '') },
+			{ field: 'reportwh', title: $.i18n('workhour', '') },
+			{ field: 'reportwd', title: $.i18n('workday', '') },
+			{ field: 'reportsymbol', title: $.i18n('symbol', '') }
+		]]
+	});
+	function AttCalNew() {
+		try {
+			var startdate = $("#startdateAtt").datetimespinner('getValue');
+			var enddate = $("#enddateAtt").datetimespinner('getValue');
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			var rows = $("#tbUserAtt").datagrid('getChecked');
+			if (rows.length == 0) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			$('body').append('<div id="AttCalW"></div>');
+			$('#AttCalW').dialog({
+				modal: true,
+				width: 586,
+				height: 500,
+				iconCls: 'icon-attcal',
+				title: $.i18n('calculating'),
+				collapsible: false,
+				minimizable: false,
+				maximizable: false,
+				closable: true,
+				cls: 'c6',
+				buttons: [
+					{
+						text: $.i18n('exit'),
+						iconCls: 'icon-exit',
+						handler: function () {
+							if (AttCal.socket.readyState == 1) {//đang mở
+								$.messager.confirm($.i18n('mytitle'), $.i18n('ask_exitcal'), function (r) {
+									if (r) {
+										AttCal.off = 1;
+									} else {
+										AttCal.off = 0;
+									}
+								});
+
+							} else {
+								$('#AttCalW').dialog('close');
+								attView();
+							}
+
+						}
+					}],
+				extractor: function (data) {
+					data = $.fn.panel.defaults.extractor(data);
+					return data;
+				},
+				onLoad: function () {
+					$('#exportAttLogs').linkbutton({
+						iconCls: 'icon-excel',
+						plain: true,
+						text: $.i18n('exportlog')
+					});
+					$('#tbAttCalLogs').datagrid({
+						fit:true,
+						rownumbers: true,
+						striped: true,
+						singleSelect: true,
+						iconCls: 'icon-text',
+						border: true,
+						toolbar: '#toolCalLogs',
+						rowStyler: function (index, row) { return 'color:' + row.colorcode + ';'; },
+						columns: [[
+							{ field: 'timestr', title: $.i18n('time'), width: 125 },
+							{ field: 'info', title: $.i18n('info'), width: 480 }
+							]]
+					});
+					AttCal.init();
+				},
+				onClose: function () {
+					$('#AttCalW').remove();
+				}
+			}).dialog('open').dialog('refresh', 'SubPages/AttCal.html').dialog('center');
+		} catch (err) { message(err) }
+	}
+	$('#view1').linkbutton({
+		iconCls: 'icon-attview',
+		plain: true,
+		text: $.i18n('view')
+	});
+	$('#gridexport').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('gridexport')
+	});
+	$('#punchtime1').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('punchtime',1)
+	});
+	$('#punchtime2').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('punchtime', 2)
+	});
+	$('#punchtime3').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('punchtime', 3)
+	});
+	$('#view2').linkbutton({
+		iconCls: 'icon-attview',
+		plain: true,
+		text: $.i18n('view')
+	});
+	$('#gridexport1').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('gridexport')
+	});
+	$('#reportInOutCol').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('inoutcolreport')
+	});
+	$('#view3').linkbutton({
+		iconCls: 'icon-attview',
+		plain: true,
+		text: $.i18n('view')
+	});
+	$('#gridexport2').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('dailydetail')
+	});
+	$('#latein').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('latein')
+	});
+	$('#earlyout').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('earlyout')
+	});
+	$('#missingpunch').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('missingpunch')
+	});
+	$('#absence').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('absence')
+	});
+	$('#summary').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('summary')
+	});
+	$('#mm-bysymbol').text($.i18n('bysymbol'));
+	$('#mm-bysymbolwithot').text($.i18n('bysymbolwithot'));
+	$('#mm-bytotal').text($.i18n('bytotal'));
+	$('#mm-byworkday').text($.i18n('byworkday'));
+	$('#mm-by2punches').text($.i18n('by2punches'));
+	$('#mm-by4punches').text($.i18n('by4punches'));
+	$('#mm-by6punches').text($.i18n('by6punches'));
+	$('#mbStatistic').menubutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('statistical'),
+		menu: '#mmThongKe'
+	});
+	function attView() {
+		try {
+			var startdate = $("#startdateAtt").datetimespinner('getValue');
+			var enddate = $("#enddateAtt").datetimespinner('getValue');
+			if (startdate == "" || enddate == "") {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			var rows = $("#tbUserAtt").datagrid('getChecked');
+			if (rows.length == 0) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			showProgress();
+			var url = 'att?startattview';
+			$.post(url, function (res) {
+				res = eval('(' + res + ')');
+				if (res.state == 'success') {
+					var dayCount = dateDiff(startdate, enddate);
+					if (dayCount > 31) dayCount = 50;
+					if (dayCount < 10) dayCount = 10;
+					url = 'att?getpunch&locale=' + i18n.locale;
+					closeProgress();
+					$("#tbPunch").datagrid({
+						url: url,
+						pageSize: dayCount,
+						queryParams: {
+							startdate: startdate,
+							enddate: enddate,
+							users:rows
+						}
+					}).datagrid('clientPaging');
+				} else {
+					closeProgress();
+					$.messager.alert(myTitle, res.message, 'error');
+				}
+			});
+
+		} catch (err) { closeProgress(); message(err) }
+	}
+	function CheckInOutView() {
+		try {
+			var startdate = $("#startdateAtt").datetimespinner('getValue');
+			var enddate = $("#enddateAtt").datetimespinner('getValue');
+			if (startdate == "" || enddate == "") {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			var rows = $("#tbUserAtt").datagrid('getChecked');
+			if (rows.length == 0) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			showProgress();
+			var url = 'att?startattview';
+			$.post(url, function (res) {
+				res = eval('(' + res + ')');
+				if (res.state == 'success') {
+					url = 'att?getcheckinout&locale=' + i18n.locale;
+					closeProgress();
+					$("#tbCheckInOut").datagrid({
+						url: url,
+						queryParams: {
+							startdate: startdate,
+							enddate: enddate,
+							users: rows
+						}
+					}).datagrid('clientPaging');
+				} else {
+					closeProgress();
+					$.messager.alert(myTitle, res.message, 'error');
+				}
+			});
+
+		} catch (err) { closeProgress(); message(err) }
+	}
+	function InOutColView() {
+		try {
+			var startdate = $("#startdateAtt").datetimespinner('getValue');
+			var enddate = $("#enddateAtt").datetimespinner('getValue');
+			if (startdate == "" || enddate == "") {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			var rows = $("#tbUserAtt").datagrid('getChecked');
+			if (rows.length == 0) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			showProgress();
+			var url = 'att?startattview';
+			$.post(url, function (res) {
+				res = eval('(' + res + ')');
+				if (res.state == 'success') {
+					//url = 'att?getinoutcol&locale=' + i18n.locale;
+					closeProgress();
+					$("#tbInOutCol").datagrid({
+						//url: url,
+						queryParams: {
+							startdate: startdate,
+							enddate: enddate,
+							users: rows
+						}
+					}).datagrid('clientPaging');
+
+				} else {
+
+					$.messager.alert(myTitle, res.message, 'error');
+				}
+			});
+
+		} catch (err) { closeProgress(); message(err) }
+	}
+
+	function stylerLateIn1(value, row, index) {
+		if (row.latein1 > 0) {
+			return 'color:red;';
+		}
+	}
+	function stylerLateIn2(value, row, index) {
+		if (row.latein2 > 0) {
+			return 'color:red;';
+		}
+	}
+	function stylerLateIn3(value, row, index) {
+		if (row.latein3 > 0) {
+			return 'color:red;';
+		}
+	}
+	function stylerEarlyOut1(value, row, index) {
+		if (row.earlyout1 > 0) {
+			return 'color:red;';
+		}
+	}
+	function stylerEarlyOut2(value, row, index) {
+		if (row.earlyout2 > 0) {
+			return 'color:red;';
+		}
+	}
+	function stylerEarlyOut3(value, row, index) {
+		if (row.earlyout3 > 0) {
+			return 'color:red;';
+		}
+	}
+	function stylerLateIn(value, row, index) {
+		if (row.latein > 0) {
+			return 'color:red;';
+		}
+	}
+	function stylerEarlyOut(value, row, index) {
+		if (row.earlyout > 0) {
+			return 'color:red;';
+		}
+	}
+	function rowStyler(index, row) {
+		if (row.newtype == "I") {
+			return 'color:#000000;';
+		} else if (row.newtype == "O") {
+			return 'color:#000000;';
+		} else {
+			return 'color:#FF0000;';
+		}
+	}
+	function GridReport() {
+		var url = 'report?id=getgrid&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function LateInReport() {
+		var url = 'report?id=getlate&locale=' + i18n.locale;
+		GetReport(url);
+	}
+
+	function EarlyOutReport() {
+		var url = 'report?id=getearly&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function AbsentReport() {
+		var url = 'report?id=getabsence&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function NoInOrNoOutReport() {
+		var url = 'report?id=getmissingpunch&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function TotalReport() {
+		var url = 'report?id=getsummary&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function StatisticsReport() {
+		var url = 'report?id=getstatistics1&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function StatisticsReport1() {
+		var url = 'report?id=getstatistics2&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function StatisticsReport2() {
+		var url = 'report?id=getstatistics3&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function StatisticsReport3() {
+		var url = 'report?id=getstatistics4&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function StatisticsReport4() {
+		var url = 'report?id=getstatistics5&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function StatisticsReport5() {
+		var url = 'report?id=getstatistics6&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function StatisticsReport6() {
+		var url = 'report?id=getstatistics7&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function GetCheckInOut() {
+		var url = 'report?id=getpunchgrid&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function GetPunchDetails1() {
+		var url = 'report?id=getpunch1&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function GetPunchDetails2() {
+		var url = 'report?id=getpunch2&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function GetInOutCol() {
+		var url = 'report?id=getinoutcol&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function InOutColReport() {
+		var url = 'report?id=inoutcolreport&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function GetPunchDetails3() {
+		var url = 'report?id=getpunch3&locale=' + i18n.locale;
+		GetReport(url);
+	}
+	function GetReport(url) {
+		try {
+			var startdate = $("#startdateAtt").datetimespinner('getValue');
+			var enddate = $("#enddateAtt").datetimespinner('getValue');
+			if (startdate == "" || enddate == "") {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			if (getValidDate(startdate, enddate) == false) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			var rows = $("#tbUserAtt").datagrid('getChecked');
+			if (rows.length == 0) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			showProgress();
+			var values = { startdate: startdate, enddate: enddate, users: rows };
+			$.post(url, JSON.stringify(values), function (res) {
+				res = eval('(' + res + ')');
+				closeProgress();
+				if (res.state == 'success') {
+					document.getElementById('my_iframe').src = res.message;
+				} else {
+					$.messager.alert($.i18n('mytitle'), res.message, 'info');
+				}
+			});
+		} catch (err) { closeProgress(); message(err) }
+	}
+	function GetWhoInWhoOut() {
+		var url = 'report?id=getwhoinwhoout&locale=' + i18n.locale;
+		try {
+			var enddate = $("#rollupdate").datetimespinner('getValue');
+			if (enddate == "") {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			
+			//var rows = $("#tbUserAtt").datagrid('getChecked');
+			//if (rows.length == 0) {
+			//	$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+			//	return;
+			//}
+			var deptid = $("#treeDeptAtt").tree('getSelected') ? $("#treeDeptAtt").tree('getSelected').id : 0;
+			showProgress();
+			var values = {deptid: deptid, enddate: enddate };
+			$.post(url, JSON.stringify(values), function (res) {
+				res = eval('(' + res + ')');
+				closeProgress();
+				if (res.state == 'success') {
+					document.getElementById('my_iframe').src = res.message;
+				} else {
+					$.messager.alert($.i18n('mytitle'), res.message, 'info');
+				}
+			});
+		} catch (err) { closeProgress(); message(err) }
+	}
+</script>

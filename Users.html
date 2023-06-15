@@ -1,0 +1,1094 @@
+﻿<div id="layoutUser" class="easyui-layout wse-layout">
+	<div data-options="region:'west',split:true" style="width:250px;padding:3px;overflow:hidden">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreaUser" style="width:306px;margin-bottom:3px" />-->
+				<!--<div style="margin-top:3px"><input id="ftDeptUser" style="width:100%"></div>-->
+				<a id="btAreaIDUser" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:3px;">
+				<ul id="treeUserDept"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftDeptUser" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center'" >
+		<table id="tbUser"></table>
+	</div>
+	
+</div>
+<div id="toolUser">
+	<a id="addUser" onclick="newItemUser()">Thêm mới</a>
+	<a id="deleteUser" onclick="deleteItemUser()">Xóa</a>
+	<span class="button-sep"></span>
+	<a id="userArr">Sắp xếp</a>
+	<span class="button-sep"></span>
+	<input id="findUser" style="width:270px" />
+	<span class="button-sep"></span>
+	<a id="exportUser" onclick="ExportUser()">Xuất</a>
+	<span class="button-sep"></span>
+	<a id="importUser" onclick="DoImportUser()">Nhập</a>
+</div>
+<div id="mnArrange">
+	<div id="m-deptarr" data-options="iconCls:'icon-dept'" onclick="showDeptUserW()">Chuyển phòng ban</div>
+	<div id="m-titlearr" data-options="iconCls:'icon-title'" onclick="showTitleW()">Chuyển phòng ban</div>
+</div>
+<div id="mmFindUser">
+	<div id="m-enrollnumber" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercode" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-username" data-options="name:'username'">Tên nhân viên</div>
+</div>
+<div id="deptUserW" style="width:400px;height:450px;padding:3px">
+	<div id="layoutChangeDept" class="easyui-layout">
+		<div data-options="region:'north',border:false" style="height:32px;">
+			<a id="btAreaChangeDept" />
+		</div>
+		<div data-options="region:'center',border:false" style="padding:3px;">
+			<ul id="deptM" class="easyui-tree"></ul>
+		</div>
+		<div data-options="region:'south',border:false" style="height:32px;">
+			<input id="ftChangeDeptUser" style="width:100%" />
+		</div>
+	</div>
+</div>
+<!--<div id="dlg-user-toolbar">
+	<input id="cbAreaChangeDept" style="width:100%;" />
+</div>-->
+<div id="DgFacePhoto" style="display:none">
+	<Center style="margin:10px"><img id="FacePhoto" src="" /></Center>
+</div>
+<div id="TitleW" style="padding:20px 5px 20px 10px">
+	<input id="cbTitle" />
+</div>
+<div id="mmAreaUser" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaIDUser">	</div>
+</div>
+<div id="mmAreaChangeDept" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaChangeDept">	</div>
+</div>
+<script type="text/javascript">
+	$(function () {
+		SelObj.init();
+		GetUser(0, 0);
+	});
+	$('#addUser').linkbutton({
+		iconCls: 'icon-add',
+		plain: false,
+		text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#deleteUser').linkbutton({
+		iconCls: 'icon-remove',
+		plain: false,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#m-deptarr').text($.i18n('dept'));
+	$('#m-titlearr').text($.i18n('title'));
+	$('#userArr').menubutton({
+		text: $.i18n('arrange'),
+		menu: '#mnArrange',
+		iconCls: 'icon-dept-move',
+		disabled: MenuItem.IsEdit() ? false : true,
+		plain:false
+	});
+	$('#exportUser').linkbutton({
+		iconCls: 'icon-excel',
+		plain: false,
+		text: $.i18n('export')
+	});
+	$('#importUser').linkbutton({
+		iconCls: 'icon-excel',
+		plain: false,
+		text: $.i18n('import')
+	});
+	$('#layoutUser').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('dept'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutUser').layout().layout('panel', 'center').panel({
+		border: false
+	});
+	$('#m-username').text($.i18n('userfullname'));
+	$('#m-usercode').text($.i18n('userfullcode'));
+	$('#m-enrollnumber').text($.i18n('userenrollnumber'));
+	$('#findUser').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindUser',
+		searcher: doSearchUser
+	});
+	$('#deptUserW').dialog({
+		title: $.i18n('choosedept'),
+		modal: true,
+		closed: true,
+		iconCls: 'icon-dept-move',
+		collapsible: false,
+		minimizable: false,
+		maximizable: false,
+		resizable: true,
+		//toolbar: '#dlg-user-toolbar',
+		buttons: [{
+			text: $.i18n('ok'),
+			iconCls: 'icon-ok',
+			handler: function () {
+				moveUsers();
+			}
+		}, {
+			text: $.i18n('cancel'),
+			iconCls: 'icon-cancel',
+			handler: function () {
+				$('#deptUserW').dialog('close');
+			}
+		}],
+		onOpen: function () {
+			$('#layoutChangeDept').layout({ fit: true });
+		}
+	});
+	$('#dlAreaIDUser').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButton($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#treeUserDept').tree({
+				queryParams: { areaid: row.id }
+			});
+			loadMenuButton(row.text);
+			$('#mmAreaUser').menu('hide');
+		}
+	});
+	function loadMenuButton(txt) {
+		$('#btAreaIDUser').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaUser',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+	//$('#cbAreaUser').combobox({
+	//	queryParams: { areaid: 0 },
+	//	url: 'areas?getusedarea&locale=' + i18n.locale,
+	//	panelHeight: 250,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	value: 0,
+	//	label: $.i18n('area'),
+	//	labelWidth: 60,
+	//	onSelect: function (record) {
+	//		$('#treeUserDept').tree({
+	//			queryParams: { areaid: record.id }
+	//		});
+	//	}
+	//});
+	$('#deptM').tree({
+		border: false,
+		fit: true,
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		}
+	});
+	$('#dlAreaChangeDept').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonChangeDept($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#deptM').tree({
+				queryParams: { areaid: row.id }
+			});
+			loadMenuButtonChangeDept(row.text);
+			$('#mmAreaChangeDept').menu('hide');
+		}
+	});
+	function loadMenuButtonChangeDept(txt) {
+		$('#btAreaChangeDept').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaChangeDept',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+	//$('#cbAreaChangeDept').combobox({
+	//	url: 'areas?getusedarea&locale=' + i18n.locale,
+	//	panelHeight: 200,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	value: 0,
+	//	label: $.i18n('area'),
+	//	labelWidth: 62,
+	//	onSelect: function (record) {
+	//		$('#deptM').tree({
+	//			queryParams: { areaid: record.id }
+	//		});
+	//	}
+	//});
+	$('#ftChangeDeptUser').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#deptM').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#deptM').tree('doFilter', newValue);
+		}
+	});
+
+	$('#ftDeptUser').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeUserDept').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeUserDept').tree('doFilter', newValue);
+		}
+	});
+	$('#tbUser').datagrid({
+		border: true,
+		title: $.i18n('user'),
+		fit: true,
+		fitColumns: true,
+		striped: true,
+		toolbar: '#toolUser',
+		pagination: true,
+		pageList: [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000],
+		pageSize: 30,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		rownumbers: true,
+		sortName: 'userfullcode',
+		queryParams: {
+			areaid: 0,
+			useridd: -1,
+			userenrollnumber: 0,
+		},
+		url: 'user?getusers',
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		frozenColumns: [[
+			{ field: 'chk', checkbox: true },
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'usersex', title: $.i18n('gender'), formatter: SelObj.GenderName, sortable: true },
+			{ field: 'userhireday', title: $.i18n('userhireday') },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true },
+			{ field: 'userenrollname', title: $.i18n('userenrollname'), sortable: true },
+			{ field: 'usercardno', title: $.i18n('usercardno'), sortable: true },
+			{ field: 'userpw', title: $.i18n('userpw') },
+			{ field: 'userprivilege', title: $.i18n('userprivilege'), formatter: SelObj.PrivilegeName },
+			{ field: 'useridtitle', title: $.i18n('title'), formatter: SelObj.TitleName },
+			{ field: 'useridd', title: $.i18n('dept'), formatter: SelObj.DeptName },
+			{ field: 'areaid', title: $.i18n('area'), formatter: SelObj.AreaName }
+		]],
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 480,
+				border: false,
+				cache: false,
+				href: 'SubPages/UserDetails.html',
+				onLoad: function () {
+					$('#tbUser').datagrid('clearSelections');
+					$('#tbUser').datagrid('fixDetailRowHeight', index);
+					$('#tbUser').datagrid('selectRow', index);
+					var myForm = $('#tbUser').datagrid('getRowDetail', index).find('form');
+					myForm.form('load', row);
+					SetUserControls(myForm, row, index);
+					ShowFP(row, index);
+				},
+			});
+			$(this).datagrid('fixDetailRowHeight', index);
+		}
+	});
+
+	function SetUserControls(myForm, row, index) {
+		var tabUser = $('#tbUser').datagrid('getRowDetail', index).find('#tabUser');
+		$(tabUser).tabs({
+			width: 600,
+			height: 470,
+			tools: [{
+				iconCls: 'icon-save',
+				handler: function () {
+					saveUpdateUser(this);
+				},
+				disabled: MenuItem.IsEdit() ? false : true
+			}, {
+				iconCls: 'icon-delete',
+				handler: function () {
+					cancelUpdateUser(this);
+				}
+			}]
+		});
+		var tabs = $(tabUser).tabs('tabs');
+		$(tabUser).tabs('update', {
+			tab: tabs[0],
+			options: {
+				title: $.i18n('user_basic_info'),
+			}
+		});
+		$(tabUser).tabs('update', {
+			tab: tabs[1],
+			options: {
+				title: $.i18n('user_fp_info'),
+			}
+		});
+		$.each(myForm.serializeArray(), function (i, field) {
+			let name = $('#tbUser').datagrid('getRowDetail', index).find('#' + field.name);
+			if (field.name == "usersex") {
+				$(name).combobox({
+					label: $.i18n('gender'),
+					required: true,
+					labelWidth: 110,
+					valueField: 'id',
+					textField: 'text',
+					panelHeight: 80,
+					data: SelObj.GenderData()
+				});
+			} else if (field.name == "userhireday") {
+				$(name).datebox({
+					label: $.i18n('userhireday'),
+					required: true,
+					formatter: mydateformatter,
+					parser: mydateparser,
+					labelWidth: 110
+				});
+			} else if (field.name == "userenrollnumber") {
+				$(name).textbox({
+					label: $.i18n(field.name),
+					required: true,
+					labelWidth: 110
+				});
+				if (row.isNewRecord) {
+					$(name).textbox('readonly', false);
+				} else {
+					$(name).textbox('readonly');
+				}
+			} else if (field.name == "userpw") {
+				$(name).textbox({
+					label: $.i18n(field.name),
+					required: false,
+					labelWidth: 110
+				});
+			} else if (field.name == "userprivilege") {
+				$(name).combobox({
+					label: $.i18n('userprivilege'),
+					required: true,
+					labelWidth: 110,
+					valueField: 'id',
+					textField: 'text',
+					panelHeight: 120,
+					data: SelObj.PrivilegeData()
+				});
+			} else if (field.name == "useridtitle") {
+				$(name).combobox({
+					label: $.i18n('title'),
+					required: true,
+					labelWidth: 110,
+					valueField: 'id',
+					textField: 'text',
+					panelHeight: 120,
+					data: SelObj.TitleData()
+				});
+			} else if (field.name == "areaid") {
+				$(name).combobox({
+					label: $.i18n('area'),
+					required: true,
+					labelWidth: 110,
+					valueField: 'id',
+					textField: 'text',
+					panelHeight: 150,
+					data: SelObj.AreaData()
+				});
+			} else if (field.name == "useridd") {
+				//var areaid = $('#cbAreaUser').combobox('getValue');
+				var sl = $('#dlAreaIDUser').datalist('getSelected');
+				var areaid = sl ? sl.id : 0;
+				$(name).combotree({
+					label: $.i18n('dept'),
+					required: true,
+					labelWidth: 110,
+					queryParams: { areaid: areaid },
+					url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+					method: 'POST',
+					loader: function (param, success, error) {
+						var opts = $(name).combotree('options');
+						loaderWSE(opts, param, success, error)
+					}
+				});
+			} else if (field.name == "userimg1") {
+				$(name).filebox({
+					prompt: $.i18n('chooseimage'),
+					buttonText: $.i18n('chooseimage'),
+					accept: 'image/*',
+					onChange: onChangeUserImg
+				});
+			} else if (field.name == "userphoto") {
+				$(name).textbox();
+			} else {
+				$(name).textbox({
+					label: $.i18n(field.name),
+					required: true,
+					labelWidth: 110
+				});
+			}
+		});
+		var img = $('#tbUser').datagrid('getRowDetail', index).find('#userimg');
+		if (row.isNewRecord) {
+			$(img).attr('src', 'images/user.jpg');
+		} else {
+			$(img).attr('src', row.userimg + '?' + Math.random());
+		}
+		var saveUser = $('#tbUser').datagrid('getRowDetail', index).find('#saveUser');
+		$(saveUser).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var cancelUser = $('#tbUser').datagrid('getRowDetail', index).find('#cancelUser');
+		$(cancelUser).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var userFace = $('#tbUser').datagrid('getRowDetail', index).find('#userFace');
+		$(userFace).text($.i18n('face'));
+		var userPalm = $('#tbUser').datagrid('getRowDetail', index).find('#userPalm');
+		$(userPalm).text($.i18n('palm'));
+	}
+	function ShowFP(row, index) {
+		if (!row.isNewRecord) {
+			var data = { userenrollnumber: row.userenrollnumber };
+			var url = 'user?getfinger'
+			$.post(url, JSON.stringify(data), function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "error") {
+					message(data.message);
+				} else {
+					var fp0 = $('#tbUser').datagrid('getRowDetail', index).find('#fp0');
+					var fp1 = $('#tbUser').datagrid('getRowDetail', index).find('#fp1');
+					var fp2 = $('#tbUser').datagrid('getRowDetail', index).find('#fp2');
+					var fp3 = $('#tbUser').datagrid('getRowDetail', index).find('#fp3');
+					var fp4 = $('#tbUser').datagrid('getRowDetail', index).find('#fp4');
+					var fp5 = $('#tbUser').datagrid('getRowDetail', index).find('#fp5');
+					var fp6 = $('#tbUser').datagrid('getRowDetail', index).find('#fp6');
+					var fp7 = $('#tbUser').datagrid('getRowDetail', index).find('#fp7');
+					var fp8 = $('#tbUser').datagrid('getRowDetail', index).find('#fp8');
+					var fp9 = $('#tbUser').datagrid('getRowDetail', index).find('#fp9');
+					var face = $('#tbUser').datagrid('getRowDetail', index).find('#face');
+					var palm = $('#tbUser').datagrid('getRowDetail', index).find('#palm');
+					$(fp0).attr('src', data.fp0);
+					$(fp1).attr('src', data.fp1);
+					$(fp2).attr('src', data.fp2);
+					$(fp3).attr('src', data.fp3);
+					$(fp4).attr('src', data.fp4);
+					$(fp5).attr('src', data.fp5);
+					$(fp6).attr('src', data.fp6);
+					$(fp7).attr('src', data.fp7);
+					$(fp8).attr('src', data.fp8);
+					$(fp9).attr('src', data.fp9);
+					$(face).attr('src', data.face);
+					$(palm).attr('src', data.palm);
+					$(face).click(function () {
+						$('#DgFacePhoto').dialog({
+							title: $.i18n('userfacephoto'),
+							width: 400,
+							height: 400,
+							closed: false,
+							cache: false,
+							modal: true,
+							iconCls: 'icon-wman',
+							onBeforeOpen: function () {
+								$.post('user?getfacephoto',
+									JSON.stringify({ userenrollnumber: row.userenrollnumber }),
+									function (data) {
+										$("#FacePhoto").attr('src', data);
+
+									});
+							},
+							onClose: function () { $("#FacePhoto").attr('src', ""); }
+						});
+					});
+				}
+			});
+
+		}
+
+	}
+	$('#treeUserDept').tree({
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (node) {
+			
+			var sl = $('#dlAreaIDUser').datalist('getSelected');
+			var areaid = sl ? sl.id : 0;
+			GetUser(areaid, node.id);
+		}
+	})
+
+	function GetUser(areaid, useridd) {
+		if (useridd != 0) {
+			var objData = [];
+			$('#tbUser').datagrid('loadData', objData);
+		}
+		$('#tbUser').datagrid({
+			queryParams: {
+				areaid: areaid,
+				useridd: useridd,
+				userenrollnumber: 0,
+			}
+			//url: 'user?getusers',
+			//method: 'POST',
+			//loader: function (param, success, error) {
+			//	var opts = $(this).datagrid('options');
+			//	loaderWSE(opts, param, success, error)
+			//}
+		});
+	}
+	function onChangeUserImg(newValue, oldValue) {
+		var tr = $(this).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var img = $('#tbUser').datagrid('getRowDetail', index).find('img');
+		var file = $(this).next().find('input[type=file]')[0];
+		if (file.files && file.files[0]) {
+			var fileToLoad = file.files[0];
+			var fileReader = new FileReader();
+			fileReader.onload = function (fileLoadedEvent) {
+				var srcData = fileLoadedEvent.target.result;
+				//alert(srcData);
+				$(img).attr('src', srcData);
+				$('#userphoto').textbox('setValue', srcData);
+			}
+			fileReader.readAsDataURL(fileToLoad);
+		}
+
+	}
+	function saveUpdateUser(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		saveItemUser(index);
+
+	}
+	function cancelUpdateUser(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		cancelItemUser(index);
+
+	}
+	function cancelItemUser(index) {
+		try {
+			var row = $('#tbUser').datagrid('getRows')[index];
+			if (row.isNewRecord) {
+				$('#tbUser').datagrid('deleteRow', index);
+			} else {
+				$('#tbUser').datagrid('collapseRow', index);
+			}
+		} catch (err) { message(err) }
+	}
+	function saveItemUser(index) {
+		try {
+			var row = $('#tbUser').datagrid('getRows')[index];
+			var myForm = $('#tbUser').datagrid('getRowDetail', index).find('form');
+			var isValid = myForm.form('validate');
+			if (isValid) {
+				var values = {};
+				$.each(myForm.serializeArray(), function (i, field) {
+					values[field.name] = field.value;
+				});
+				var url = row.isNewRecord ? 'user?adduser&locale=' + i18n.locale : 'user?updateuser&locale=' + i18n.locale
+				$.post(url, JSON.stringify(values),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "error") {
+							message(data.message);
+
+						} else {
+							data.isNewRecord = false;
+							$('#tbUser').datagrid('collapseRow', index);
+							$('#tbUser').datagrid('updateRow', {
+								index: index,
+								row: data
+							});
+
+						}
+
+					});
+			}
+
+		} catch (err) { message(err) }
+	}
+	function newItemUser() {
+		var index = $('#tbUser').datagrid('getRows').length - 1;
+		if (index > 0) {
+			var row = $('#tbUser').datagrid('getRows')[index]
+			if (row.isNewRecord) { return }
+		}
+
+		var node = $('#treeUserDept').tree('getSelected');
+		$('#tbUser').datagrid('appendRow',
+			{
+				isNewRecord: true,
+				useridd: node ? node.id : 0,
+				areaid: 0,
+				usercardno: "0000000000",
+				useridtitle: 0,
+				usersex: 0,
+				userprivilege: 0
+			});
+		index = $('#tbUser').datagrid('getRows').length - 1;
+		$('#tbUser').datagrid('expandRow', index);
+		$('#tbUser').datagrid('selectRow', index);
+
+
+	}
+	function deleteItemUser() {
+		try {
+			var rows = $('#tbUser').datagrid('getChecked');
+			if (rows.length > 0) {
+				$.messager.confirm(myTitle, $.i18n('user_ask_delete'), function (r) {
+					if (r) {
+						if (rows[rows.length - 1].isNewRecord) {
+							$('#tbUser').datagrid('deleteRow', $('#tbUser').datagrid('getRowIndex', rows[rows.length - 1]));
+							return;
+						}
+						showProgress();
+						//var data = new Array();
+						//for (var i = 0; i < rows.length; i++) {
+						//	var row = rows[i];
+						//	data.push(row.userenrollnumber);
+						//}
+						//var myJsonString = { count: rows.length, userenrollnumber: data };
+						$.post("user?deleteuser", JSON.stringify(rows),
+							function (data, status) {
+								var data = eval('(' + data + ')');
+								closeProgress();
+								if (status == "success") {
+									if (data.state == "success") {
+										for (var i = 0; i < rows.length; i++) {
+											var row = rows[i];
+											$('#tbUser').datagrid('deleteRow', $('#tbUser').datagrid('getRowIndex', row));
+										}
+									} else {
+										message(data.message);
+									}
+								} else {
+									message('error');
+								}
+							}
+						);
+					}
+				});
+			}
+		} catch (err) { closeProgress(); message(err) }
+	}
+	function doSearchUser(value, name) {
+		try {
+			if (!value == "") {
+				//var AreaID = $('#cbAreaUser').combobox('getValue');
+				var sl = $('#dlAreaIDUser').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				if (name == 'enrollnumber') {
+					$('#tbUser').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				} else if (name == 'username') {
+					$('#tbUser').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				} else if (name == 'usercode') {
+					$('#tbUser').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -3,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+	}
+	function showDeptUserW() {
+		try {
+			var rows = $('#tbUser').datagrid('getChecked');
+			if (rows.length == 0) { return }
+			//var AreaID = $('#cbAreaUser').combobox('getValue');
+			var sl = $('#dlAreaIDUser').datalist('getSelected');
+			//var AreaID = sl ? sl.id : 0;
+			var index = $('#dlAreaIDUser').datalist('getRowIndex',sl)
+			$('#deptUserW').dialog({
+				height: 500,//window.innerHeight - 100,
+				onBeforeOpen: function () {
+					//$('#cbAreaChangeDept').combobox('setValue', AreaID);
+					$('#dlAreaChangeDept').datalist('selectRow',index);
+					//$('#deptM').tree({				
+					//	queryParams: { areaid: AreaID }
+					//})
+				}
+			}).dialog('open').dialog('center');
+		} catch (err) { message(err) }
+	}
+	function moveUsers() {
+		try {
+			var node = $('#deptM').tree('getSelected');
+			if (node) {
+				if (node.levelID == 0) return;
+				showProgress();
+				//var data = new Array();
+				var rows = $('#tbUser').datagrid('getChecked');
+				for (var i = 0; i < rows.length; i++) {
+					//var row = rows[i];
+					//data.push(row.userenrollnumber);
+					rows[i].newidd = node.id;
+				}
+				//var payload = { useridd: node.id, userenrollnumber: data }
+				$.post("user?updateuseridd", JSON.stringify(rows),
+					function (data, status) {
+
+						if (status == "success") {
+							var data = eval('(' + data + ')');
+							if (data.state == "success") {
+								$('#deptUserW').dialog('close');
+								for (var i = 0; i < rows.length; i++) {
+									var row = rows[i];
+									$('#tbUser').datagrid('deleteRow', $('#tbUser').datagrid('getRowIndex', row));
+								}
+							} else {
+								message(data.message);
+							}
+						} else {
+							message('error');
+						}
+						closeProgress();
+					}
+				);
+
+			}
+			else {
+				message($.i18n('choosedept'));
+			}
+		} catch (err) { message(err) }
+	}
+	function ExportUser() {
+		var node = $('#treeUserDept').tree('getSelected');
+		if (!node) return;
+		var url = 'export?id=getuser&locale=' + i18n.locale + '&deptid=' + node.id;
+		GetExport(url);
+	}
+
+	var fileAddUserName;
+	function DoImportUser() {
+		$('body').append('<div id="ImportUsersWindow"></div>');
+		$('#ImportUsersWindow').window({
+			width: window.innerWidth - (window.innerWidth * 0.4),
+			height: window.innerHeight - 100,
+			modal: true,
+			iconCls: 'icon-excel',
+			title: $.i18n('importuser'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			extractor: function (data) {
+				data = $.fn.panel.defaults.extractor(data);
+				return data;
+			},
+			onClose: function () {
+				$('#ImportUsersWindow').remove();
+			},
+			onLoad: function () {
+				onImportUserLoad();
+			}
+		}).window('open').window('refresh', 'SubPages/ImportBase.html').window('center');
+	}
+
+	function onImportUserLoad() {
+		$('#importLayout').layout('resize', {
+			width: '100%',
+			height: '100%'
+		});
+		$('#fileLayout').layout('resize', {
+			width: '100%',
+			height: '100%'
+		});
+
+		$('#importfile').filebox({
+			width: window.innerWidth - (window.innerWidth * 0.6),
+			prompt: $.i18n('excelfile'),
+			buttonText: $.i18n('excelfile'),
+			accept: 'application/vnd.ms-excel',
+			onChange: onChangeFileUserImport
+		});
+		$('#tbDataImport').datagrid({
+			//footer: '#ft',
+			toolbar: '#toolDataImport',
+			fit: true,
+			border:true,
+			rownumbers: true,
+			singleSelect: true,
+			striped: true,
+			queryParams: { importfilename: fileAddUserName },
+			url: 'import?id=getexceluser&locale=' + i18n.locale,
+			method: 'POST',
+			loader: function (param, success, error) {
+				var opts = $(this).datagrid('options');
+				loaderWSE(opts, param, success, error)
+			},
+			columns: [[
+				{ field: 'userfullcode', title: $.i18n('userfullcode') },
+				{ field: 'userfullname', title: $.i18n('userfullname') },
+				{ field: 'gender', title: $.i18n('gender') },
+				{ field: 'userhireday', title: $.i18n('userhireday') },
+				{ field: 'userenrollnumber', title: $.i18n('userenrollnumber') },
+				//{ field: 'userenrollname', title: $.i18n('userenrollname') },
+				{ field: 'usercardno', title: $.i18n('usercardno') },
+				{ field: 'department', title: $.i18n('dept') }
+			]]
+		});
+		$('#tbImportLog').datagrid({
+			fit: true,
+			border: true,
+			rownumbers: true,
+			striped: true,
+			singleSelect: true,
+			iconCls: 'icon-text',
+			toolbar: '#toolImportLog',
+			rowStyler: function (index, row) {
+				return 'color:' + row.ColorCode + ';'
+
+			},
+			columns: [[
+				{ field: 'timestr', width: 125, title: $.i18n('time') },
+				{ field: 'info', width: 480, title: $.i18n('info') }
+				]]
+		});
+		$('#doImport').linkbutton({
+			iconCls: 'icon-ok',
+			plain: true,
+			text: $.i18n('update'),
+			onClick: doUpdateImportUser
+		});
+		$('#importLog').linkbutton({
+			iconCls: 'icon-excel',
+			plain: true,
+			text: $.i18n('exportlog')
+		});
+		$('#getTemplate').linkbutton({
+			iconCls: 'icon-excel',
+			plain: true,
+			text: $.i18n('template'),
+			onClick: function () {
+				document.getElementById('exp_iframe').src = 'data/download/usertemplate.xls';
+			}
+		});
+	}
+	function onChangeFileUserImport(newValue, oldValue) {
+		if (newValue == "") return;
+		if (newValue.match(/\.(xls[mx]?)$/) && newValue) {
+			doAddUserFile();
+		} else {
+			$("#importfile").filebox("clear");
+			message($.i18n('chooseexcelfile'));
+		} 
+	}
+	function doAddUserFile() {
+		try {
+			$('#frmImportFile').form('submit', {
+				url: 'import?id=setexceluser&locale=' + i18n.locale,
+				onSubmit: function () {
+					var f = $("#importfile").filebox('getText');
+					if (f == "") {
+						return false;
+					} else {
+						$.messager.progress({ title: $.i18n('mytitle'), msg: $.i18n('processing') });
+						return true;
+					}
+
+				},
+				success: function (res) {
+					$.messager.progress('close');
+					var res = eval('(' + res + ')');
+					if (res.state == "error") {
+						$.messager.alert($.i18n('mytitle'), res.message, 'error');
+
+					} else {
+						fileAddUserName = res.message;
+						$('#tbDataImport').datagrid({
+							queryParams: { importfilename: fileAddUserName },
+							onLoadSuccess: function (data) {
+								if (data.rows[0].state == "error") { $.messager.alert(myTitle, data.rows[0].message, 'error'); }
+							}
+						});
+
+					}
+
+				}
+
+			});
+		} catch (err) { message(err) }
+	}
+	function doUpdateImportUser() {
+		var rows = $("#tbDataImport").datagrid('getData');
+		if (rows.total == 0) {
+			$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+			return;
+		}
+		$('#tbImportLog').datagrid({ data: [] });
+		ImportUser.init();
+	}
+	$('#cbTitle').combobox({
+		url: 'title?getselecttitle&locale=' + i18n.locale,
+		panelHeight: 250,
+		valueField: 'id',
+		textField: 'text',
+		label: $.i18n('title'),
+		labelWidth: 60,
+		width: 280
+	});
+	function showTitleW() {
+		try {
+			var rows = $('#tbUser').datagrid('getChecked');
+			if (rows.length == 0) { return }
+			$('#TitleW').window({
+				height: 160,
+				width: 320,
+			}).window('open').window('center');
+		} catch (err) { message(err) }
+	}
+	$('#TitleW').dialog({
+		title: $.i18n('choosetitle'),
+		modal: true,
+		closed: true,
+		iconCls: 'icon-dept-move',
+		collapsible: false,
+		minimizable: false,
+		maximizable: false,
+		resizable: true,
+		buttons: [{
+			text: $.i18n('ok'),
+			iconCls: 'icon-ok',
+			handler: function () {
+				ChangeTitle();
+			}
+		}, {
+			text: $.i18n('cancel'),
+			iconCls: 'icon-cancel',
+			handler: function () {
+				$('#TitleW').dialog('close');
+			}
+		}]
+
+	});
+	function ChangeTitle() {
+		try {
+			var value = $('#cbTitle').combobox('getValue');
+			if (value) {
+				showProgress();
+				var rows = $('#tbUser').datagrid('getChecked');
+				for (var i = 0; i < rows.length; i++) {
+					rows[i].newtitleid = value;
+				}
+				$.post("user?updatetitleid", JSON.stringify(rows),
+					function (data, status) {
+
+						if (status == "success") {
+							var data = eval('(' + data + ')');
+							if (data.state == "success") {
+								$('#TitleW').dialog('close');
+								$('#tbUser').datagrid('reload');
+							} else {
+								message(data.message);
+							}
+						} else {
+							message('error');
+						}
+						closeProgress();
+					}
+				);
+
+			}
+			else {
+				message($.i18n('choosetitle'));
+			}
+		} catch (err) { message(err) }
+	}
+</script>

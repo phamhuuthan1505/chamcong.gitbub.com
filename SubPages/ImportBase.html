@@ -1,0 +1,28 @@
+﻿<div id="importLayout" class="easyui-layout">
+	<div data-options="region:'north',border:false" style="height:330px;padding:3px;">
+		<div id="fileLayout" class="easyui-layout">
+			<div data-options="region:'north'" style="height:40px;padding:3px">
+				<form id="frmImportFile" method="post" enctype="multipart/form-data">
+					<input id="importfile" name="importfile" />
+				</form>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="tbDataImport"></table>
+			</div>
+		</div>
+		
+	</div>
+	<div data-options="region:'center',border:false" style="padding:3px;" >
+		<table id="tbImportLog"></table>
+	</div>
+</div>
+<div id="toolDataImport" style="padding:2px;">
+	<a id="doImport">Thực hiện cập nhật</a>
+	<span class="button-sep"></span>
+	<a id="getTemplate">Template</a>
+</div>
+<div id="toolImportLog" style="padding:2px;">
+	<a id="importLog" onclick="$('#tbImportLog').datagrid('toExcel','Logs.xls');">Xuất Excel</a>
+</div>
+
+	

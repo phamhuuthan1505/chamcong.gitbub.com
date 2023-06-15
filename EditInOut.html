@@ -1,0 +1,697 @@
+﻿<div id="layoutEditInOut" class="easyui-layout wse-layout">
+	<div data-options="region:'west',split: true" style="width:250px;padding:3px;overflow:hidden">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreaEditInOut" style="width:283px;margin-bottom:3px" />-->
+				<a id="btAreaEditInOut" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:3px;">
+				<ul id="treeDeptEditInOut"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftDeptEditInOut" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center'" style="padding-bottom:3px">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false,split: true" style="width:370px;padding-bottom:3px">
+				<table id="tbUserEditInOut"></table>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-bottom: 3px">
+				<table id="tbEditInOut"></table>
+			</div>
+		</div>
+
+	</div>
+</div>
+<div id="toolUserEditInOut">
+	<input id="findUserEditInOut" style="width:300px" />
+</div>
+<div id="mmFindUserEditInOut">
+	<div id="m-enrollnumberEditInOut" data-options="name:'enrollnumber'">Mã chấm công</div>
+	<div id="m-usercodeEditInOut" data-options="name:'usercode'">Mã nhân viên</div>
+	<div id="m-usernameEditInOut" data-options="name:'username'">Tên nhân viên</div>
+</div>
+<div id="toolEditInOut">
+	<input id="dateEditInOut" />
+	<a id="reloadTime" onclick="javascript:$('#tbEditInOut').datagrid('reload')">Tải lại</a>
+	<a id="addTime"  onclick="newCheckInOut()">Thêm</a>
+	<a id="deleteTime"  onclick="deleteEditInOut()">Xóa</a>
+</div>
+<div id="mmAreaEditInOut" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaEditInOut">	</div>
+</div>
+<script type="text/javascript">
+	SelDevObj.init();
+	$('#layoutEditInOut').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('dept'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true
+	});
+	$('#layoutEditInOut').layout().layout('panel', 'center').panel({
+		border: false
+	});
+	$('#m-usernameEditInOut').text($.i18n('userfullname'));
+	$('#m-usercodeEditInOut').text($.i18n('userfullcode'));
+	$('#m-enrollnumberEditInOut').text($.i18n('userenrollnumber'));
+	$('#findUserEditInOut').searchbox({
+		prompt: $.i18n('finduser'),
+		menu: '#mmFindUserEditInOut',
+		searcher: doSearchUserEditInOut
+	});
+	$('#dateEditInOut').datebox({
+		required: true,
+		formatter: mydateformatter,
+		parser: mydateparser,
+		label: $.i18n('date'),
+		labelWidth: 36,
+		width: 150,
+		value: getDate(),
+		onSelect: function (d) {
+			var rwuser = $('#tbUserEditInOut').datagrid('getSelected');
+			if (!rwuser) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			$('#tbEditInOut').datagrid({
+				queryParams: {
+					timedate: d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear(),
+					userenrollnumber:rwuser.userenrollnumber
+				}
+			});
+		}
+	});
+	function getDate() {
+		var d = new Date();
+		var date = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+		return date;
+	}
+	$('#reloadTime').linkbutton({
+		iconCls: 'icon-reload',
+		plain: true,
+		text: $.i18n('reload')
+	});
+	$('#addTime').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#deleteTime').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#dlAreaEditInOut').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonEditInOut($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#treeDeptEditInOut').tree({
+				queryParams: { areaid: row.id }
+			});
+			loadMenuButtonEditInOut(row.text);
+			$('#mmAreaEditInOut').menu('hide');
+		}
+	});
+	function loadMenuButtonEditInOut(txt) {
+		$('#btAreaEditInOut').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaEditInOut',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+	//$('#cbAreaEditInOut').combobox({
+	//	url: 'areas?getusedarea&locale=' + i18n.locale,
+	//	panelHeight: 250,
+	//	valueField: 'id',
+	//	textField: 'text',
+	//	value: 0,
+	//	label: $.i18n('area'),
+	//	labelWidth: 60,
+	//	onSelect: function (record) {
+	//		$('#treeDeptEditInOut').tree({
+	//			queryParams: { areaid: record.id }
+	//		});
+	//	}
+	//});
+	$('#treeDeptEditInOut').tree({
+		lines: true,
+		url: 'departmentnew?getuseddepartment&locale=' + i18n.locale,
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (node) {
+			//var areaid = $('#cbAreaEditInOut').combobox('getValue');
+			var sl = $('#dlAreaEditInOut').datalist('getSelected');
+			var areaid = sl ? sl.id : 0;
+			$('#tbUserEditInOut').datagrid({
+				queryParams: {
+					areaid: areaid,
+					useridd: node.id,
+					userenrollnumber: 0,
+				}
+			});
+		}
+	});
+	$('#ftDeptEditInOut').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeDeptEditInOut').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('dept').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeDeptEditInOut').tree('doFilter', newValue);
+		}
+	});
+	$('#tbUserEditInOut').datagrid({
+		title: $.i18n('user'),
+		fit: true,
+		rownumbers: true,
+		toolbar: '#toolUserEditInOut',
+		pagination: true,
+		pageList: [10, 15, 20, 25, 30, 50, 100, 200, 500, 1000, 2000, 3000, 5000],
+		pageSize: 30,
+		singleSelect: true,
+		striped: true,
+		sortName: 'userfullcode',
+		frozenColumns: [[
+			{ field: 'userfullcode', title: $.i18n('userfullcode'), sortable: true }
+		]],
+		columns: [[
+			{ field: 'userfullname', title: $.i18n('userfullname'), sortable: true },
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber'), sortable: true }
+		]],
+		queryParams: {
+			areaid: 0,
+			useridd: 0,
+			userenrollnumber: 0,
+		},
+		url: 'user?getusers',
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (index, row) {
+			var timedate = $("#dateEditInOut").datebox('getValue');
+			if (timedate == "") {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+				return;
+			}
+			$('#tbEditInOut').datagrid({
+				queryParams: {
+					userenrollnumber: row.userenrollnumber,
+					timedate: timedate
+				}
+			});
+		}
+	})
+	function doSearchUserEditInOut(value, name) {
+		try {
+			if (!value == "") {
+				//var AreaID = $('#cbAreaEditInOut').combobox('getValue');
+				var sl = $('#dlAreaEditInOut').datalist('getSelected');
+				var AreaID = sl ? sl.id : 0;
+				if (name == 'enrollnumber') {
+					$('#tbUserEditInOut').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -1,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				} else if (name == 'username') {
+					$('#tbUserEditInOut').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -2,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				} else if (name == 'usercode') {
+					$('#tbUserEditInOut').datagrid({
+						queryParams: {
+							areaid: AreaID,
+							useridd: -3,
+							SearchValue: value
+						},
+						url: 'user?getusers',
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				}
+
+			}
+		} catch (err) { message(err) }
+	}
+	$('#tbEditInOut').datagrid({
+		fit: true,
+		rownumbers: true,
+		striped: true,
+		singleSelect: true,
+		pageSize: 10,
+		method: 'post',
+		toolbar: '#toolEditInOut',
+		url: 'editinout?getcheckinout',
+		queryParams: {
+			userenrollnumber: 0,
+			timedate: ""
+		},
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		columns: [[
+			{ field: 'userenrollnumber', title: $.i18n('userenrollnumber') },
+			{ field: 'timedate', title: $.i18n('date') },
+			{ field: 'timestr', title: $.i18n('time') },
+			{ field: 'origintype', title: $.i18n('type') },
+			{ field: 'source', title: $.i18n('source') },
+			{ field: 'machineno', title: $.i18n('device'), formatter: SelDevObj.DevName }
+		]],
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			var href;
+			if (row.isNewRecord) {
+				href = 'SubPages/AddCheckInOut.html';
+				ddv.panel({
+					height: 440,
+					border: false,
+					cache: false,
+					href: href,
+					onLoad: function () {
+						$('#tbEditInOut').datagrid('fixDetailRowHeight', index);
+						$('#tbEditInOut').datagrid('selectRow', index);
+						$('#tbEditInOut').datagrid('getRowDetail', index).find('form').form('load', row);
+						SetControlAddInOut(index, row);
+					}
+				});
+			} else {
+				href = 'SubPages/EditCheckInOut.html';
+				ddv.panel({
+					height: 200,
+					border: false,
+					cache: false,
+					href: href,
+					onLoad: function () {
+						$('#tbEditInOut').datagrid('fixDetailRowHeight', index);
+						$('#tbEditInOut').datagrid('selectRow', index);
+						SetControlEditInOut(index, row);
+						$('#tbEditInOut').datagrid('getRowDetail', index).find('form').form('load', row);
+					}
+				});
+			}
+		}
+		
+	});
+	function SetControlAddInOut(index, row) {
+		var ctrlW = 300; var labelW = 120;
+		var userenrollnumber = $('#tbEditInOut').datagrid('getRowDetail', index).find('#userenrollnumber');
+		$(userenrollnumber).textbox({
+			label: $.i18n('userenrollnumber'),
+			required: true,
+			labelWidth: labelW,
+			width: ctrlW,
+			disabled: true
+		});
+		var timestrIn = $('#tbEditInOut').datagrid('getRowDetail', index).find('#timestrIn');
+		$(timestrIn).datetimespinner({
+			label: $.i18n('timein',''),
+			required: true,
+			labelWidth: labelW,
+			width: ctrlW,
+			formatter: mydatetimeformatter,
+			parser: mydatetimeparser
+		});
+		var timestrOut = $('#tbEditInOut').datagrid('getRowDetail', index).find('#timestrOut');
+		$(timestrOut).datetimespinner({
+			label: $.i18n('timeout',''),
+			required: true,
+			labelWidth: labelW,
+			width: ctrlW,
+			formatter: mydatetimeformatter,
+			parser: mydatetimeparser
+		});
+		var cbMachineNoIn = $('#tbEditInOut').datagrid('getRowDetail', index).find('#cbMachineNoIn');
+		$(cbMachineNoIn).combobox({
+			label: $.i18n('devicein'),
+			required: true,
+			panelHeight: 150,
+			labelWidth: labelW,
+			width: ctrlW,
+			url: 'editinout?getinmachine',
+			valueField: 'id',
+			textField: 'text',
+		});
+		var cbMachineNoOut = $('#tbEditInOut').datagrid('getRowDetail', index).find('#cbMachineNoOut');
+		$(cbMachineNoOut).combobox({
+			label: $.i18n('deviceout'),
+			required: true,
+			panelHeight: 150,
+			labelWidth: labelW,
+			width: ctrlW,
+			url: 'editinout?getoutmachine',
+			valueField: 'id',
+			textField: 'text',
+		});
+		var cbUpdateType = $('#tbEditInOut').datagrid('getRowDetail', index).find('#cbUpdateType');
+		$(cbUpdateType).combobox({
+			label: $.i18n('update'),
+			required: true,
+			panelHeight: 150,
+			labelWidth: labelW,
+			width: ctrlW,
+			valueField: 'id',
+			textField: 'text',
+			data: [
+				{ id: 'I', text: $.i18n('timein','') },
+				{ id: 'O', text: $.i18n('timeout','') },
+				{ id: 'IO', text: $.i18n('both') }
+			],
+			onSelect: function (record) {
+				if (record.id == "I") {
+					$(cbMachineNoOut).combobox('disable');
+					$(cbMachineNoIn).combobox('enable');
+					$(timestrIn).datetimespinner('enable');
+					$(timestrOut).datetimespinner('disable');
+				} else if (record.id == "O") {
+					$(cbMachineNoOut).combobox('enable');
+					$(cbMachineNoIn).combobox('disable');
+					$(timestrOut).datetimespinner('enable');
+					$(timestrIn).datetimespinner('disable');
+				} else {
+					$(cbMachineNoOut).combobox('enable');
+					$(cbMachineNoIn).combobox('enable');
+					$(timestrIn).datetimespinner('enable');
+					$(timestrOut).datetimespinner('enable');
+				}
+			}
+		});
+		
+		var saveAddCheckInOut = $('#tbEditInOut').datagrid('getRowDetail', index).find('#saveAddCheckInOut');
+		$(saveAddCheckInOut).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save')
+		});
+		var cancelAddCheckInOut = $('#tbEditInOut').datagrid('getRowDetail', index).find('#cancelAddCheckInOut');
+		$(cancelAddCheckInOut).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+	}
+	function SetControlEditInOut(index, row) {
+		var ctrlW = 300; var labelW = 120;
+		var userenrollnumber = $('#tbEditInOut').datagrid('getRowDetail', index).find('#userenrollnumber');
+		$(userenrollnumber).textbox({
+			label: $.i18n('userenrollnumber'),
+			required: true,
+			labelWidth: labelW,
+			width: ctrlW,
+			disabled: true
+		});
+		var timestr = $('#tbEditInOut').datagrid('getRowDetail', index).find('#timestr');
+		$(timestr).datetimespinner({
+			label: $.i18n('timepunch'),
+			required: true,
+			labelWidth: labelW,
+			width: ctrlW,
+			formatter: mydatetimeformatter,
+			parser: mydatetimeparser
+		});
+		var cbOriginType = $('#tbEditInOut').datagrid('getRowDetail', index).find('#cbOriginType');
+		$(cbOriginType).combobox({
+			label: $.i18n('type'),
+			required: true,
+			panelHeight: 150,
+			labelWidth: labelW,
+			width: ctrlW,
+			valueField: 'id',
+			textField: 'text',
+			data: [
+				{ id: 'I', text: $.i18n('timein','') },
+				{ id: 'O', text: $.i18n('timeout','') }
+			]
+		});
+		var cbMachineNo = $('#tbEditInOut').datagrid('getRowDetail', index).find('#cbMachineNo');
+		$(cbMachineNo).combobox({
+			label: $.i18n('device'),
+			required: true,
+			panelHeight: 150,
+			labelWidth: labelW,
+			width: ctrlW,
+			valueField: 'id',
+			textField: 'text',
+			data: SelDevObj.DevData()
+		});
+		var saveEditCheckInOut = $('#tbEditInOut').datagrid('getRowDetail', index).find('#saveEditCheckInOut');
+		$(saveEditCheckInOut).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var cancelEditCheckInOut = $('#tbEditInOut').datagrid('getRowDetail', index).find('#cancelEditCheckInOut');
+		$(cancelEditCheckInOut).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+	}
+	function newCheckInOut() {
+		try {
+			var timedate = $("#dateEditInOut").datebox('getValue');
+			if (timedate == "") {
+				$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'),'info');
+				return;
+			}
+			var rwuser = $('#tbUserEditInOut').datagrid('getSelected');
+			if (!rwuser) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			var index = $('#tbEditInOut').datagrid('getRows').length - 1;
+			if (index > 0) {
+				var row = $('#tbEditInOut').datagrid('getRows')[index]
+				if (row.isNewRecord) { return }
+			}
+			$('#tbEditInOut').datagrid('appendRow', {
+				isNewRecord: true,
+				userenrollnumber:rwuser.userenrollnumber,
+				userfullcode: rwuser.userfullcode,
+				timestrIn: timedate + ' ' + '07:30:00',
+				timestrOut: timedate + ' ' + '17:00:00',
+				machineno:0
+			});
+			index = $('#tbEditInOut').datagrid('getRows').length - 1;
+			$('#tbEditInOut').datagrid('expandRow', index);
+			$('#tbEditInOut').datagrid('selectRow', index);
+
+		} catch (err) { message(err) }
+	}
+	function cancelAddCheckInOut(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		$('#tbEditInOut').datagrid('deleteRow', index);
+	}
+	function saveAddCheckInOut(target) {
+		try {
+			var val = $("#CheckInOutForm").form('validate');
+			if (!val) return;
+			var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+			var index = parseInt(tr.attr('datagrid-row-index'));
+			var rwuser = $('#tbUserEditInOut').datagrid('getSelected');
+			if (!rwuser) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			var timestrIn = $("#timestrIn").datetimespinner('getValue');
+			var timestrOut = $("#timestrOut").datetimespinner('getValue');
+			var updatetype = $("#cbUpdateType").combobox('getValue');
+			var machinenoIn = $("#cbMachineNoIn").combobox('getValue');
+			var machinenoOut = $("#cbMachineNoOut").combobox('getValue');
+			var newRow = {};
+			newRow.userfullcode = rwuser.userfullcode;
+			newRow.userenrollnumber = rwuser.userenrollnumber;
+			newRow.timestrIn = timestrIn;
+			newRow.timestrOut = timestrOut;
+			newRow.updatetype = updatetype;
+			newRow.machinenoIn = machinenoIn;
+			newRow.machinenoOut = machinenoOut;
+			$.post('editinout?addcheckinout', JSON.stringify(newRow),
+				function (data, status) {
+					if (status == "success") {
+						data = eval('(' + data + ')');
+						if (data[0].state == "error") {
+							$.messager.alert(myTitle, data[0].message, 'error');
+						} else {
+							data[0].isNewRecord = false;
+							if (updatetype == "IO") {
+								$('#tbEditInOut').datagrid('collapseRow', index);
+								$('#tbEditInOut').datagrid('updateRow', {
+									index: index,
+									row: data[0]
+								});
+								//console.log(JSON.stringify(data[1]));
+								$('#tbEditInOut').datagrid('appendRow', {
+									isNewRecord: false,
+									userenrollnumber: data[1].userenrollnumber,
+									timestr: data[1].timestr,
+									timedate: data[1].timedate,
+									origintype: data[1].origintype,
+									source: data[1].source,
+									machineno: data[1].machineno
+								});
+							} else {
+								$('#tbEditInOut').datagrid('collapseRow', index);
+								$('#tbEditInOut').datagrid('updateRow', {
+									index: index,
+									row: data[0]
+								});
+							}
+							$('#tbEditInOut').datagrid('autoSizeColumn');
+						}
+					} else {
+						message('error');
+					}
+
+				});
+		} catch (err) { message(err) }
+
+	}
+	function deleteEditInOut() {
+		var row = $('#tbEditInOut').datagrid('getSelected');
+		if (!row) { return }
+		var rwuser = $('#tbUserEditInOut').datagrid('getSelected');
+		if (!rwuser) {
+			$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+			return;
+		}
+		$.messager.confirm($.i18n('mytitle'), $.i18n('deltime-ask'), function (r) {
+			if (r) {
+				var newRow = {};
+				newRow.userfullcode = rwuser.userfullcode;
+				newRow.userenrollnumber = rwuser.userenrollnumber;
+				newRow.timestr = row.timestr;
+				newRow.origintype = row.origintype;
+				newRow.source = row.source;
+				newRow.machineno = row.machineno;
+				$.post('editinout?deleteinout', JSON.stringify(newRow),
+					function (data, status) {
+						if (status == "success") {
+							data = eval('(' + data + ')');
+							if (data.state == "error") {
+								$.messager.alert($.i18n('mytitle'), data.message, 'error');
+							} else {
+								var index = $('#tbEditInOut').datagrid('getRowIndex', row);
+								$('#tbEditInOut').datagrid('deleteRow', index);
+							}
+						} else {
+							message('error');
+						}
+					});
+
+
+			}
+		});
+	}
+	function cancelEditCheckInOut(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		$('#tbEditInOut').datagrid('collapseRow', index);
+	}
+	function saveEditCheckInOut(target) {
+		try {
+			var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+			var index = parseInt(tr.attr('datagrid-row-index'));
+			$('#tbEditInOut').datagrid('selectRow', index);
+			var row = $('#tbEditInOut').datagrid('getSelected');
+			var timestr = $("#timestr").datetimespinner('getValue');
+			var origintype = $("#cbOriginType").combobox('getValue');
+			var machineno = $("#cbMachineNo").combobox('getValue');
+			var rwuser = $('#tbUserEditInOut').datagrid('getSelected');
+			if (!rwuser) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('chooseuser'), 'info');
+				return;
+			}
+			if ((timestr == row.timestr) && (origintype == row.origintype) && (machineno == row.machineno)) {
+				$('#tbEditInOut').datagrid('collapseRow', index);
+				return;
+			}
+
+
+			var newRow = {};
+			newRow.userfullcode = rwuser.userfullcode;
+			newRow.userenrollnumber = row.userenrollnumber;
+			newRow.timestrNew = timestr;
+			newRow.origintype = origintype;
+			newRow.source = 'PC';
+			newRow.machineno = machineno;
+			newRow.timestr = row.timestr;
+			$.post('editinout?editcheckinout', JSON.stringify(newRow),
+				function (data, status) {
+					if (status == "success") {
+						data = eval('(' + data + ')');
+						if (data.state == "error") {
+							$.messager.alert(myTitle, data.message, 'error');
+						} else {
+							$('#tbEditInOut').datagrid('collapseRow', index);
+							$('#tbEditInOut').datagrid('updateRow', {
+								index: index,
+								row: data
+							});
+						}
+					} else {
+						message('error');
+					}
+
+				});
+
+		} catch (err) { message(err) }
+	}
+
+</script>

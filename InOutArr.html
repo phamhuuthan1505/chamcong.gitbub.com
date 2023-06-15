@@ -1,0 +1,505 @@
+﻿ <table id="tbInOutArr"></table>
+<div id="toolInoutarr">
+	<a id="addInoutArr" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newItemInOutArr()">Thêm mới</a>
+	<a id="deleteInoutArr" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="deleteInOutArr()">Xóa</a>
+	<a id="reloadInoutArr" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="javascript:$('#tbInOutArr').datagrid('reload', {});">Tải lại</a>
+	<a id="btinout" class="easyui-linkbutton" iconCls="icon-next" plain="true" onclick="showInOutW()">Phân giờ</a>
+</div>
+<script type="text/javascript">
+	$(function () {
+		SelInOutMode.init();
+		//console.log(SelInOutMode.InOutModeData());
+	});
+	
+	$('#addInoutArr').linkbutton({
+		iconCls: 'icon-add',
+		plain: true,
+		text: $.i18n('add'),
+		disabled: MenuItem.IsAdd() ? false : true
+	});
+	$('#deleteInoutArr').linkbutton({
+		iconCls: 'icon-remove',
+		plain: true,
+		text: $.i18n('delete'),
+		disabled: MenuItem.IsDelete() ? false : true
+	});
+	$('#reloadInoutArr').linkbutton({
+		iconCls: 'icon-reload',
+		plain: true,
+		text: $.i18n('reload')
+	});
+	$('#btinout').linkbutton({
+		iconCls: 'icon-next',
+		plain: true,
+		text: $.i18n('timediv'),
+		disabled:true
+	});
+	$('#tbInOutArr').datagrid({
+		columns: [[
+			{ field: 'inoutcode', title: $.i18n('code') },
+			{ field: 'inoutname', title: $.i18n('description') },
+			{ field: 'inoutmode', title: $.i18n('inoutmode'), formatter: SelInOutMode.InOutModeName, width: 550 }
+		]],
+		rownumbers: true,
+		toolbar: '#toolInoutarr',
+		singleSelect: true,
+		striped: true,
+		fit: true,
+		border: false,
+		url: 'inoutarr?getinoutarr',
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onSelect: function (index, row) {
+			if (row.inoutmode == 1) {
+				$("#btinout").linkbutton('enable');
+			} else {
+				$("#btinout").linkbutton('disable');
+			}
+		},
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 450,
+				border: false,
+				cache: false,
+				href: 'SubPages/inoutarr_detail.html',
+				onLoad: function () {
+					$('#tbInOutArr').datagrid('fixDetailRowHeight', index);
+					$('#tbInOutArr').datagrid('selectRow', index);	
+					SetInOutArrControls(row, index);
+					$('#tbInOutArr').datagrid('getRowDetail', index).find('form').form('load', row);
+				}
+			});
+			$('#tbInOutArr').datagrid('fixDetailRowHeight', index);
+
+		},
+		onCollapseRow: function (index, row) {
+			if (row.inoutmode == 1) {
+				$("#btinout").linkbutton('enable');
+			} else {
+				$("#btinout").linkbutton('disable');
+			}
+		}
+	});
+	function SetInOutArrControls(row, index) {
+		var saveInOutArr = $('#tbInOutArr').datagrid('getRowDetail', index).find('#saveInOutArr');
+		$(saveInOutArr).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var cancelInOutArr = $('#tbInOutArr').datagrid('getRowDetail', index).find('#cancelInOutArr');
+		$(cancelInOutArr).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		var inoutcode = $('#tbInOutArr').datagrid('getRowDetail', index).find('#inoutcode');
+		$(inoutcode).textbox({
+			label: $.i18n('code'),
+			required: true,
+			labelWidth: 360,
+			width:440
+		});
+		var inoutname = $('#tbInOutArr').datagrid('getRowDetail', index).find('#inoutname');
+		$(inoutname).textbox({
+			label: $.i18n('description'),
+			required: true,
+			labelWidth: 360,
+			width: 750
+		});
+		var inoutmode = $('#tbInOutArr').datagrid('getRowDetail', index).find('#inoutmode');
+		$(inoutmode).combobox({
+			label: $.i18n('inoutmode'),
+			required: true,
+			labelWidth: 360,
+			width: 750,
+			valueField: 'id',
+			textField: 'text',
+			data: SelInOutMode.InOutModeData()
+		});
+		var automin = $('#tbInOutArr').datagrid('getRowDetail', index).find('#automin');
+		$(automin).numberbox({
+			label: $.i18n('automin'),
+			required: true,
+			labelWidth: 360,
+			width: 440
+		});
+		var automax = $('#tbInOutArr').datagrid('getRowDetail', index).find('#automax');
+		$(automax).numberbox({
+			label: $.i18n('automax'),
+			required: true,
+			labelWidth: 360,
+			width: 440
+		});
+		var autointerval = $('#tbInOutArr').datagrid('getRowDetail', index).find('#autointerval');
+		$(autointerval).numberbox({
+			label: $.i18n('autointerval'),
+			required: true,
+			labelWidth: 360,
+			width: 440
+		});
+		var daycount = $('#tbInOutArr').datagrid('getRowDetail', index).find('#daycount');
+		$(daycount).numberspinner({
+			label: $.i18n('daycount'),
+			required: true,
+			labelWidth: 360,
+			width: 440
+		});
+		var endtime = $('#tbInOutArr').datagrid('getRowDetail', index).find('#endtime');
+		$(endtime).timespinner({
+			label: $.i18n('endtime'),
+			required: true,
+			labelWidth: 360,
+			width: 440
+		});
+		
+		var removestart = $('#tbInOutArr').datagrid('getRowDetail', index).find('#removestart');		
+		var removeend = $('#tbInOutArr').datagrid('getRowDetail', index).find('#removeend');	
+		var removeout = $('#tbInOutArr').datagrid('getRowDetail', index).find('#removeout');
+		$(removeout).switchbutton({
+			label: $.i18n('removeout'),
+			required: true,
+			labelWidth: 360,
+			width: 80,
+			onChange: function (checked) {
+				if (checked) {
+					$(removestart).timespinner('enable');
+					$(removeend).timespinner('enable');
+				} else {
+
+					$(removestart).timespinner('disable');
+					$(removeend).timespinner('disable');
+				}
+			}
+		});
+		var opts = $(removeout).switchbutton('options');
+		$(removestart).timespinner({
+			label: $.i18n('removestart'),
+			required: true,
+			labelWidth: 360,
+			width: 440
+		});
+		$(removeend).timespinner({
+			label: $.i18n('removeend'),
+			required: true,
+			labelWidth: 360,
+			width: 440
+		});
+		if (opts.checked) {
+			$(removestart).timespinner('enable');
+			$(removeend).timespinner('enable');
+		} else {
+
+			$(removestart).timespinner('disable');
+			$(removeend).timespinner('disable');
+		}
+	}
+	function saveInOutArr(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		saveItemInOutArr(index);
+	}
+	function cancelInOutArr(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbInOutArr').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbInOutArr').datagrid('deleteRow', index);
+		} else {
+			$('#tbInOutArr').datagrid('collapseRow', index);
+		}
+	}
+	function saveItemInOutArr(index) {
+		var row = $('#tbInOutArr').datagrid('getRows')[index];
+		var url = row.isNewRecord ? 'inoutarr?addinoutarr' : 'inoutarr?updateinoutarr'//&inoutid='+row.inoutid;
+		var myForm = $('#tbInOutArr').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (isValid) {
+			var values = {};
+			$.each(myForm.serializeArray(), function (i, field) {
+				values[field.name] = field.value;
+			});
+			values['inoutid'] = row.inoutid;
+			$.post(url, JSON.stringify(values),
+				function (data) {
+					var data = eval('(' + data + ')');
+					console.log(data);
+					if (data.state == "error") {
+						if (data.messagekey) {
+							var msg = $.i18n(data.messagekey, values.inoutcode);
+							message(msg);
+						} else {
+							message(data.message);
+						}
+
+					} else {
+						data.isNewRecord = false;
+						$('#tbInOutArr').datagrid('collapseRow', index);
+						$('#tbInOutArr').datagrid('updateRow', {
+							index: index,
+							row: data
+						});
+
+					}
+
+				});
+		}
+
+	}
+	function newItemInOutArr() {
+		var index = $('#tbInOutArr').datagrid('getRows').length - 1;
+
+		if (index > 0) {
+			var row = $('#tbInOutArr').datagrid('getRows')[index];
+			if (row.isNewRecord) { return }
+		}
+
+		$('#tbInOutArr').datagrid('appendRow', { isNewRecord: true, inoutmode:0 });
+		index = $('#tbInOutArr').datagrid('getRows').length - 1;
+		$('#tbInOutArr').datagrid('expandRow', index);
+		$('#tbInOutArr').datagrid('selectRow', index);
+	}
+	function deleteInOutArr() {
+		var row = $('#tbInOutArr').datagrid('getSelected');
+		if (!row) return;
+		if (row.isNewRecord) {
+			$('#tbInOutArr').datagrid('deleteRow', $('#tbInOutArr').datagrid('getRowIndex', row));
+			return;
+		}
+			$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete', row.inoutcode), function (r) {
+				if (r) {
+					var data = { inoutid: row.inoutid };
+					$.post('inoutarr?deleteinoutarr&locale=' + i18n.locale, JSON.stringify(data),
+						function (data, status) {
+							if (status == "success") {
+								var data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#tbInOutArr').datagrid('deleteRow', $('#tbInOutArr').datagrid('getRowIndex', row));
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+						}
+					);
+				}
+			});
+		
+	}
+	function showInOutW() {
+		var row = $('#tbInOutArr').datagrid('getSelected');
+		if (!row) { return; }
+		inoutid = row.inoutid;
+		$('body').append('<div id="indexWindow" style="display:none;overflow:hidden"></div>');
+		$('#indexWindow').window({
+			width: 550,
+			height: 400,
+			modal: true,
+			closed: true,
+			iconCls: 'icon-next',
+			title: $.i18n('timediv'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			extractor: function (data) {
+				return CheckSessionTimeOut(data);
+			},
+			onClose: function () {
+				$('#indexWindow').remove();
+			},
+			onLoad: function () {
+				$('#newInOut').linkbutton({
+					iconCls: 'icon-add',
+					plain: true,
+					text: $.i18n('add'),
+				});
+				$('#deleteInOut').linkbutton({
+					iconCls: 'icon-remove',
+					plain: true,
+					text: $.i18n('delete')
+				});
+				$('#reloadInOut').linkbutton({
+					iconCls: 'icon-reload',
+					plain: true,
+					text: $.i18n('reload')
+				});
+				$('#tbInOut').datagrid({
+					columns: [[
+						{ field: 'startin', title: $.i18n('startin') },
+						{ field: 'endin', title: $.i18n('endin') },
+						{ field: 'startout', title: $.i18n('startout') },
+						{ field: 'endout', title: $.i18n('endout') }
+					]],
+					fit:true,
+					rownumbers: true,
+					border:false,
+					url: 'inoutarr?getinout',
+					singleSelect: true,
+					striped: true,
+					queryParams: {
+						inoutid: inoutid
+					},
+					method: 'POST',
+					loader: function (param, success, error) {
+						var opts = $(this).datagrid('options');
+						loaderWSE(opts, param, success, error)
+					},
+					view: detailview,
+					detailFormatter: function (index, row) {
+						return '<div class="ddv" style="padding:5px 0"></div>';
+					},
+					onExpandRow: function (index, row) {
+						var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+						ddv.panel({
+							height: 190,
+							border: false,
+							cache: false,
+							href: 'SubPages/inout_detail.html',
+							onLoad: function () {
+								$('#tbInOut').datagrid('fixDetailRowHeight', index);
+								$('#tbInOut').datagrid('selectRow', index);
+								var myForm = $('#tbInOut').datagrid('getRowDetail', index).find('form');
+								SetInOutControls(myForm,row, index);
+								//$('#tbInOut').datagrid('getRowDetail', index).find('form').form('load', row);
+								myForm.form('load', row);
+							}
+						});
+						$('#tbInOut').datagrid('fixDetailRowHeight', index);
+
+					}
+				});
+			}
+		}).window('open').window('refresh', 'subpages/inout.html').window('center');
+	}
+	function SetInOutControls(myForm,row, index) {
+		var saveInOut = $('#tbInOut').datagrid('getRowDetail', index).find('#saveInOut');
+		$(saveInOut).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save')
+		});
+		var cancelInOut = $('#tbInOut').datagrid('getRowDetail', index).find('#cancelInOut');
+		$(cancelInOut).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+		$.each(myForm.serializeArray(), function (i, field) {
+			let name = $('#tbInOut').datagrid('getRowDetail', index).find('#' + field.name);
+			$(name).timespinner({
+				label: $.i18n(field.name),
+				required: true,
+				labelWidth: 90,
+				width:160
+			});
+		});
+	}
+	function saveInOut(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		saveItemInout(index);
+	}
+	function cancelInOut(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbInOut').datagrid('getRows')[index];
+		if (row.isNewRecord) {
+			$('#tbInOut').datagrid('deleteRow', index);
+		} else {
+			$('#tbInOut').datagrid('collapseRow', index);
+		}
+	}
+	
+	function saveItemInout(index) {
+		var row = $('#tbInOut').datagrid('getRows')[index];
+		var url = row.isNewRecord ? 'inoutarr?addinout' : 'inoutarr?updateinout';
+		var myForm = $('#tbInOut').datagrid('getRowDetail', index).find('form');
+		var isValid = myForm.form('validate');
+		if (!isValid) return;
+		var values = {};
+		$.each(myForm.serializeArray(), function (i, field) {
+			values[field.name] = field.value;
+		});
+		values['inoutid'] = inoutid;
+		values['id'] = row.id;
+		$.post(url, JSON.stringify(values),
+			function (data) {
+				var data = eval('(' + data + ')');
+				if (data.state == "error") {
+					message(data.message);
+
+				} else {
+					data.isNewRecord = false;
+					$('#tbInOut').datagrid('collapseRow', index);
+					$('#tbInOut').datagrid('updateRow', {
+						index: index,
+						row: data
+					});
+
+				}
+
+			});
+
+	}
+	function newItemInOut() {
+		try {
+			var index = $('#tbInOut').datagrid('getRows').length - 1;
+			if (index > 0) {
+				var row = $('#tbInOut').datagrid('getRows')[index];
+				if (row.isNewRecord) { return; }
+			}
+
+			$('#tbInOut').datagrid('appendRow', {
+				isNewRecord: true,
+				startin: '05:00',
+				endin: '09:00',
+				startout: '09:01',
+				endout:'12:00'
+			});
+			index = $('#tbInOut').datagrid('getRows').length - 1;
+			$('#tbInOut').datagrid('expandRow', index);
+			$('#tbInOut').datagrid('selectRow', index);
+		} catch (err) {
+			message(err);
+		}
+	}
+	function deleteInOut() {
+		var row = $('#tbInOut').datagrid('getSelected');
+		if (row) {
+			if (row.isNewRecord) {
+				$('#tbInOut').datagrid('deleteRow', $('#tbInOut').datagrid('getRowIndex', row));
+				return;
+			}
+			$.messager.confirm($.i18n('mytitle'), $.i18n('ask_delete_item'), function (r) {
+				if (r) {
+					
+					var data = { id: row.id };
+					$.post('inoutarr?deleteinout', JSON.stringify(data),
+						function (data, status) {
+							if (status == "success") {
+								var data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#tbInOut').datagrid('deleteRow', $('#tbInOut').datagrid('getRowIndex', row));
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+						}
+					);
+				}
+			});
+		}
+	}
+
+</script>

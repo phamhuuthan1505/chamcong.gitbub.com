@@ -1,0 +1,97 @@
+﻿<table id="tbDevLog"></table>
+<div id="toolDevLog">
+	<input id="StartDateDevLog" />
+	<input id="EndDateDevLog" />
+	<a id="getDevLog" onclick="GetDevLog()">Thực hiện</a>
+	<!--<span class="button-sep"></span>
+	<a id="deleteDevLog" onclick="DeleteDevLog()">Xóa sự kiện</a>-->
+	<span class="button-sep"></span>
+	<a id="exportDevLog" onclick="$('#tbDevLog').datagrid('toExcel','Logs.xls');">Xuất Excel</a>
+</div>
+<script type="text/javascript">
+	var d = new Date();
+	var startdate = d.getDate() - 3 + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + '00:00:00';
+	$('#StartDateDevLog').datetimespinner({
+		required: true,
+		formatter: mydatetimeformatter,
+		parser: mydatetimeparser,
+		width: 250,
+		label: $.i18n('fromdate'),
+		labelWidth: 75,
+	}).datetimespinner('setValue', startdate);
+	var enddate = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + '23:59:59';
+	$('#EndDateDevLog').datetimespinner({
+		required: true,
+		formatter: mydatetimeformatter,
+		parser: mydatetimeparser,
+		width: 250,
+		label: $.i18n('todate'),
+		labelWidth: 75,
+	}).datetimespinner('setValue', enddate);
+	$('#getDevLog').linkbutton({
+		iconCls: 'icon-search',
+		plain: true,
+		text: $.i18n('execute')
+	});
+	//$('#deleteDevLog').linkbutton({
+	//	iconCls: 'icon-remove',
+	//	plain: true,
+	//	text: $.i18n('delete')
+	//});
+	$('#exportDevLog').linkbutton({
+		iconCls: 'icon-excel',
+		plain: true,
+		text: $.i18n('export')
+	});
+	$('#tbDevLog').datagrid({
+		toolbar: '#toolDevLog',
+		fit: true,
+		border: false,
+		rownumbers: true,
+		singleSelect: true,
+		striped: true,
+		pagination: true,
+		pageList: [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000],
+		pageSize: 20,
+		singleSelect: true,
+		checkOnSelect: false,
+		selectOnCheck: false,
+		sortName: 'logtime',
+		sortOrder: 'desc',
+		//queryParams: { startdate: startdate, enddate: enddate },
+		//url: 'leavelog?getleavelog&locale=' + i18n.locale,
+		//method: 'POST',
+		//loader: function (param, success, error) {
+		//	var opts = $(this).datagrid('options');
+		//	loaderWSE(opts, param, success, error)
+		//},
+		//frozenColumns: [[
+		//	{ field: 'chk', checkbox: true }
+		//]],
+		columns: [[
+			{ field: 'serialnumber', title: $.i18n('serialnumber') },
+			{ field: 'logtime', title: $.i18n('time'), sortable: true },
+			{ field: 'logstate', title: $.i18n('eventtype'), formatter: formatstatusString },
+			{ field: 'passedtime', title: $.i18n('statechangetime') }
+		]]
+	});
+	function GetDevLog() {
+		var opts = $('#indexWindow1').dialog('options');
+		var serialnumber = opts.queryParams.serialnumber;
+		var startdate = $("#StartDateDevLog").datetimespinner('getValue');
+		var enddate = $("#EndDateDevLog").datetimespinner('getValue');
+		if (getValidDate(startdate, enddate) == false) {
+			$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+			return;
+		}
+		$('#tbDevLog').datagrid({
+			queryParams: { startdate: startdate, enddate: enddate, serialnumber: serialnumber },
+			url: 'machines?getdevlog&locale=' + i18n.locale,
+			method: 'POST',
+			loader: function (param, success, error) {
+				var opts = $(this).datagrid('options');
+				loaderWSE(opts, param, success, error)
+			},
+		});
+	}
+</script>

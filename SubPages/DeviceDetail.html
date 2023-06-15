@@ -1,0 +1,63 @@
+﻿<form>
+	<div id="tabDev">
+		<div title="Căn bản">
+			<div class="dev-col">
+				<div><input name="machineid" id="machineid"></div>
+				<div><input name="machinename" id="machinename"></div>
+				<div><input id="serialnumber" name="serialnumber" /></div>
+				<div><input id="ipaddress" name="ipaddress" data-options="validType:'checkIP'" /></div>
+				<div><input id="activekey" name="activekey" /></div>
+				<div><input id="status" name="status"></div>
+				<div><input id="areaid" name="areaid"></div>
+			</div>
+		</div>
+		<div title="Nâng cao">
+			<div class="easyui-layout" style="width:600px;height:320px;">
+				<div data-options="region:'center',border:false" class="dev-col">
+					<div><input id="lastrecorddate" name="lastrecorddate" /></div>
+					<div><input id="cyclereload" name="cyclereload" ></div>
+					<div><input id="delay" name="delay"></div>
+				</div>
+				<div data-options="region:'south',border:false" style="height:200px;">
+					<div class="easyui-layout" data-options="fit:true">
+						<div data-options="region:'west',border:false" style="width:300px;">
+							
+							<div class="dev-col">
+								<div style="margin-bottom:5px"><input id="attlog" name="attlog" /></div>
+								<div style="margin-bottom:5px"><input id="oplog" name="oplog" /></div>
+								<div style="margin-bottom:5px"><input id="attphoto" name="attphoto" /></div>
+								<div style="margin-bottom:5px"><input id="enrollfp" name="enrollfp" /></div>
+								<div style="margin-bottom:5px"><input id="enrolluser" name="enrolluser" /></div>
+								<div style="margin-bottom:5px"><input id="fpimag" name="fpimag" /></div>
+							</div>
+						</div>
+						<div data-options="region:'center',border:false">
+							<div class="dev-col">
+								<div style="margin-bottom:5px"><input id="chguser" name="chguser" /></div>
+								<div style="margin-bottom:5px"><input id="chgfp" name="chgfp" /></div>
+								<div style="margin-bottom:5px"><input id="face" name="face" /></div>
+								<div style="margin-bottom:5px"><input id="userpic" name="userpic" /></div>
+								<div style="margin-bottom:5px"><input id="workcode" name="workcode" /></div>
+								<div style="margin-bottom:5px"><input id="biophoto" name="biophoto" /></div>
+							</div>
+						</div>
+						</div>
+				</div>
+			</div>
+		</div>
+		<div title="Dung lượng cập nhật  trực tuyến">
+			<div class="dev-col">
+				<div><input id="usercount" name="usercount" /></div>
+				<div><input id="fpcount" name="fpcount" /></div>
+				<div><input id="facecount" name="facecount" /></div>
+				<div><input id="attcount" name="attcount" /></div>
+				<div><input id="admincount" name="admincount" /></div>
+			</div>
+		</div>
+		</div>
+	
+</form>
+<div class="easyui-panel" data-options="border:false" style="width:600px;height:50px;padding:10px 10px 10px 20px;">
+	<a id="saveDev" onclick="saveMachine(this)">Lưu</a>
+	<a id="cancelDev" onclick="cancelMachine(this)">Hủy</a>
+</div>

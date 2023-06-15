@@ -1,0 +1,11 @@
+﻿<div class="easyui-layout wse-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="height:25px;">
+		<div id="AttCalP" class="easyui-progressbar" data-options="value:0" style="width: 566px;"></div>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="tbAttCalLogs"></table>
+	</div>
+</div>
+<div id="toolCalLogs">
+	<a id="exportAttLogs" onclick="$('#tbAttCalLogs').datagrid('toExcel','Logs.xls');">Xuất Excel</a>
+</div>

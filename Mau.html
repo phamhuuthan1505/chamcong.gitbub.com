@@ -1,0 +1,119 @@
+﻿<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'north',border:false" style="height:68px;">
+        <div><input id="cbAreaIDDevStatus" style="width:285px;margin-bottom:3px" data-options="label:'Địa bàn:',labelWidth:55" /></div>
+        <div style="margin-top:3px"><input id="ftDevStatus" style="width:100%"></div>
+    </div>
+    <div data-options="region:'south',border:false" style="height:50px;">
+        <div style="margin:10px">
+            <center>
+                <label id="infoSocket" style="color:#009">Socket Info</label>
+            </center>
+        </div>
+    </div>
+    <div data-options="region:'center',border:false" style="padding:5px;">
+        <ul id="StatusDevices"></ul>
+    </div>
+</div>
+<script>
+	function createMenu(items) {
+		var m = $('<div></div>').appendTo('body').menu({ onClick: menuHandler });
+		_create(items);
+		return m;
+
+		function _create(items, p) {
+			$.map(items, function (item) {
+				m.menu('appendItem', $.extend({}, item, {
+					parent: (p ? p.target : null)
+				}));
+				if (item.items) {
+					var p1 = m.menu('findItem', item.text);
+					_create(item.items, p1);
+				}
+			});
+		}
+	}
+	function createMenuBar(data, container) {
+		$.map(data, function (btn) {
+			var b = $('<a href="javascript:void(0)"></a>').appendTo(container);
+			if (btn.items) {
+				b.menubutton($.extend({}, btn, {
+					menu: createMenu(btn.items)
+				}));
+			} else {
+				b.linkbutton($.extend({}, btn, {
+					plain: true
+				}));
+			}
+		});
+		function createMenu(items) {
+			var m = $('<div></div>').appendTo('body').menu({ onClick: menuHandler });
+			_create(items);
+			return m;
+
+			function _create(items, p) {
+				$.map(items, function (item) {
+					m.menu('appendItem', $.extend({}, item, {
+						parent: (p ? p.target : null)
+					}));
+					if (item.items) {
+						var p1 = m.menu('findItem', item.text);
+						_create(item.items, p1);
+					}
+				});
+			}
+		}
+	}
+	function menuHandler(item) {
+		alert(item.text);
+	}
+	var data = [{
+		text: 'File',
+		iconCls: 'icon-clear',
+		items: [{
+			text: 'Exit',
+			iconCls: 'icon-device',
+			name: 'exit',
+
+		}]
+	}, {
+		text: 'Entry',
+		items: [{
+			text: 'Employee Entry',
+			items: [{
+				text: 'Enter Part Timers'
+			}, {
+				text: 'Enter Short Timers'
+			}, {
+				text: 'Enter Others',
+				items: [{
+					text: 'Enter Early Retirement'
+				}, {
+					text: 'Enter Near Retirement'
+				}]
+			}]
+		}, {
+			text: 'Department Entry'
+		}, {
+			text: 'Position Entry'
+		}]
+	}, {
+		text: 'View',
+		items: [{
+			text: 'Logged in Users'
+		}, {
+			text: 'Logged out Users'
+		}]
+	}, {
+		text: 'About'
+	}];
+
+	$.get('basiccommand?getdatamenu')
+		.done(function (data) {
+			var data = eval('(' + data + ')');
+			$('#getdatamenu').menubutton(
+				$.extend({}, this, {
+					iconCls: 'icon-edit',
+					menu: createMenu(data)
+				}));
+		});
+</script>

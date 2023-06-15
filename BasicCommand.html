@@ -1,0 +1,392 @@
+﻿<div id="layoutBasicCmd" class="easyui-layout wse-layout" data-options="fit:true">
+	<div data-options="region:'west',split:true" style="width:230px;padding:3px;overflow:auto">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<!--<input id="cbAreaBasicCmd" style="width:225px;margin-bottom:3px" />-->
+				<a id="btAreaIDBasicCmd" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:5px;">
+				<ul id="BasicCmdDevices"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftBasicCmd" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" >
+		<table id="tbCmdEvents" ></table>
+	</div>
+	<div data-options="region:'south',border:false" style="height:35px;">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:300px;">
+				<center style="margin-top:8px">
+					<label id="infoBasicCmdSocket" style="color:#009">Socket Info</label>
+				</center>
+			</div>
+			<div data-options="region:'center',border:false" style="height:35px;">
+				<center style="margin-top:8px">
+					<label id="infoEventCmdSocket" style="color:#009">Socket Info</label>
+				</center>
+			</div>
+		</div>
+			
+	</div>
+</div>
+<div id="toolCmdEvents" style="padding-left:5px;">
+	<a id="getdatamenu">Lệnh cập nhật dữ liệu</a>
+	<a id="controlmenu">Lệnh cập nhật dữ liệu</a>
+	<a id="deletemenu">Lệnh cập nhật dữ liệu</a>
+	<span class="button-sep"></span>
+	<a id="clearBasicCmdEvent" onclick="$('#tbCmdEvents').datagrid({data:[]});">Xóa bỏ sự kiện</a>
+	<span class="button-sep"></span>
+	<input id="swStatus1" />
+	 <input id="swData1" />
+	<!--<span class="button-sep"></span>
+	<label>Thông tin mới ở đầu trang:</label> <input id="swNewInfo1" class="easyui-switchbutton" data-options="height:22,checked:false">-->
+</div>
+<div id="mmAreaBasicCmd" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaIDBasicCmd">	</div>
+</div>
+<script type="text/javascript">
+	var clientID = 0;
+	$('#layoutBasicCmd').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('device'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true,
+		iconCls: 'icon-device'
+	});
+	$('#layoutBasicCmd').layout('panel', 'center').panel({
+		title: $.i18n('event'),
+		border: true,
+		iconCls: 'icon-text'
+	});
+	$('#clearBasicCmdEvent').linkbutton({
+		iconCls: 'icon-clear',
+		plain: true,
+		text: $.i18n('clearevent')
+	});
+	$(function () {
+		$.get('basiccommand?getdatamenu&locale='+ i18n.locale)
+			.done(function (data) {
+				var data = eval('(' + data + ')');
+				$('#getdatamenu').menubutton(
+					$.extend({}, this, {
+						text: $.i18n('getdatamenu'),
+						iconCls: 'icon-downloadcmd',
+						menu: createMenu(data,menuHandler)
+				}));
+			});
+		$.get('basiccommand?getcontrolmenu&locale=' + i18n.locale)
+			.done(function (data) {
+				var data = eval('(' + data + ')');
+				$('#controlmenu').menubutton(
+					$.extend({}, this, {
+						text: $.i18n('controlmenu'),
+						iconCls: 'icon-cmd',
+						menu: createMenu(data, menuHandler)
+					}));
+			});
+		$.get('basiccommand?getdeletemenu&locale=' + i18n.locale)
+			.done(function (data) {
+				var data = eval('(' + data + ')');
+				$('#deletemenu').menubutton(
+					$.extend({}, this, {
+						text: $.i18n('deletemenu'),
+						iconCls: 'icon-file-delete',
+						menu: createMenu(data, menuHandler)
+					}));
+			});
+		$.get('basiccommand?getclientid')
+			.done(function (data) {
+				clientID = data;
+				clearInterval(EventsOfCommands.ReopenSocket);
+				EventsOfCommands.clientID = data;
+				EventsOfCommands.init(0);
+				clearInterval(StatusOfBasicCmdDevices.ReopenSocket);
+				StatusOfBasicCmdDevices.init(0);
+			});
+	});
+	$('#ftBasicCmd').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#BasicCmdDevices').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#BasicCmdDevices').tree('doFilter', newValue);
+		}
+	}).textbox('addClearBtn', 'icon-clear');
+	$('#BasicCmdDevices').tree({
+		url: 'devicesstatus?getdevices',
+		lines: true,
+		checkbox: function (node) {
+			if (node.levelid == -1) return true;
+			if (node.levelid == 0) return true;
+			if (node.levelid == 1) return true;
+			if (node.iconCls == "icon-devonline") return true;
+		},
+		queryParams: { areaid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onCheck: function (node, checked) {
+			var nodes = $('#BasicCmdDevices').tree('getChecked');
+			//console.log(nodes);
+			var ids = new Array();
+			for (var i = 0; i < nodes.length; i++) {
+				if (nodes[i].levelid == 2) {
+					ids.push(nodes[i].id);
+				}
+			}
+			EventsOfCommands.machineids = ids;
+			EventsOfCommands.sendmachineids();
+		}
+
+	});
+	$('#dlAreaIDBasicCmd').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonBasicCmd($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#BasicCmdDevices').tree({
+				url: 'devicesstatus?getdevices',
+				lines: true,
+				queryParams: { areaid: row.id },
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+			});
+			loadMenuButtonBasicCmd(row.text);
+			$('#mmAreaBasicCmd').menu('hide');
+		}
+	});
+	function loadMenuButtonBasicCmd(txt) {
+		$('#btAreaIDBasicCmd').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaBasicCmd',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+
+	
+	$('#tbCmdEvents').datagrid({
+		columns: [[
+			{ field: 'timestr', title: $.i18n('eventtime'), width: 140 },
+			{ field: 'eventinfo', title: $.i18n('eventname'), width: 120 },
+			{ field: 'sessionname', title: $.i18n('devicename'), width: 120 },
+			{ field: 'info', title: $.i18n('eventinfo'), width: 800 },
+		]],
+		fit:true,
+		rownumbers: true,
+		iconCls: 'icon-text',
+		singleSelect: true,
+		toolbar: '#toolCmdEvents',
+		border: false,
+		rowStyler: function (index, row) { return 'color:' + row.colorcode + ';'; },
+	}).datagrid('fixColumnSize');
+	$('#swStatus1').checkbox({
+		label: $.i18n('requestevent'),
+		labelWidth: i18n.locale == 'vi' ? 92 : 90,
+		height: 15,
+		width: 15,
+		labelPosition: 'after',
+		checked: true,
+		onChange: function (checked) {
+			var opt = $('#swData1').checkbox('options');
+			var data = { IsDataShow: opt.checked, IsRequestShow: checked };
+			EventsOfCommands.send(data);
+		}
+	});
+	$('#swData1').checkbox({
+		label: $.i18n('dataevent'),
+		labelWidth: i18n.locale == 'vi' ? 92 : 70,
+		height: 15,
+		width: 15,
+		labelPosition: 'after',
+		checked: true,
+		onChange: function (checked) {
+			var opt = $('#swStatus1').checkbox('options');
+			var data = { IsRequestShow: opt.checked, IsDataShow: checked };
+			EventsOfCommands.send(data);
+		}
+	});
+	function menuHandler(item) {
+		var data = { clientid: EventsOfCommands.clientID };
+		EventsOfCommands.send(data)
+		var nodes = $('#BasicCmdDevices').tree('getChecked');
+		var ids = new Array();
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].levelid == 2) {
+				ids.push(nodes[i].id);
+			}
+		}
+		if (ids.length == 0) {
+			$.messager.alert(myTitle, $.i18n('choosedevice'), 'info');
+			return;
+		}
+		if (item.name == 'bytime') {
+			openDateWindow(item, nodes);
+		} else if (item.name == 'setparameter') {
+			var dlg = $.messager.prompt({
+				iconCls: 'icon-setting',
+				title: $.i18n('setparameter'),
+				msg: $.i18n('inputparameter') + ':',
+				shadow: false,
+				buttons: [{
+					plain: true,
+					iconCls: 'icon-ok',
+					text: $.i18n('ok'),
+					width: 100,
+					onClick: function () {
+						var opts = dlg.dialog('options');
+						var value = dlg.find('.messager-input').val();
+						dlg.dialog('close');
+						opts.fn(value);
+					}
+				}, {
+					plain: true,
+					width: 100,
+					iconCls: 'icon-cancel',
+					text: $.i18n('cancel'),
+					onClick: function () {
+						var opts = dlg.dialog('options');
+						dlg.dialog('close');
+						opts.fn();
+					}
+					}],
+				fn: function (r) {
+					if (r) {
+						if (!(r.includes("="))) return;
+						setCommands(item.cmdid, nodes, item.text, "", "", r);
+					}
+				}
+			});
+		} else if (item.name == 'delete') {
+			var ask = $.i18n('ask_delete_cmd',item.text.toLowerCase());
+			$.messager.confirm($.i18n('mytitle'), ask, function (r) {
+				if (r) {
+					setCommands(item.cmdid, nodes, item.text, "", "", "");
+				}
+			});
+		} else {
+			setCommands(item.cmdid, nodes, item.text, "", "", "");
+		}
+		
+	}
+	function setCommands(cmdType, nodes, des, starttime, endtime, optionpara) {
+		var data = { clientid: EventsOfCommands.clientID };
+		EventsOfCommands.send(data)
+		var ids = new Array();
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].levelid == 2) {
+				ids.push(nodes[i].id);
+			}
+		}
+		if (ids.length == 0) {
+			$.messager.alert(myTitle, $.i18n('choosedevice'), 'info');
+			return;
+		}
+		var data = {
+			ids: ids, cmdType: cmdType, description: des,
+			starttime: starttime, endtime: endtime, optionpara: optionpara,
+			issync: false, clientid: clientID
+		};
+		$.post('basiccommand?setcommands&locale=' + i18n.locale, JSON.stringify(data),
+			function (data, status) {
+				if (status == "success") {
+					var data = eval('(' + data + ')');
+					message(data.message);
+				} else {
+					message('error');
+				}
+			}
+		);
+	}
+	function openDateWindow(item, nodes) {
+		var ids = new Array();
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].levelid == 2) {
+				ids.push(nodes[i].id);
+			}
+		}
+		if (ids.length == 0) {
+			$.messager.alert(myTitle, $.i18n('choosedevice'), 'info');
+			return;
+		}
+		$('body').append('<div id="indexWindow1" style="display:none;overflow:hidden;padding:10px"></div>');
+		$('#indexWindow1').dialog({
+			width: 400,
+			height: 200,
+			modal: true,
+			closed: true,
+			iconCls: '',
+			title: $.i18n('choosedate'),
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			constrain: true,
+			onClose: function () {
+				$('#indexWindow1').remove();
+			},
+			buttons: [{
+				text: $.i18n('ok'),
+				iconCls: 'icon-ok',
+				handler: function () {
+					var starttime = $("#startdateCommd").datetimespinner('getValue');
+					var endtime = $("#enddateCommd").datetimespinner('getValue');
+					setCommands(item.cmdid, nodes, item.text, starttime, endtime, "");
+					$('#indexWindow1').dialog('close');
+				}
+			}, {
+					text: $.i18n('exit'),
+					iconCls: 'icon-exit',
+					handler: function () { $('#indexWindow1').dialog('close'); }
+			}],
+			onLoad: function () {
+				
+				var d = new Date();
+				var startdate = d.getDate() - 3 + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + '00:00:00';
+				$('#startdateCommd').datetimespinner({
+					required: true,
+					formatter: mydatetimeformatter,
+					parser: mydatetimeparser,
+					width: 300,
+					label: $.i18n('fromdate'),
+					labelWidth: 90,
+				}).datetimespinner('setValue', startdate);
+				var enddate = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + '23:59:59';
+				$('#enddateCommd').datetimespinner({
+					required: true,
+					formatter: mydatetimeformatter,
+					parser: mydatetimeparser,
+					width: 300,
+					label: $.i18n('todate'),
+					labelWidth: 90,
+				}).datetimespinner('setValue', enddate);
+			}
+
+		}).dialog('open').dialog('refresh', 'GetByDate.html').dialog('center');
+	}
+</script>

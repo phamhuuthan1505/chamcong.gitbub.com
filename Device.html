@@ -1,0 +1,874 @@
+﻿	<div id="layoutDev" class="easyui-layout wse-layout">
+		<div data-options="region:'west',split: true" style="width:250px;padding:3px;">
+			<ul id="areasTree"></ul>
+		</div>
+		<div data-options="region:'center'">
+			<table id="tbMachines"></table>
+		</div>
+	</div>
+	<div id="toolMachine">
+		<a id="addDev"  onclick="newMachine()">Thêm mới</a>
+		<a id="deleteDev"  onclick="deleteMachine()">Xóa</a>
+		<span class="button-sep"></span>
+		<a id="changeArea"  onclick="showSchoolW()">Chuyển trường</a>
+		<span class="button-sep"></span>
+		<a id="registerDev">Đăng ký</a>
+		<span class="button-sep"></span>
+		<input id="searchDev"  style="width:250px" />
+		<span class="button-sep"></span>
+		<a id="exportDev" onclick="getMachinesList()">Danh sách thiết bị</a>
+	</div>
+	<div id="mmDeviceActive" style="width:185px">
+		<div id="m-register" data-options="iconCls:'icon-unlockgreen'" onclick="DoGetActive()">Đăng ký nhanh</div>
+		<div id="m-registration" data-options="iconCls:'icon-unlockman'" onclick="openActiveHandle()">Quản lý đăng ký</div>
+	</div>
+	<div id="mmMachineSearch">
+		<div id="m-serialnumber" data-options="name:'serialnumber'">Số sê ri</div>
+		<div id="m-machinename" data-options="name:'machinename'">Tên máy</div>
+		<div id="m-machineid" data-options="name:'machineid'">Mã máy</div>
+	</div>
+	<div id="AreaW" style="padding:20px 5px 20px 10px">
+		<input id="cbAreaDev" />
+	</div>
+	
+	<iframe id="machine_iframe" style="display:none;"></iframe>
+	<script type="text/javascript">
+		$(function () {
+			SelAreaObj.init();
+		});
+		//#region contrrol
+		$('#layoutDev').layout({ fit: true }).layout('panel', 'west').panel({
+			title: $.i18n('area'),
+			hideCollapsedContent: false,
+			collapsible: true,
+			border: true,
+			split: true
+		});
+		$('#layoutDev').layout('panel', 'center').panel({
+			title: $.i18n('device'),
+			border: true
+		});
+		$('#addDev').linkbutton({
+			iconCls: 'icon-add',
+			plain: true,
+			text: $.i18n('add'),
+			disabled: MenuItem.IsAdd() ? false : true
+		});
+		$('#deleteDev').linkbutton({
+			iconCls: 'icon-remove',
+			plain: true,
+			text: $.i18n('delete'),
+			disabled: MenuItem.IsDelete() ? false : true
+		});
+		$('#changeArea').linkbutton({
+			iconCls: 'icon-dept-move',
+			plain: true,
+			text: $.i18n('area_move'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		$('#m-register').text($.i18n('dev_now_register'));
+		$('#m-registration').text($.i18n('dev_registration'));
+		$('#registerDev').menubutton({
+			text: $.i18n('dev_register'),
+			menu: '#mmDeviceActive',
+			iconCls: 'icon-unlock',
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		$('#m-serialnumber').text($.i18n('serialnumber'));
+		$('#m-machinename').text($.i18n('machinename'));
+		$('#m-machineid').text($.i18n('machineid'));
+		$('#searchDev').searchbox({
+			prompt: $.i18n('dev_search'),
+			menu: '#mmMachineSearch',
+			searcher: doSearchMachine
+		});
+		$('#exportDev').linkbutton({
+			iconCls: 'icon-excel',
+			plain: true,
+			text: $.i18n('dev_export')
+		});
+			$('#areasTree').tree({
+				url: 'areas?gettreearea',
+				method: 'GET',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				},
+				lines: true,
+				checkbox: false,
+				onClick: function (node) {
+					$('#tbMachines').datagrid({
+						url: 'machines?getmachines&locale=' + i18n.locale,
+						method: 'POST',
+						queryParams: {
+							areaid: node.id,
+							levelid: node.levelid
+						},
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						}
+					});
+				}
+
+			});
+		$('#AreaW').dialog({
+			title: $.i18n('choosearea'),
+			modal: true,
+			closed: true,
+			iconCls: 'icon-dept-move',
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			resizable: true,
+			buttons: [{
+				text: $.i18n('ok'),
+				iconCls: 'icon-ok',
+				handler: function () {
+					moveDevice();
+				}
+			}, {
+				text: $.i18n('cancel'),
+				iconCls: 'icon-cancel',
+				handler: function () {
+					$('#AreaW').dialog('close');
+				}
+			}]
+			
+		});
+		$('#cbAreaDev').combobox({
+			url: 'areas?getselectarea&locale=' + i18n.locale,
+			panelHeight: 250,
+			valueField: 'id',
+			textField: 'text',
+			label: $.i18n('area'),
+			labelWidth: 60,
+			width:280
+		});
+		//#endregion
+		//#region Machine Grid
+		$('#tbMachines').datagrid({
+			frozenColumns: [[
+				{ field: 'chk', checkbox: true },
+				{ field: 'machineid', title: $.i18n('machineid'), sortable: true },
+			]],
+			columns: [[
+				{ field: 'machinename', title: $.i18n('machinename'), sortable: true },
+				{ field: 'serialnumber', title: $.i18n('serialnumber'), sortable: true },
+				{ field: 'ipaddress', title: $.i18n('ipaddress'), sortable: true },
+				//{ field: 'port', title: 'Cổng' },
+				{ field: 'activekey', title: $.i18n('activekey'), formatter: formatregistedString},
+				{ field: 'areaid', title: $.i18n('area'), formatter:SelAreaObj.AreaName},
+				{ field: 'lasteventtime', title: $.i18n('lasteventtime') },
+				{ field: 'passtime', title: $.i18n('passtime') },
+				{ field: 'statusstring', title: $.i18n('statusstring'), formatter: formatstatusString },
+				{ field: 'status', title: $.i18n('status'), formatter: machinestatus },
+				{ field: 'action', title: $.i18n('viewlog'), formatter: logButton, width:80}
+			]],
+			border:false,
+			fit: true,
+			rownumbers: true,
+			striped: true,
+			singleSelect: true,
+			checkOnSelect: false,
+			selectOnCheck: false,
+			pagination: true,
+			view: detailview,
+			iconCls: 'icon-fp-reader',
+			toolbar: '#toolMachine',
+			sortName: 'machineid',
+			pageSize: 20,
+			
+			view: detailview,
+			detailFormatter: function (index, row) {
+				return '<div class="ddv"></div>';
+			},
+			onExpandRow: function (index, row) {
+				var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+				ddv.panel({
+					height: 360,
+					width: 600,
+					border: true,
+					cache: false,
+					href: 'SubPages/DeviceDetail.html',
+					onLoad: function () {
+						$('#tbMachines').datagrid('clearSelections');
+						$('#tbMachines').datagrid('fixDetailRowHeight', index);
+						$('#tbMachines').datagrid('selectRow', index);
+						var myForm = $('#tbMachines').datagrid('getRowDetail', index).find('form');
+						SetDeviceControls(myForm, row, index);
+
+					}
+				});
+				$('#tbMachines').datagrid('fixDetailRowHeight', index);
+
+			},
+			onLoadSuccess: function () {
+				$(this).datagrid('getPanel').find('.easyui-linkbutton').each(function () {
+					$(this).linkbutton({
+						onClick: function () {
+							var serialnumber = $(this).attr('serialnumber');
+							ViewLog(serialnumber);
+
+						}
+					})
+				})
+			}
+
+		});
+		function logButton(value, row) {
+			return '<a class="easyui-linkbutton" iconCls="icon-report" plain="true" serialnumber="' + row.serialnumber + '"></a>';
+		}
+		function SetDeviceControls(myForm, row, index) {
+			var tabDev = $('#tbMachines').datagrid('getRowDetail', index).find('#tabDev');
+			$(tabDev).tabs();
+			var tabs = $(tabDev).tabs('tabs');
+			$(tabDev).tabs({
+				width: 600,
+				height: 310,
+				border:false,
+				tools: [{
+					iconCls: 'icon-save',
+					handler: function () {
+						saveMachine(this);
+					}
+				}, {
+					iconCls: 'icon-delete',
+					handler: function () {
+						cancelMachine(this);
+					}
+				}]
+			}).tabs('update', {
+				tab: tabs[0],
+				options: {
+					title: $.i18n('basic'),
+				}
+			}).tabs('update', {
+				tab: tabs[1],
+				options: {
+					title: $.i18n('advanced'),
+				}
+			}).tabs('update', {
+				tab: tabs[2],
+				options: {
+					title: $.i18n('online_capacity'),
+				}
+			});
+			var saveDev = $('#tbMachines').datagrid('getRowDetail', index).find('#saveDev');
+			$(saveDev).linkbutton({
+				iconCls: 'icon-save',
+				plain: true,
+				text: $.i18n('save'),
+				disabled: MenuItem.IsEdit() ? false : true
+			});
+			var cancelDev = $('#tbMachines').datagrid('getRowDetail', index).find('#cancelDev');
+			$(cancelDev).linkbutton({
+				iconCls: 'icon-delete',
+				plain: true,
+				text: $.i18n('cancel')
+			});
+			$.each(myForm.serializeArray(), function (i, field) {
+				let name = $('#tbMachines').datagrid('getRowDetail', index).find('#' + field.name);
+				if (field.name == "machineid") {
+					if (row.isNewRecord) {
+						$(name).combobox({
+							label: $.i18n(field.name),
+							required: true,
+							labelWidth: 140,
+							url: 'machines?getmachineid',
+							valueField: 'id',
+							textField: 'text',
+							required: true,
+							onChange: function (newValue, oldValue) {
+								var MachineName = $('#tbMachines').datagrid('getRowDetail', index).find('#machinename');
+								$(MachineName).textbox('setText', 'Máy ' + newValue);
+								$(MachineName).textbox('textbox').focus();
+							},
+							onLoadSuccess: function () {
+								myForm.form('load', row);
+							}
+						});
+					} else {
+						$(name).combobox({
+							label: $.i18n(field.name),
+							required: true,
+							labelWidth: 140,
+								url: 'machines?getmachineid',
+								valueField: 'id',
+								textField: 'text',
+								required: true,
+								onLoadSuccess: function () {
+									myForm.form('load', row);
+								}
+							}).combobox('readonly');
+					}
+				} else if (field.name == "status") {
+					$(name).combobox({
+						label: $.i18n(field.name),
+						required: true,
+						labelWidth: 140,
+						valueField: 'id',
+						textField: 'text',
+						data: [{
+							id: 0,
+							text: $.i18n('dev_open')
+						}, {
+								id: 2,
+								text: $.i18n('dev_off')
+							}],
+						panelHeight: 70
+					});
+				} else if (field.name == "areaid") {
+					$(name).combobox({
+						label: $.i18n('area'),
+						required: true,
+						labelWidth: 140,
+						valueField: 'id',
+						textField: 'text',
+						panelHeight: 150,
+						data: SelAreaObj.AreaData()
+					});
+				} else if (field.name == "lastrecorddate") {
+					$(name).datetimespinner({
+						label: $.i18n(field.name),
+						required: true,
+						labelWidth: 180,
+						formatter: mydatetimeformatter,
+						parser: mydatetimeparser
+					});
+				} else if (field.name == "cyclereload") {
+					$(name).numberspinner({
+						label: $.i18n(field.name),
+						required: true,
+						labelWidth: 180,
+						min: 1,
+						max: 24,
+						value: 4
+					});
+				} else if (field.name == "delay") {
+					$(name).numberspinner({
+						label: $.i18n(field.name),
+						required: true,
+						labelWidth: 180,
+						min: 2,
+						max: 320,
+						value: 15
+					});
+				} else if (field.name == "attlog") {
+					$(name).checkbox({
+						label: $.i18n('transflag1'),
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "oplog") {
+					$(name).checkbox({
+						label: $.i18n('transflag2'),
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "attphoto") {
+					$(name).checkbox({
+						label: $.i18n('transflag3'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "enrollfp") {
+					$(name).checkbox({
+						label: $.i18n('transflag4'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "enrolluser") {
+					$(name).checkbox({
+						label: $.i18n('transflag5'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "fpimag") {
+					$(name).checkbox({
+						label: $.i18n('transflag6'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "chguser") {
+					$(name).checkbox({
+						label: $.i18n('transflag7'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "chgfp") {
+					$(name).checkbox({
+						label: $.i18n('transflag8'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "face") {
+					$(name).checkbox({
+						label: $.i18n('transflag9'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "userpic") {
+					$(name).checkbox({
+						label: $.i18n('transflag10'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "workcode") {
+					$(name).checkbox({
+						label: $.i18n('transflag11'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else if (field.name == "biophoto") {
+					$(name).checkbox({
+						label: $.i18n('transflag12'),
+						required: true,
+						labelWidth: 170,
+						height: 15,
+						width: 15,
+						value: 'true'
+					});
+				} else {
+					$(name).textbox({
+						label: $.i18n(field.name),
+						required: true,
+						labelWidth: 140,
+					});
+				}
+			});
+		}
+		function doSearchMachine(value, name) {
+			try {
+				if (!value == "") {
+					if (name == 'machineid') {
+						$('#tbMachines').datagrid({
+							queryParams: {
+								areaid: -1,
+								machineid: value,
+								machinename: '',
+							},
+							url: 'machines?getmachines',
+							method: 'POST',
+							loader: function (param, success, error) {
+								var opts = $(this).datagrid('options');
+								loaderWSE(opts, param, success, error)
+							}
+
+						});
+					} else if (name == 'machinename') {
+						$('#tbMachines').datagrid({
+							queryParams: {
+								areaid: -2,
+								machineid: 0,
+								machinename: value,
+							},
+							url: 'machines?getmachines',
+							method: 'POST',
+							loader: function (param, success, error) {
+								var opts = $(this).datagrid('options');
+								loaderWSE(opts, param, success, error)
+							}
+
+						});
+					} else if (name == 'serialnumber') {
+						$('#tbMachines').datagrid({
+							queryParams: {
+								areaid: -3,
+								machineid: 0,
+								machinename: '',
+								serialnumber: value
+							},
+							url: 'machines?getmachines',
+							method: 'POST',
+							loader: function (param, success, error) {
+								var opts = $(this).datagrid('options');
+								loaderWSE(opts, param, success, error)
+							}
+
+						});
+					}
+				}
+			} catch (err) { message(err) }
+		}
+
+		function formatstatusString(val, row) {
+			if (val == $.i18n('offline')) {
+				return '<span style="color:red;">' + val + '</span>';
+			} else {
+				return '<span style="color:blue;">' + val + '</span>';
+			}
+		}
+		function machinestatus(value, row, index) {
+			if (value == 2) {
+				return $.i18n('dev_off');
+			} else {
+				return $.i18n('dev_open');
+			}
+		}
+		function formatregistedString(val, row) {
+			if (val != $.i18n('dev_registered')) {
+				return '<span style="color:red;">' + val + '</span>';
+			} else {
+				return  val ;
+			}
+		}
+		//#endregion
+		//#region Sự kiện
+		function showSchoolW() {
+			try {
+				var rows = $('#tbMachines').datagrid('getChecked');
+				if (rows.length == 0) { return }
+				$('#AreaW').window({
+					height: 160,
+					width:320,
+				}).window('open').window('center');
+			} catch (err) { message(err) }
+		}
+		function moveDevice() {
+			try {
+				var value = $('#cbAreaDev').combobox('getValue');
+				if (value) {
+					showProgress();
+					var rows = $('#tbMachines').datagrid('getChecked');
+					//var data = new Array();
+					//for (var i = 0; i < rows.length; i++) {
+					//	var row = rows[i];
+					//	data.push(row.machineid);
+					//}
+					//var payload = { areaid: value, machineid: data }
+					for (var i = 0; i < rows.length; i++) {
+						rows[i].newareaid = value;
+					}
+					$.post("machines?updateareaid", JSON.stringify(rows),
+						function (data, status) {
+
+							if (status == "success") {
+								var data = eval('(' + data + ')');
+								if (data.state == "success") {
+									$('#AreaW').dialog('close');
+									for (var i = 0; i < rows.length; i++) {
+										var row = rows[i];
+										$('#tbMachines').datagrid('deleteRow', $('#tbMachines').datagrid('getRowIndex', row));
+									}
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+							closeProgress();
+						}
+					);
+
+				}
+				else {
+					message($.i18n('choosearea'));
+				}
+			} catch (err) { message(err) }
+		}
+		function newMachine() {
+			try {
+				var node = $('#areasTree').tree('getSelected');
+				if (!node) {
+					message($.i18n('choosearea'));
+					return;
+				}
+				if (node.levelid == -1) {
+					message($.i18n('choosearea'));
+					return;
+				}
+				var index = $('#tbMachines').datagrid('getRows').length - 1;
+				if (index > 0) {
+					var row = $('#tbMachines').datagrid('getRows')[index]
+					if (row.isNewRecord) { return }
+				}
+				$('#tbMachines').datagrid('appendRow', {
+					isNewRecord: true,
+					ipaddress: '192.168.1.201',
+					port: 4370,
+					commkey: 0,
+					status: 0,
+					AttLog: 'on',
+					OpLog: 'on',
+					AttPhoto: 'on',
+					EnrollUser: 'on',
+					ChgUser: 'on',
+					EnrollFP: 'on',
+					ChgFP: 'on',
+					FPImag: 'off',
+					FACE: 'on',
+					UserPic: 'on',
+					WorkCode: 'on',
+					ComparationPhoto: 'on',
+					areaid: node.areaid,
+					areaname: node.text,
+					activekey: $.i18n('dev_unregistered'),
+					usercount: 0,
+					fpcount: 0,
+					attcount: 0,
+					facecount: 0,
+					admincount: 0,
+					areaid:node.id
+				});
+				index = $('#tbMachines').datagrid('getRows').length - 1;
+				$('#tbMachines').datagrid('expandRow', index);
+				$('#tbMachines').datagrid('selectRow', index);
+
+			} catch (err) { message(err) }
+		}
+		function deleteMachine() {
+			var rows = $('#tbMachines').datagrid('getChecked');
+			if (rows.length <= 0) { return }
+			$.messager.confirm($.i18n('mytitle'), $.i18n('dev_ask_delete'), function (r) {
+				if (r) {
+					$.post('machines?deletemachine',
+						JSON.stringify(rows),
+						function (data, status) {
+							if (status == "success") {
+								var data = eval('(' + data + ')');
+								if (data.state == "success") {
+									for (var i = 0; i < rows.length; i++) {
+										var row = rows[i];
+										$('#tbMachines').datagrid('deleteRow', $('#tbMachines').datagrid('getRowIndex', row));
+									}
+								} else {
+									message(data.message);
+								}
+							} else {
+								message('error');
+							}
+						});
+
+
+				}
+			});
+		}
+		function saveNewMachine(index) {
+			var row = $('#tbMachines').datagrid('getRows')[index];
+			var myForm = $('#tbMachines').datagrid('getRowDetail', index).find('form');
+			var isValid = myForm.form('validate');
+			if (isValid) {
+				var values = {};
+				$.each(myForm.serializeArray(), function (i, field) {
+					values[field.name] = field.value;
+				});
+				var url = row.isNewRecord ? 'machines?addnewmachine&locale=' + i18n.locale : 'machines?updatemachine&locale=' + i18n.locale;
+				$.post(url, JSON.stringify(values),
+					function (data) {
+						var data = eval('(' + data + ')');
+						if (data.state == "error") {
+							message(data.message);
+
+						} else {
+							data = eval('(' + data.message + ')');
+							data.isNewRecord = false;
+							$('#tbMachines').datagrid('collapseRow', index);
+							$('#tbMachines').datagrid('updateRow', {
+								index: index,
+								row: data
+							});
+						}
+
+					});
+			}
+		}
+		function CancelMachineItem(index) {
+			var row = $('#tbMachines').datagrid('getRows')[index];
+			if (row.isNewRecord) {
+				$('#tbMachines').datagrid('deleteRow', index);
+			} else {
+				$('#tbMachines').datagrid('collapseRow', index);
+			}
+		}
+		function saveMachine(target) {
+			var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+			var index = parseInt(tr.attr('datagrid-row-index'));
+			saveNewMachine(index)
+		}
+		function cancelMachine(target) {
+			var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+			var index = parseInt(tr.attr('datagrid-row-index'));
+			CancelMachineItem(index)
+		}
+		//#endregion
+		//#region Đăng ký
+		function DoGetActive() {
+			var row = $('#tbMachines').datagrid('getSelected');
+			if (!row) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('selecteddev'));
+				return;
+			}
+			var index = $('#tbMachines').datagrid('getRowIndex', row);
+			var data = { serialnumber: row.serialnumber };
+			showProgress()
+			$.post('machines?getactive&locale=' + i18n.locale,
+				JSON.stringify(data),
+				function (data, status) {
+					closeProgress()
+					var data = eval('(' + data + ')');
+					if (data.state == "success") {
+						$('#tbMachines').datagrid('updateRow', {
+							index: index,
+							row: { activekey: data.value1 }
+						});
+						$.messager.alert(myTitle, data.message, 'info');
+					} else {
+						$.messager.alert(myTitle, data.message, 'error');
+					}
+
+				});
+		}
+		function openActiveHandle() {
+			var row = $('#tbMachines').datagrid('getSelected');
+			if (!row) {
+				$.messager.alert($.i18n('mytitle'), $.i18n('selecteddev'));
+				return;
+			}
+			$('body').append('<div id="ActiveHandleWindow" style="display:none;" >');
+			$('#ActiveHandleWindow').window({
+				width: 850,
+				height: 480,
+				modal: true,
+				closed: true,
+				cache: true,
+				iconCls: 'icon-unlockman',
+				title: $.i18n('dev_registration'),
+				collapsible: false,
+				minimizable: false,
+				maximizable: false,
+				extractor: function (data) {
+					data = $.fn.panel.defaults.extractor(data);
+					return data;
+				},
+				onLoad: function () {
+					$('#p1').html($.i18n('tip_register', '<span style="color:blue;font-style:normal">' + $.i18n('reload_parametercode') + '</span>',
+						'<span style="color:blue;font-style:normal">' + $.i18n('update_registercode') + '</span>'));
+					$('#p2').text($.i18n('parametercode') + ':');
+					$('#reload_parametercode').linkbutton({
+						iconCls: 'icon-fp-reader',
+						text: $.i18n('reload_parametercode')
+					});
+					$('#save_parametercode').linkbutton({
+						iconCls: 'icon-text',
+						text: $.i18n('save_parametercode')
+					});
+					$('#p3').text($.i18n('registercode') + ':');
+					$('#reload_registercode').linkbutton({
+						iconCls: 'icon-unlock',
+						text: $.i18n('reload_registercode')
+					});
+					$('#save_registercode').linkbutton({
+						iconCls: 'icon-text',
+						text: $.i18n('save_registercode')
+					});
+					$('#update_registercode').linkbutton({
+						iconCls: 'icon-save',
+						text: $.i18n('update_registercode')
+					});
+					doGetRequestStr();
+				}
+
+
+
+			}).window('refresh', 'ActiveHandle.html').window('center').window('open');
+		}
+		function doGetRequestStr() {
+			var row = $('#tbMachines').datagrid('getSelected');
+			if (!row) { return }
+			var data = { serialnumber: row.serialnumber };
+			showProgress()
+			$.post('machines?getRequestStr',
+				JSON.stringify(data),
+				function (data, status) {
+					closeProgress()
+					var data = eval('(' + data + ')');
+					if (data.state == "success") {
+						$('#requestStr').val(data.message);
+					} else {
+						$('#requestStr').val(data.message);
+					}
+				});
+		}
+		//#endregion
+		//#region Report
+		function getMachinesList() {
+			var url = 'export?id=getdev&locale=' + i18n.locale;
+			GetExport(url);
+		}
+		function ViewLog(SN) {
+			$('body').append('<div id="indexWindow1" style="display:none;overflow:hidden;padding:3px"></div>');
+			$('#indexWindow1').dialog({
+				width: window.innerWidth - (window.innerWidth * 0.4),
+				height: window.innerHeight - 100,
+				modal: true,
+				closed: true,
+				iconCls: 'icon-search',
+				title: $.i18n('viewlog'),
+				collapsible: false,
+				minimizable: false,
+				maximizable: false,
+				constrain: true,
+				queryParams: { serialnumber: SN},
+				extractor: function (data) {
+
+					data = $.fn.panel.defaults.extractor(data);
+					return data;
+
+				},
+				onClose: function () {
+					$('#indexWindow1').remove();
+				},
+				onLoad: function () {
+					var startdate = $("#StartDateDevLog").datetimespinner('getValue');
+					var enddate = $("#EndDateDevLog").datetimespinner('getValue');
+					if (getValidDate(startdate, enddate) == false) {
+						$.messager.alert($.i18n('mytitle'), $.i18n('choosedate'), 'info');
+						return;
+					}
+					$('#tbDevLog').datagrid({
+						queryParams: { startdate: startdate, enddate: enddate, serialnumber:SN },
+						url: 'machines?getdevlog&locale=' + i18n.locale,
+						method: 'POST',
+						loader: function (param, success, error) {
+							var opts = $(this).datagrid('options');
+							loaderWSE(opts, param, success, error)
+						},
+					});
+				}
+			}).dialog('open').dialog('refresh', 'SubPages/DevLog.html').dialog('center');
+		}
+			//#endregion
+
+	</script>

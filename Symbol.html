@@ -1,0 +1,239 @@
+﻿<div id="tabSymbol" class="easyui-tabs wse-layout" data-options="fit:true,border:false,pill:false">
+	<div title="Các kí hiệu chấm công" style="padding:5px">
+		<table id="tbSymReport"></table>
+	</div>
+	<div title="Các kí hiệu vắng" style="padding:5px">
+		<table id="tbAbentSymbol"></table>
+	</div>
+</div>
+<script type="text/javascript">
+	var tabs = $('#tabSymbol').tabs().tabs('tabs');
+	$('#tabSymbol').tabs('update', {
+		tab: tabs[0],
+		options: {
+			title: $.i18n('attsymbol'),
+		}
+	});
+	$('#tabSymbol').tabs('update', {
+		tab: tabs[1],
+		options: {
+			title: $.i18n('absencesymbol'),
+		}
+	});
+	$('#tbSymReport').datagrid({
+		rownumbers: true,
+		striped: true,
+		singleSelect: true,
+		method: 'get',
+		url: 'rules?getsymreport&locale=' + i18n.locale,
+		fit: true,
+		loader: function (param, success, error) {
+			var opts = $(this).datagrid('options');
+			loaderWSE(opts, param, success, error)
+		},
+		columns: [[
+			{ field: 'description', title: $.i18n('description') },
+			{ field: 'symbol', title: $.i18n('symbol','') },
+			{ field: 'isyes', title: $.i18n('show'), formatter: isyesswitch }
+		]],
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 120,
+				border: false,
+				cache: false,
+				href: 'SubPages/SymReportDetail.html',
+				onLoad: function () {
+					$('#tbSymReport').datagrid('fixDetailRowHeight', index);
+					$('#tbSymReport').datagrid('selectRow', index);
+					$('#tbSymReport').datagrid('getRowDetail', index).find('form').form('load', row);
+					SetSymbolControls(row, index);
+				}
+			});
+			$('#tbSymReport').datagrid('fixDetailRowHeight', index);
+		}
+	});
+	function SetSymbolControls(row, index) {
+		var symbol = $('#tbSymReport').datagrid('getRowDetail', index).find('#symbol');
+		$(symbol).textbox({
+			label: $.i18n('symbol',''),
+			required: true,
+			labelWidth: 50,
+		});
+		var isyes = $('#tbSymReport').datagrid('getRowDetail', index).find('#isyes');
+		$(isyes).switchbutton({
+			label: $.i18n('show'),
+			required: true,
+			labelWidth: 50,
+			height: 24,
+		});
+		var saveSymbol = $('#tbSymReport').datagrid('getRowDetail', index).find('#saveSymbol');
+		$(saveSymbol).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var cancelSymbol = $('#tbSymReport').datagrid('getRowDetail', index).find('#cancelSymbol');
+		$(cancelSymbol).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+	}
+	function saveSymReport(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbSymReport').datagrid('getRows')[index];
+		var isValid = $('#tbSymReport').datagrid('getRowDetail', index).find('form').form('validate');
+		if (isValid) {
+			var doc = {
+				id: row.id,
+				symname: row.symname,
+				symbol: $('#tbSymReport').datagrid('getRowDetail', index).find('#symbol').textbox('getValue'),
+				isyes: $('#tbSymReport').datagrid('getRowDetail', index).find('#isyes').switchbutton('options').checked ? 'on' : 'off'
+			}
+			var url = 'rules?updatesymreport';
+			$.post(url, JSON.stringify(doc),
+				function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "error") {
+						message(data.message);
+					} else {
+						data.isNewRecord = false;
+						$('#tbSymReport').datagrid('collapseRow', index);
+						$('#tbSymReport').datagrid('updateRow', {
+							index: index,
+							row: data
+						});
+					}
+
+				});
+
+		}
+	}
+	function cancelSymReport(target) {
+			var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+			var index = parseInt(tr.attr('datagrid-row-index'));
+			$('#tbSymReport').datagrid('collapseRow', index);
+	}
+	$('#tbAbentSymbol').datagrid({
+		rownumbers: true,
+		striped: true,
+		singleSelect: true,
+		method: 'get',
+		url: 'rules?getabsentsymbol',
+		fit: true,
+		columns: [[
+			{ field: 'absentdescription', title: $.i18n('description') },
+			{ field: 'absentsymbol', title: $.i18n('symbol','') },
+			{ field: 'isyes', title: $.i18n('used'), formatter: isyesswitch },
+			{ field: 'iscount', title: $.i18n('paid'), formatter: isyesswitch }
+		]],
+		view: detailview,
+		detailFormatter: function (index, row) {
+			return '<div class="ddv" style="padding:5px 0"></div>';
+		},
+		onExpandRow: function (index, row) {
+			var ddv = $(this).datagrid('getRowDetail', index).find('div.ddv');
+			ddv.panel({
+				height: 250,
+				border: false,
+				cache: false,
+				href: 'SubPages/AbsentSymbolDetail.html',
+				onLoad: function () {
+					$('#tbAbentSymbol').datagrid('fixDetailRowHeight', index);
+					$('#tbAbentSymbol').datagrid('selectRow', index);
+					$('#tbAbentSymbol').datagrid('getRowDetail', index).find('form').form('load', row);
+					SetAbSymbolControls(row, index);
+				}
+			});
+			$('#tbAbentSymbol').datagrid('fixDetailRowHeight', index);
+
+		}
+	});
+	function SetAbSymbolControls(row, index) {
+		var absentdescription = $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#absentdescription');
+		$(absentdescription).textbox({
+			label: $.i18n('description'),
+			required: true,
+			width: 250,
+			labelPosition:'top'
+		});
+		var absentsymbol = $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#absentsymbol');
+		$(absentsymbol).textbox({
+			label: $.i18n('symbol',''),
+			required: true,
+			width: 250,
+			labelPosition: 'top'
+		});
+		var isyes = $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#isyes');
+		$(isyes).switchbutton({
+			label: $.i18n('used'),
+			required: true,
+			labelWidth: 65,
+			height: 24,
+		});
+		var iscount = $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#iscount');
+		$(iscount).switchbutton({
+			label: $.i18n('paid'),
+			required: true,
+			labelWidth: 65,
+			height: 24,
+		});
+		var saveAbSymbol = $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#saveAbSymbol');
+		$(saveAbSymbol).linkbutton({
+			iconCls: 'icon-save',
+			plain: true,
+			text: $.i18n('save'),
+			disabled: MenuItem.IsEdit() ? false : true
+		});
+		var cancelAbSymbol = $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#cancelAbSymbol');
+		$(cancelAbSymbol).linkbutton({
+			iconCls: 'icon-delete',
+			plain: true,
+			text: $.i18n('cancel')
+		});
+	}
+	function saveAbsentSymbol(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		var row = $('#tbAbentSymbol').datagrid('getRows')[index];
+		var isValid = $('#tbAbentSymbol').datagrid('getRowDetail', index).find('form').form('validate');
+		if (isValid) {
+			var doc = {
+				absentcode: row.absentcode,
+				absentdescription: $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#absentdescription').textbox('getValue'),
+				absentsymbol: $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#absentsymbol').textbox('getValue'),
+				isyes: $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#isyes').switchbutton('options').checked ? 'on' : 'off',
+				iscount: $('#tbAbentSymbol').datagrid('getRowDetail', index).find('#iscount').switchbutton('options').checked ? 'on' : 'off'
+			}
+			var url = 'rules?updateabsentsymbol';
+			$.post(url, JSON.stringify(doc),
+				function (data) {
+					var data = eval('(' + data + ')');
+					if (data.state == "error") {
+						message(data.message);
+					} else {
+						data.isNewRecord = false;
+						$('#tbAbentSymbol').datagrid('collapseRow', index);
+						$('#tbAbentSymbol').datagrid('updateRow', {
+							index: index,
+							row: data
+						});
+					}
+
+				});
+		}
+	}
+	function cancelAbsentSymbol(target) {
+		var tr = $(target).closest('.datagrid-row-detail').closest('tr').prev();
+		var index = parseInt(tr.attr('datagrid-row-index'));
+		$('#tbAbentSymbol').datagrid('collapseRow', index);
+	}
+
+</script>

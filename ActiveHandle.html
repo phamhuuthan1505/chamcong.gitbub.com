@@ -1,0 +1,61 @@
+
+<p id="p1" style="font-style:italic;font-weight:bold;font-size:13px;margin:5px"></p>
+<p id="p2" style="margin:10px;font-weight:bold;font-size:13px;color:blue">Chuỗi thông số:</p>
+<a id="reload_parametercode" onclick="doGetRequestStr()">Tải lại chuỗi thống số máy chấm công</a>
+<a id="save_parametercode"  onclick="DoSaveRequestStr()">Lưu lại chuỗi thông số</a>
+<br />
+ <textarea id="requestStr" rows="5" cols="100" style="margin:5px;"></textarea>
+ <p id="p3" style="margin:10px;font-weight:bold;font-size:13px;color:blue">Chuỗi đăng ký:</p>
+ <a id="reload_registercode"   onclick="doReGetActiveStr()">Tải lại chuỗi đăng ký</a>
+ <a id="save_registercode"  onclick="DoSaveActiveStr()">Lưu lại chuỗi đăng ký</a>
+ <br />
+ <textarea id="activeStr" rows="5" cols="100" style="margin:5px"></textarea>
+ <a id="update_registercode"  onclick="doUpdateActiveStr()">Cập nhật lại đăng ký</a>
+<script type="text/javascript">
+function doReGetActiveStr(){
+	var row = $('#tbMachines').datagrid('getSelected');
+	var data = {serialnumber: row.serialnumber,RequestStr: $('#requestStr').val()};
+	showProgress();
+	$.post('machines?getActiveStr&locale=' + i18n.locale,
+		JSON.stringify(data),
+		function(data, status){
+		closeProgress();
+		var data = eval('('+data+')');
+		$('#activeStr').val(data.message);
+			
+	});
+}
+function doUpdateActiveStr(){
+	var row = $('#tbMachines').datagrid('getSelected');
+	var data = {serialnumber: row.serialnumber,ActiveStr: $('#activeStr').val()};
+	showProgress();
+	$.post('machines?updateActiveStr&locale=' + i18n.locale,
+		JSON.stringify(data),
+		function(data, status){
+		closeProgress()
+		var data = eval('('+data+')');
+		if (data.state=="success"){
+			var index = $('#tbMachines').datagrid('getRowIndex',row);
+			$('#tbMachines').datagrid('updateRow',{
+									index: index,
+									row: {activekey : data.value1}
+								});	
+			$.messager.alert(myTitle,data.message,'info');
+		}else{
+			$.messager.alert(myTitle,data.message,'error');
+		}
+			
+	});
+}
+function DoSaveRequestStr(){try{
+	var row = $('#tbMachines').datagrid('getSelected');
+	var blob = new Blob([$('#requestStr').val().trim()], {type: "text/plain"});
+	saveAs(blob, row.serialnumber + "(Request).txt");
+}catch(err){message(err)}}
+function DoSaveActiveStr(){try{
+	var row = $('#tbMachines').datagrid('getSelected');
+	var blob = new Blob([$('#activeStr').val().trim()], {type: "text/plain"});
+	saveAs(blob, row.serialnumber + "(Actived).txt");
+}catch(err){message(err)}}
+</script>
+

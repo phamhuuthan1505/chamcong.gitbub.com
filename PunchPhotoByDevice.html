@@ -1,0 +1,189 @@
+﻿<div id="layoutPunchPhoto" class="easyui-layout wse-layout" data-options="fit:true">
+	
+	<div data-options="region:'west',split:true" style="width:260px;padding:3px;overflow:auto">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:32px;">
+				<a id="btAreaPunchPhoto" />
+			</div>
+			<div data-options="region:'center',border:false" style="padding:5px;">
+				<ul id="treeDevPunchPhoto"></ul>
+			</div>
+			<div data-options="region:'south',border:false" style="height:32px;">
+				<input id="ftDevPunchPhoto" style="width:100%">
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div id="layoutPunchPhotoCenter" class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:300px;">			
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'north',border:false" style="height:32px;margin:2px 0px 0px 5px">
+						<input id="cbPunchPhotoYear">
+					</div>
+					
+					<div data-options="region:'center',border:false">
+						<ul id="treeShowDate"></ul>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-left:3px">
+				<div class="easyui-panel photos" data-options="fit:true,border:true">
+					<ul id="photo"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="mmAreaPunchPhoto" class="menu-content" data-options="hideOnUnhover: false">
+	<div id="dlAreaPunchPhoto">	</div>
+</div>
+<script type="text/javascript">
+	$('#layoutPunchPhoto').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('device'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true,
+		iconCls: 'icon-device'
+	});
+	//$('#layoutPunchPhoto').layout('panel', 'center').panel({
+	//	title: $.i18n('time'),
+	//	border: true,
+	//	iconCls: 'icon-text'
+	//});
+	$('#layoutPunchPhotoCenter').layout({ fit: true }).layout('panel', 'west').panel({
+		title: $.i18n('selectdate'),
+		hideCollapsedContent: false,
+		collapsible: true,
+		border: true,
+		split: true,
+		iconCls: 'icon-filter'
+	});
+	//$('#layoutPunchPhotoCenter').layout('panel', 'center').panel({
+	//	//title: $.i18n('time'),
+	//	border: true,
+	//	iconCls: 'icon-wman'
+	//});
+	$('#cbPunchPhotoYear').combobox({
+		data: getPhotoYears(),
+		width: 110,
+		panelHeight: 100,
+		label: $.i18n('year'),
+		labelWidth: 40,
+		onChange: function (newValue, oldValue) {
+			var node = $('#treeDevPunchPhoto').tree("getSelected");
+			if (!node) return;
+			if (node.levelid != 2) return;
+			$('#treeShowDate').tree({
+				queryParams: {
+					serialnumber: node.code,
+					machinename: node.text,
+					year: newValue
+				}
+			});
+		}
+	});
+	function getPhotoYears() {
+		try {
+			var d = new Date;
+			var y = parseInt(d.getFullYear());
+			var data = [{ text: y - 2, value: y - 2 }, { text: y - 1, value: y - 1 }, { text: y, value: y, selected: true  }];
+			return data;
+		} catch (err) { message(err); }
+	}
+	$('#dlAreaPunchPhoto').datalist({
+		method: 'get',
+		url: 'areas?getusedarea&locale=' + i18n.locale,
+		loader: function (param, success, error) {
+			var opts = $(this).datalist('options');
+			loaderWSE(opts, param, success, error)
+		},
+		valueField: 'id',
+		textField: 'text',
+		width: 200,
+		height: 250,
+		border: 0,
+		onLoadSuccess: function () {
+			loadMenuButtonPunchPhoto($.i18n('all'));
+		},
+		onSelect: function (index, row) {
+			$('#treeDevPunchPhoto').tree({
+				url: 'syncgroup?getdevices&locale=' + i18n.locale,
+				lines: true,
+				queryParams: { areaid: row.id },
+				method: 'POST',
+				loader: function (param, success, error) {
+					var opts = $(this).tree('options');
+					loaderWSE(opts, param, success, error)
+				}
+			});
+			loadMenuButtonPunchPhoto(row.text);
+			$('#mmAreaPunchPhoto').menu('hide');
+		}
+	});
+	function loadMenuButtonPunchPhoto(txt) {
+		$('#btAreaPunchPhoto').menubutton({
+			text: $.i18n('area') + ': ' + txt,
+			menu: '#mmAreaPunchPhoto',
+			iconCls: 'icon-area',
+			plain: true,
+			showEvent: 'click'
+		});
+	}
+	$('#ftDevPunchPhoto').textbox({
+		icons: [{
+			iconCls: 'icon-filter',
+			handler: function (e) {
+				$('#treeDevPunchPhoto').tree('doFilter', $(e.data.target).textbox('getValue'))
+			},
+
+		}],
+		prompt: $.i18n('filterinput', $.i18n('device').toLowerCase()),
+		onChange: function (newValue, oldValue) {
+			$('#treeDevPunchPhoto').tree('doFilter', newValue);
+		}
+	}).textbox('addClearBtn', 'icon-clear');
+
+	$('#treeDevPunchPhoto').tree({
+		url: 'syncgroup?getdevices&locale=' + i18n.locale,
+		lines: true,
+		queryParams: { areaid: 0 },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onClick: function (node) {
+			if (node.levelid == 2) {
+				var year = $('#cbPunchPhotoYear').combobox('getValue');
+				$('#treeShowDate').tree({
+					queryParams: {
+						serialnumber: node.code,
+						machinename: node.text,
+						year: year
+					}
+				});
+			} else {
+				message($.i18n('choosedevice'));
+			}
+		}
+	});
+	$('#treeShowDate').tree({
+		url: 'punchphoto?getfoldertree&locale=' + i18n.locale,
+		lines: true,
+		queryParams: { serialnumber: "" },
+		method: 'POST',
+		loader: function (param, success, error) {
+			var opts = $(this).tree('options');
+			loaderWSE(opts, param, success, error)
+		},
+		onClick: function (node) {
+			//console.log(node)
+			var url = 'punchphoto?getphotopath&locale=' + i18n.locale;
+			$.post(url, JSON.stringify(node), function (res) {
+				$("#photo").html(res);
+
+			});
+		}
+	});
+</script>

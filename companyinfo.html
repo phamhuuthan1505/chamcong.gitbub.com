@@ -1,0 +1,123 @@
+<div class="easyui-layout" data-options="fit:true">
+	<div data-options="region:'west',border:false" style="width:200px;padding:10px">
+		<div style="margin-bottom:20px"><img id="imglogo" src="" style="width:160px;height:145px;" /></div>
+
+		<div style="margin-top:32px">
+			<input  id="complogo" name="complogo" style="width:100%;"/>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" >
+		<form id="frmComp" method="post" enctype="multipart/form-data">
+			<div><input  id="compname" name="compname"  style="width:300px;" /></div>
+			<div> <input  id="compaddress" name="compaddress" class="easyui-textbox" style="width:300px;" /></div>
+			<div><input  id="comptel" name="comptel" style="width:300px;" /></div>
+			<div style="margin-top:10px"><a id="saveComp"  onclick="saveCompany()">Cập nhật</a></div>
+		</form>
+	</div>
+	<!--<div data-options="region:'south',title:'South Title',split:true" style="height:100px;">
+		
+	</div>-->
+</div>
+  <script type="text/javascript">
+	  var srcData = '';
+	  $('#complogo').filebox({
+		  prompt: $.i18n('complogo'),
+		  buttonText: $.i18n('complogo'),
+		  accept: 'image/*',
+		  onChange: onChangeCompLogo
+	  });
+	  $('#compname').textbox({
+		  label: $.i18n('compname'),
+		  required: true,
+		  labelPosition:'top'
+	  });
+	  $('#compaddress').textbox({
+		  label: $.i18n('compaddress'),
+		  required: true,
+		  labelPosition: 'top'
+	  });
+	  $('#comptel').textbox({
+		  label: $.i18n('comptel'),
+		  required: true,
+		  labelPosition: 'top'
+	  });
+	  $('#saveComp').linkbutton({
+		  iconCls: 'icon-save',
+		  plain: false,
+		  text: $.i18n('update')
+		  //disabled: MenuItem.IsEdit() ? false : true
+	  });
+	  $(function(){
+		 getcompanyinfo(); 
+	  });
+     function getcompanyinfo(){
+		 var url='company?getcompany'
+		 $.post(url,function(data,state){
+			 var data = eval('('+data+')');
+			$('#frmComp').form('load',data)
+			$("#imglogo").attr('src', 'complogo.png?' + Math.random());		
+		});
+	 }
+	 function saveCompany(){
+		 var isValid = $('#compname').textbox('isValid');
+			if (!isValid) {
+				$('#compname').textbox('validate');
+				$('#compname').textbox('textbox').focus();
+				return;
+			}
+			showProgress();
+			var doc ={compname:$('#compname').textbox('getValue'),
+					compaddress:$('#compaddress').textbox('getValue'),
+					comptel:$('#comptel').textbox('getValue'),
+					imglogo:srcData
+					}
+		 $.post('company?update&locale=' + i18n.locale,
+				  JSON.stringify(doc),
+				  function(data){
+					  closeProgress()
+					  var data = eval('('+data+')');
+					  if (data.state=="success"){
+							//$('#indexWindow').window('close');
+							message(data.message);
+					  }else{
+						  message(data.message);
+					  }
+					  
+			  });	
+		// $('#frmComp').form('submit',{
+//			url: 'company?update',
+//			onSubmit: function(){
+//				return $(this).form('validate');
+//			},
+//			success: function(res){
+//				var res = eval('('+res+')');
+//				if (res.state=="success"){
+//					$('#indexWindow').window('close');
+//					message(res.message);
+//				}else{
+//					message(res.message);
+//				}
+//				
+//			}
+//			 
+//		 })
+	 }
+	 
+	 function onChangeCompLogo(newValue,oldValue){
+		
+		var file = $(this).next().find('input[type=file]')[0];
+		if (file.files&&file.files[0]){
+			var fileToLoad = file.files[0];
+			var fileReader = new FileReader();
+			fileReader.onload = function(fileLoadedEvent) {
+			srcData = fileLoadedEvent.target.result;
+			//alert(srcData);
+			//console.log(srcData);
+			$("#imglogo").attr('src',srcData);
+		}
+		fileReader.readAsDataURL(fileToLoad);		}
+		
+	 }
+  </script>
+
+ 
